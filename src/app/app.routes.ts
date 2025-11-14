@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { Auth } from './features/auth/auth';
-import { authGuard, roleGuard } from './core/guards';
+import { authGuard, roleGuard, guestGuard } from './core/guards';
 import { AdminRole } from './core/shared/models';
 
 export const routes: Routes = [
@@ -8,6 +8,7 @@ export const routes: Routes = [
     path: '',
     component: Auth,
     pathMatch: 'full',
+    canActivate: [guestGuard],
   },
   {
     path: 'super-admin',

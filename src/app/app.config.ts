@@ -12,7 +12,15 @@ import { authInterceptor, loadingInterceptor, errorInterceptor } from './core/in
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, errorInterceptor])),
+    provideHttpClient(
+      withInterceptors(
+        [
+          authInterceptor,
+          loadingInterceptor,
+          errorInterceptor,
+        ]
+      )
+    ),
     provideAnimations(),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
