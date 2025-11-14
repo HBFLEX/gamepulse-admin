@@ -8,6 +8,73 @@
 @import '@taiga-ui/core/styles/taiga-ui-theme.less';
 @import '@taiga-ui/core/styles/taiga-ui-fonts';
 
+:root {
+  // Primary colors (buttons, links, active states)
+  --tui-primary: #C53A34;
+  --tui-primary-hover: #A32F2A;
+  --tui-primary-active: #8B2723;
+
+  // Status colors that use primary
+  --tui-status-info: #C53A34;
+  --tui-status-info-pale: rgba(197, 58, 52, 0.12);
+  --tui-status-info-pale-hover: rgba(197, 58, 52, 0.24);
+
+  // Text on primary backgrounds
+  --tui-text-primary: #C53A34;
+  --tui-text-primary-on-accent-1: #ffffff;
+  --tui-text-primary-on-accent-2: #ffffff;
+
+  // Links
+  --tui-link: #C53A34;
+  --tui-link-hover: #A32F2A;
+
+  // Focus/Selection colors
+  --tui-selection: rgba(197, 58, 52, 0.12);
+
+  // Base colors for interactive elements
+  --tui-base-01: #C53A34;
+  --tui-base-02: #A32F2A;
+  --tui-base-03: #8B2723;
+  --tui-base-04: #732320;
+  --tui-base-05: #5C1D1A;
+  --tui-base-06: #461714;
+  --tui-base-07: #30110E;
+  --tui-base-08: #1A0908;
+
+  // Support colors (tooltips, hints)
+  --tui-support-01: #C53A34;
+  --tui-support-02: #A32F2A;
+
+  // Background colors for hints/tooltips
+  --tui-background-neutral-1: #C53A34;
+  --tui-background-neutral-1-hover: #A32F2A;
+  --tui-background-neutral-1-pressed: #8B2723;
+}
+
+// Override tooltip/hint colors with ::ng-deep (necessary for Taiga UI)
+::ng-deep {
+  // Tooltip/Hint directive background
+  [data-appearance="hint"],
+  [tuihint],
+  tui-hint-box,
+  .t-hint {
+    --tui-background-base: #C53A34 !important;
+    background: #C53A34 !important;
+    color: white !important;
+  }
+
+  // Hint content
+  .t-content {
+    background: #C53A34 !important;
+    color: white !important;
+  }
+
+  // Dropdown hint appearance
+  [data-appearance="hint"] {
+    background: #C53A34 !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -18,7 +85,7 @@ body {
   padding: 0;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+  sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -28,6 +95,26 @@ body {
   color: #1a1a1a;
   font-size: 16px;
   line-height: 1.5;
+}
+
+// Apply Bebas Neue to headers, buttons, and emphasis text
+h1, h2, h3, h4, h5, h6,
+[tuiTitle],
+[tuiSubtitle],
+.tui-text_h1,
+.tui-text_h2,
+.tui-text_h3,
+.tui-text_h4,
+.tui-text_h5,
+.tui-text_h6,
+button,
+.tui-button,
+[tuiButton],
+.auth-title,
+.footer-text,
+label[tuiLabel] {
+  font-family: 'Bebas Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 1px;
 }
 
 input,
@@ -51,6 +138,6 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid #1a73e8;
+  outline: 2px solid #C53A34;
   outline-offset: 2px;
 }
