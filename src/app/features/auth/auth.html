@@ -2,64 +2,65 @@
   <div class="auth-card">
     <div class="auth-header">
       <div class="auth-logo">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <rect width="48" height="48" rx="12" fill="#1a73e8"/>
-          <path d="M24 12L32 20L24 28L16 20L24 12Z" fill="white"/>
-          <path d="M24 20L32 28L24 36L16 28L24 20Z" fill="white" opacity="0.7"/>
-        </svg>
+        <img
+          ngSrc="assets/images/gamepulse_logo.png"
+          width="50"
+          height="50"
+        >
       </div>
-      <h1 class="auth-title">GamePulse Admin</h1>
-      <p class="auth-subtitle">Sign in to access your dashboard</p>
     </div>
 
-    <form class="auth-form" (ngSubmit)="onSubmit()">
-      @if (error()) {
-        <div class="auth-error">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-          </svg>
-          <span>{{ error() }}</span>
-        </div>
-      }
+    <form
+      appearance="floating"
+      tuiForm
+      (ngSubmit)="onSubmit()"
+      [style.max-width.rem]="35"
+    >
 
-      <div class="form-group">
-        <label class="form-label" for="email">Email Address</label>
-        <tui-input
-          id="email"
-          class="form-input"
-          [(ngModel)]="email"
-          name="email"
-          type="email"
-          tuiTextfieldSize="l"
-          [disabled]="isLoading()"
-        >
-          Enter your email
-        </tui-input>
-      </div>
+      <!--header-->
+      <header tuiHeader>
+        <h3 tuiTitle>
+          GAMEPULSE ADMIN
+          <span tuiSubtitle>Sign in to access your dashboard</span>
+        </h3>
+      </header>
 
-      <div class="form-group">
-        <label class="form-label" for="password">Password</label>
-        <tui-input-password
-          id="password"
-          class="form-input"
+      <!--email address input-->
+      <tui-textfield>
+      <label tuiLabel>Email ID</label>
+      <input
+        tuiTextfield
+        [(ngModel)]="email"
+        name="email"
+        placeholder="enter your email ID"
+        type="email"
+        required
+      />
+    </tui-textfield>
+
+      <!--password input-->
+      <tui-textfield>
+        <label tuiLabel>Password</label>
+        <input
+          tuiTextfield
           [(ngModel)]="password"
           name="password"
-          tuiTextfieldSize="l"
-          [disabled]="isLoading()"
-        >
-          Enter your password
-        </tui-input-password>
-      </div>
+          placeholder="enter your password"
+          type="password"
+          required
+        />
+        <tui-icon tuiPassword />
+      </tui-textfield>
 
+      <!--submit button-->
       <button
-        type="submit"
-        tuiButton
-        appearance="primary"
         size="l"
+        appearance="accent"
+        tuiButton
+        [disabled]="!email() || !password() || isLoading()"
         class="submit-button"
-        [disabled]="isLoading() || !email() || !password()"
       >
-        {{ isLoading() ? 'Signing in...' : 'Sign In' }}
+        SIGN IN
       </button>
     </form>
 
