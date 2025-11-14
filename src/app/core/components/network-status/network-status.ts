@@ -39,8 +39,9 @@ import { NetworkService } from '../../shared/services';
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 14px;
-      font-weight: 500;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 1px;
     }
 
     @keyframes slideIn {

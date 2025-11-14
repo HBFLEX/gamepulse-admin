@@ -40,16 +40,24 @@ import { TuiButton } from '@taiga-ui/core';
     }
 
     h1 {
-      font-size: 32px;
-      font-weight: 600;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 40px;
+      letter-spacing: 2px;
       color: #1a1a1a;
       margin: 0 0 12px;
     }
 
     p {
-      font-size: 16px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 1px;
       color: #6b7280;
       margin: 0 0 32px;
+    }
+
+    button {
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 1.5px;
     }
   `,
 })
