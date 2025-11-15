@@ -394,12 +394,19 @@ export class AdminApiService {
   // ==========================================
 
   getTeamsWithStatus(): Observable<{ active: number; inactive: number; total: number }> {
-    return this.http.get<any[]>(`${this.apiUrl}/teams`).pipe(
-      map((teams) => {
-        const active = teams.filter((t) => t.is_active !== false).length;
+    return this.http.get<any>(`${this.apiUrl}/teams`).pipe(
+      map((response) => {
+        // Handle both array response and object with data property
+        const teams = response.data;
+
+        console.log('TEAMS', teams);
+
+        const active = teams.filter((t: any) => t.is_active !== false).length;
         const inactive = teams.length - active;
+
         console.log('active teams', active);
         console.log('inactive teams', inactive);
+
         return {
           active,
           inactive,
