@@ -1,0 +1,44 @@
+<div class="overview-page">
+  <!-- WebSocket Connection Status (for debugging) -->
+  @if (!isWebSocketConnected()) {
+    <div class="connection-banner warning">
+      <span>⚠️ Real-time updates disconnected. Attempting to reconnect...</span>
+    </div>
+  }
+  
+  @if (loading()) {
+    <div class="loading-container">
+      <tui-loader [size]="'xl'"></tui-loader>
+    </div>
+  } @else {
+    <!-- Quick Stats Cards -->
+    <app-stats-cards [stats]="stats()" />
+
+    <!-- Row 1: System Health & Realtime Activity -->
+    <div class="row row-main-metrics">
+      <app-system-health [health]="systemHealth()" />
+      <app-realtime-activity [activity]="realtimeActivity()" />
+    </div>
+
+    <!-- Row 2: Engagement & Content Performance -->
+    <div class="row row-engagement">
+      <app-engagement-chart [data]="userEngagement()" />
+      <app-content-performance [content]="contentPerformance()" />
+    </div>
+
+    <!-- Row 3: Admin Actions Table -->
+    <div class="row row-full">
+      <app-admin-actions-table [actions]="adminActions()" />
+    </div>
+
+    <!-- Row 4: Charts -->
+    <div class="row row-full">
+      <app-team-distribution-chart [data]="teamDistribution()" />
+    </div>
+
+    <!-- Row 5: Content Types Chart -->
+    <div class="row row-full">
+      <app-content-types-chart [data]="contentTypes()" />
+    </div>
+  }
+</div>
