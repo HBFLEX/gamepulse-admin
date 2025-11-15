@@ -25,7 +25,7 @@ import { LoadingService } from '../../shared/services';
 
     .loading-bar-progress {
       height: 100%;
-      background: linear-gradient(90deg, #ea5e2b 0%, #c53939 50%, #07ff51 100%);
+      background: linear-gradient(90deg, #ea5e2b 0%, #c53939 50%, #3A2634 100%);
       animation: loading 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
       transform-origin: left;
       box-shadow: 0 0 10px rgba(228, 94, 44, 0.6);
