@@ -44,13 +44,30 @@
           (change)="onRoleFilterChange($any($event.target).value)"
         >
           <option value="all">All Roles</option>
-          <option value="Super Admin">Super Admin</option>
-          <option value="League Admin">League Admin</option>
-          <option value="Team Admin">Team Admin</option>
-          <option value="Content Admin">Content Admin</option>
-          <option value="Game Admin">Game Admin</option>
+          <option value="super_admin">Super Admin</option>
+          <option value="league_admin">League Admin</option>
+          <option value="team_admin">Team Admin</option>
+          <option value="content_admin">Content Admin</option>
+          <option value="game_admin">Game Admin</option>
         </select>
       </div>
+
+      <!-- Team Filter (only show when Team Admin is selected) -->
+      @if (roleFilter() === 'team_admin' && teams().length > 0) {
+        <div class="filter-item">
+          <label tuiLabel>Team</label>
+          <select
+            class="filter-select"
+            [value]="teamFilter()"
+            (change)="onTeamFilterChange($any($event.target).value)"
+          >
+            <option value="all">All Teams</option>
+            @for (team of teams(); track team.id) {
+              <option [value]="team.id">{{ team.name }}</option>
+            }
+          </select>
+        </div>
+      }
 
       <!-- Status Filter -->
       <div class="filter-item">
@@ -74,7 +91,7 @@
         </div>
         <div class="stat-item">
           <span class="stat-label">Showing</span>
-          <span class="stat-value">{{ filteredAdmins().length }}</span>
+          <span class="stat-value">{{ displayedAdmins().length }}</span>
         </div>
       </div>
     </div>
@@ -83,14 +100,14 @@
   <!-- Table Card -->
   @if (loading()) {
     <div class="loading-container">
-      <tui-loader size="xl"></tui-loader>
+      <tui-loader size="m"></tui-loader>
     </div>
-  } @else if (filteredAdmins().length === 0) {
+  } @else if (displayedAdmins().length === 0) {
     <div tuiCardLarge class="empty-state">
       <tui-icon icon="@tui.users" class="empty-icon" />
       <h3>No administrators found</h3>
       <p>Try adjusting your filters or create a new admin</p>
-      <button tuiButton appearance="secondary" size="m" (click)="openCreateModal()">
+      <button tuiButton appearance="primary" size="m" (click)="openCreateModal()">
         <tui-icon icon="@tui.plus" />
         Create Admin
       </button>
@@ -110,53 +127,57 @@
             <th *tuiHead="'actions'" tuiTh class="actions-header">Actions</th>
           </tr>
           </thead>
-          <tbody tuiTbody [data]="filteredAdmins()">
-            @for (admin of filteredAdmins(); track admin.id) {
+          <tbody tuiTbody [data]="displayedAdmins()">
+            @for (admin of displayedAdmins(); track admin.id) {
               <tr tuiTr>
                 <td *tuiCell="'avatar'" tuiTd>
                   <tui-avatar size="s" class="admin-avatar">
-                    {{ getInitials(admin.full_name) }}
+                    {{ getInitials(admin.fullName) }}
                   </tui-avatar>
                 </td>
                 <td *tuiCell="'name'" tuiTd>
                   <div class="name-cell">
-                    <span class="admin-name">{{ admin.full_name }}</span>
+                    <span class="admin-name">{{ admin.fullName || 'N/A' }}</span>
                     @if (admin.username) {
                       <span class="admin-username">&#64;{{ admin.username }}</span>
                     }
                   </div>
                 </td>
                 <td *tuiCell="'email'" tuiTd>
-                  <span class="admin-email">{{ admin.email }}</span>
+                  <span class="admin-email">{{ admin.email || 'N/A' }}</span>
                 </td>
                 <td *tuiCell="'role'" tuiTd>
-                  <span
-                    class="role-badge"
-                    [style.background-color]="getRoleBadgeColor(admin.role.role_name) + '20'"
-                    [style.color]="getRoleBadgeColor(admin.role.role_name)"
-                  >
-                    {{ admin.role.role_name }}
-                  </span>
+                  @if (admin.role) {
+                    <span
+                      class="role-badge"
+                      [style.background-color]="getRoleBadgeColor(admin.role.name) + '20'"
+                      [style.color]="getRoleBadgeColor(admin.role.name)"
+                    >
+                      {{ getRoleDisplayName(admin.role.name) }}
+                    </span>
+                  } @else {
+                    <span class="role-badge" style="background-color: #6b728020; color: #6b7280">
+                      No Role
+                    </span>
+                  }
                 </td>
                 <td *tuiCell="'status'" tuiTd>
                   <div class="status-toggle">
                     <input
                       tuiSwitch
                       type="checkbox"
-                      [checked]="admin.is_active"
+                      [checked]="admin.isActive"
                       (change)="toggleAdminStatus(admin)"
                     />
-                    <span [class.active]="admin.is_active" [class.inactive]="!admin.is_active">
-                      {{ admin.is_active ? 'Active' : 'Inactive' }}
+                    <span [class.active]="admin.isActive" [class.inactive]="!admin.isActive">
+                      {{ admin.isActive ? 'Active' : 'Inactive' }}
                     </span>
                   </div>
                 </td>
                 <td *tuiCell="'lastLogin'" tuiTd>
-                  @if (admin.last_login) {
-                    <span class="last-login">{{ formatDate(admin.last_login) }}</span>
-                  } @else {
-                    <span class="no-login">Never</span>
-                  }
+                  <span [class]="admin.lastLogin ? 'last-login' : 'no-login'">
+                    {{ formatDate(admin.lastLogin || '') }}
+                  </span>
                 </td>
                 <td *tuiCell="'actions'" tuiTd>
                   <div class="action-buttons">
@@ -164,6 +185,7 @@
                       tuiIconButton
                       appearance="flat"
                       size="s"
+                      class="edit-button"
                       [tuiHint]="'Edit admin'"
                       (click)="openEditModal(admin)"
                     >
@@ -201,7 +223,7 @@
             Previous
           </button>
           <span class="page-info">
-            Page {{ currentPage() }} of {{ Math.ceil(totalAdmins() / pageSize()) }}
+            Page {{ currentPage() }} of {{ totalPages() }}
           </span>
           <button
             tuiButton
@@ -223,7 +245,7 @@
 @if (showCreateModal()) {
   <div class="modal-overlay" (click)="closeCreateModal()">
     <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
-      <div tuiHeader class="modal-header">
+      <div class="modal-header">
         <h2>CREATE NEW ADMIN</h2>
         <button tuiIconButton appearance="flat" size="s" (click)="closeCreateModal()">
           <tui-icon icon="@tui.x" />
@@ -326,7 +348,7 @@
 @if (showEditModal() && selectedAdmin()) {
   <div class="modal-overlay" (click)="closeEditModal()">
     <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
-      <div tuiHeader class="modal-header">
+      <div class="modal-header">
         <h2>EDIT ADMIN</h2>
         <button tuiIconButton appearance="flat" size="s" (click)="closeEditModal()">
           <tui-icon icon="@tui.x" />
@@ -415,7 +437,7 @@
 @if (showDeleteModal() && selectedAdmin()) {
   <div class="modal-overlay" (click)="closeDeleteModal()">
     <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
-      <div tuiHeader class="modal-header">
+      <div class="modal-header">
         <h2>DELETE ADMIN</h2>
         <button tuiIconButton appearance="flat" size="s" (click)="closeDeleteModal()">
           <tui-icon icon="@tui.x" />
@@ -434,7 +456,7 @@
           <tui-icon icon="@tui.alert-triangle" class="warning-icon" />
           <p>
             Are you sure you want to delete
-            <strong>{{ selectedAdmin()!.full_name }}</strong>?
+            <strong>{{ selectedAdmin()!.fullName }}</strong>?
           </p>
           <p class="warning-text">This action cannot be undone.</p>
         </div>

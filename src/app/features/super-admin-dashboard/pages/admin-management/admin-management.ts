@@ -1,25 +1,20 @@
-import {Component, computed, inject, signal} from '@angular/core';
-import {AdminManagementApiService} from '../../../../core/services/admin-management-api-service';
-import {AdminApiService} from '../../../../core/services/admin-api.service';
-import {AdminUser, CreateAdminDto, UpdateAdminDto} from '../../../../core/models/admin-management.model';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {
-  TuiButton,
-  TuiDataList,
-  TuiDropdown,
-  TuiError, TuiHint,
-  TuiIcon,
-  TuiLabel,
-  TuiLoader,
-  TuiTextfield
-} from '@taiga-ui/core';
-import {TuiAvatar, TuiBadge, TuiSwitch} from '@taiga-ui/kit';
-import {TuiCardLarge, TuiHeader} from '@taiga-ui/layout';
-import {TuiTable} from '@taiga-ui/addon-table';
-import {TuiInputModule, TuiSelectModule} from '@taiga-ui/legacy';
+import { Component, inject, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TuiButton, TuiHint, TuiIcon, TuiLabel, TuiLoader, TuiTextfield } from '@taiga-ui/core';
+import { TuiAvatar, TuiSwitch } from '@taiga-ui/kit';
+import { TuiCardLarge } from '@taiga-ui/layout';
+import { TuiTable } from '@taiga-ui/addon-table';
+import { AdminManagementApiService } from '../../../../core/services/admin-management-api-service';
+import { AdminApiService } from '../../../../core/services/admin-api.service';
+import { AdminUser, CreateAdminDto, UpdateAdminDto } from '../../../../core/models/admin-management.model';
 
 interface RoleOption {
+  id: number;
+  name: string;
+}
+
+interface Team {
   id: number;
   name: string;
 }
@@ -31,21 +26,14 @@ interface RoleOption {
     FormsModule,
     TuiButton,
     TuiIcon,
-    TuiDataList,
-    TuiDropdown,
     TuiLabel,
-    TuiError,
     TuiLoader,
     TuiTextfield,
     TuiSwitch,
-    TuiBadge,
     TuiAvatar,
     TuiCardLarge,
-    TuiHeader,
     TuiTable,
     TuiHint,
-    TuiInputModule,
-    TuiSelectModule,
   ],
   templateUrl: './admin-management.html',
   styleUrl: './admin-management.less',
@@ -54,7 +42,7 @@ export class AdminManagement {
   private readonly adminApi = inject(AdminManagementApiService);
   private readonly teamsApi = inject(AdminApiService);
 
-  // State signals
+  // State
   readonly admins = signal<AdminUser[]>([]);
   readonly loading = signal(false);
   readonly totalAdmins = signal(0);
@@ -62,18 +50,19 @@ export class AdminManagement {
   readonly pageSize = signal(20);
   readonly hasMore = signal(false);
 
-  // Filter signals
+  // Filters
   readonly searchTerm = signal('');
   readonly roleFilter = signal<string>('all');
   readonly statusFilter = signal<'all' | 'active' | 'inactive'>('all');
+  readonly teamFilter = signal<string>('all');
 
-  // Modal signals
+  // Modals
   readonly showCreateModal = signal(false);
   readonly showEditModal = signal(false);
   readonly showDeleteModal = signal(false);
   readonly selectedAdmin = signal<AdminUser | null>(null);
 
-  // Form signals
+  // Forms
   readonly createForm = signal<CreateAdminDto>({
     email: '',
     password: '',
@@ -89,12 +78,12 @@ export class AdminManagement {
     isActive: true,
   });
 
-  // Error signals
+  // Errors
   readonly createError = signal<string | null>(null);
   readonly editError = signal<string | null>(null);
   readonly deleteError = signal<string | null>(null);
 
-  // Available roles
+  // Data
   readonly roles: RoleOption[] = [
     { id: 1, name: 'Super Admin' },
     { id: 2, name: 'League Admin' },
@@ -103,40 +92,34 @@ export class AdminManagement {
     { id: 5, name: 'Game Admin' },
   ];
 
-  // Teams list
-  readonly teams = signal<any[]>([]);
-
-  // Table columns
+  readonly teams = signal<Team[]>([]);
   readonly columns = ['avatar', 'name', 'email', 'role', 'status', 'lastLogin', 'actions'];
 
-  // Computed filtered admins
-  readonly filteredAdmins = computed(() => {
+  // Client-side filtered list for display
+  readonly displayedAdmins = computed(() => {
     let filtered = this.admins();
-
-    // Search filter
-    const search = this.searchTerm().toLowerCase();
+    
+    // Filter by team if team_admin is selected and a specific team is chosen
+    const teamFilterValue = this.teamFilter();
+    if (this.roleFilter() === 'team_admin' && teamFilterValue !== 'all') {
+      filtered = filtered.filter(admin => admin.team?.id === Number(teamFilterValue));
+    }
+    
+    // Filter by search term
+    const search = this.searchTerm().toLowerCase().trim();
     if (search) {
       filtered = filtered.filter(
         (admin) =>
-          admin.full_name.toLowerCase().includes(search) ||
-          admin.email.toLowerCase().includes(search) ||
+          admin.fullName?.toLowerCase().includes(search) ||
+          admin.email?.toLowerCase().includes(search) ||
           admin.username?.toLowerCase().includes(search)
       );
     }
 
-    // Role filter
-    if (this.roleFilter() !== 'all') {
-      filtered = filtered.filter((admin) => admin.role.role_name === this.roleFilter());
-    }
-
-    // Status filter
-    if (this.statusFilter() !== 'all') {
-      const isActive = this.statusFilter() === 'active';
-      filtered = filtered.filter((admin) => admin.is_active === isActive);
-    }
-
     return filtered;
   });
+
+  readonly totalPages = computed(() => Math.ceil(this.totalAdmins() / this.pageSize()));
 
   ngOnInit(): void {
     this.loadAdmins();
@@ -145,20 +128,19 @@ export class AdminManagement {
 
   loadAdmins(): void {
     this.loading.set(true);
-
     const roleParam = this.roleFilter() !== 'all' ? this.roleFilter() : undefined;
-    const isActiveParam =
-      this.statusFilter() !== 'all' ? this.statusFilter() === 'active' : undefined;
+    const isActiveParam = this.statusFilter() !== 'all' ? this.statusFilter() === 'active' : undefined;
 
     this.adminApi.getAdmins(roleParam, isActiveParam, this.currentPage(), this.pageSize()).subscribe({
       next: (response) => {
-        this.admins.set(response.data);
-        this.totalAdmins.set(response.meta.total);
-        this.hasMore.set(response.meta.hasMore);
+        this.admins.set(response.data || []);
+        this.totalAdmins.set(response.meta?.total || 0);
+        this.hasMore.set(response.meta?.hasMore || false);
         this.loading.set(false);
       },
       error: (error) => {
         console.error('Error loading admins:', error);
+        this.admins.set([]);
         this.loading.set(false);
       },
     });
@@ -166,12 +148,8 @@ export class AdminManagement {
 
   loadTeams(): void {
     this.teamsApi.getTeams().subscribe({
-      next: (teams) => {
-        this.teams.set(teams);
-      },
-      error: (error) => {
-        console.error('Error loading teams:', error);
-      },
+      next: (teams) => this.teams.set(teams || []),
+      error: (error) => console.error('Error loading teams:', error),
     });
   }
 
@@ -181,6 +159,8 @@ export class AdminManagement {
 
   onRoleFilterChange(value: string): void {
     this.roleFilter.set(value);
+    // Reset team filter when role changes
+    this.teamFilter.set('all');
     this.currentPage.set(1);
     this.loadAdmins();
   }
@@ -191,7 +171,14 @@ export class AdminManagement {
     this.loadAdmins();
   }
 
+  onTeamFilterChange(value: string): void {
+    this.teamFilter.set(value);
+    this.currentPage.set(1);
+    this.loadAdmins();
+  }
+
   onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
     this.loadAdmins();
   }
@@ -222,9 +209,8 @@ export class AdminManagement {
     }
 
     this.loading.set(true);
-
     this.adminApi.createAdmin(form).subscribe({
-      next: (response) => {
+      next: () => {
         this.loading.set(false);
         this.closeCreateModal();
         this.loadAdmins();
@@ -239,10 +225,10 @@ export class AdminManagement {
   openEditModal(admin: AdminUser): void {
     this.selectedAdmin.set(admin);
     this.editForm.set({
-      fullName: admin.full_name,
-      roleId: admin.role.id,
+      fullName: admin.fullName,
+      roleId: admin.role?.id,
       teamId: admin.team?.id,
-      isActive: admin.is_active,
+      isActive: admin.isActive,
     });
     this.editError.set(null);
     this.showEditModal.set(true);
@@ -261,7 +247,7 @@ export class AdminManagement {
     this.loading.set(true);
 
     this.adminApi.updateAdmin(admin.id, this.editForm()).subscribe({
-      next: (response) => {
+      next: () => {
         this.loading.set(false);
         this.closeEditModal();
         this.loadAdmins();
@@ -292,7 +278,7 @@ export class AdminManagement {
     this.loading.set(true);
 
     this.adminApi.deleteAdmin(admin.id).subscribe({
-      next: (response) => {
+      next: () => {
         this.loading.set(false);
         this.closeDeleteModal();
         this.loadAdmins();
@@ -306,12 +292,8 @@ export class AdminManagement {
 
   toggleAdminStatus(admin: AdminUser): void {
     this.adminApi.toggleActive(admin.id).subscribe({
-      next: (response) => {
-        this.loadAdmins();
-      },
-      error: (error) => {
-        console.error('Error toggling admin status:', error);
-      },
+      next: () => this.loadAdmins(),
+      error: (error) => console.error('Error toggling admin status:', error),
     });
   }
 
@@ -325,6 +307,7 @@ export class AdminManagement {
   }
 
   formatDate(dateString: string): string {
+    if (!dateString) return 'Never';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -337,13 +320,24 @@ export class AdminManagement {
 
   getRoleBadgeColor(roleName: string): string {
     const roleColors: Record<string, string> = {
-      'Super Admin': '#E45E2C',
-      'League Admin': '#3A2634',
-      'Team Admin': '#C53A34',
-      'Content Admin': '#10b981',
-      'Game Admin': '#f59e0b',
+      'super_admin': '#E45E2C',
+      'league_admin': '#3A2634',
+      'team_admin': '#C53A34',
+      'content_admin': '#10b981',
+      'game_admin': '#f59e0b',
     };
     return roleColors[roleName] || '#6b7280';
+  }
+  
+  getRoleDisplayName(roleName: string): string {
+    const roleNames: Record<string, string> = {
+      'super_admin': 'Super Admin',
+      'league_admin': 'League Admin',
+      'team_admin': 'Team Admin',
+      'content_admin': 'Content Admin',
+      'game_admin': 'Game Admin',
+    };
+    return roleNames[roleName] || roleName;
   }
 
   protected readonly Math = Math;
