@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TuiButton, TuiHint, TuiIcon, TuiLabel, TuiLoader, TuiTextfield } from '@taiga-ui/core';
+import { TuiButton, TuiHint, TuiIcon, TuiLabel, TuiLoader, TuiTextfield, TuiAlertService } from '@taiga-ui/core';
 import { TuiAvatar, TuiSwitch } from '@taiga-ui/kit';
 import { TuiCardLarge } from '@taiga-ui/layout';
 import { TuiTable } from '@taiga-ui/addon-table';
@@ -41,6 +41,7 @@ interface Team {
 export class AdminManagement {
   private readonly adminApi = inject(AdminManagementApiService);
   private readonly teamsApi = inject(AdminApiService);
+  private readonly alerts = inject(TuiAlertService);
 
   // State
   readonly admins = signal<AdminUser[]>([]);
@@ -327,6 +328,14 @@ export class AdminManagement {
         this.loading.set(false);
         this.closeCreateModal();
         this.loadAdmins();
+        // Show success toast
+        this.alerts
+          .open('Admin created successfully', {
+            appearance: 'success',
+            label: 'Success',
+            autoClose: 3000,
+          })
+          .subscribe();
       },
       error: (error) => {
         this.loading.set(false);
@@ -401,13 +410,27 @@ export class AdminManagement {
         console.log('Update response:', response);
         // Optionally reload to sync with server (silent background refresh)
         this.loadAdminsInBackground();
+        // Show success toast
+        this.alerts
+          .open('Admin updated successfully', {
+            appearance: 'success',
+            label: 'Success',
+            autoClose: 3000,
+          })
+          .subscribe();
       },
       error: (error) => {
         console.error('Update error:', error);
         // Revert the optimistic update on error and show the error
         this.loadAdmins();
-        // Could show a toast notification here instead
-        alert('Failed to update admin: ' + (error.error?.message || 'Unknown error'));
+        // Show error toast
+        this.alerts
+          .open('Failed to update admin: ' + (error.error?.message || 'Unknown error'), {
+            appearance: 'error',
+            label: 'Update Failed',
+            autoClose: 5000,
+          })
+          .subscribe();
       },
     });
   }
@@ -443,13 +466,27 @@ export class AdminManagement {
         console.log('Admin deleted successfully');
         // Optionally reload to sync with server
         this.loadAdminsInBackground();
+        // Show success toast
+        this.alerts
+          .open('Admin deleted successfully', {
+            appearance: 'success',
+            label: 'Success',
+            autoClose: 3000,
+          })
+          .subscribe();
       },
       error: (error) => {
         console.error('Delete error:', error);
         // Revert the optimistic update on error
         this.loadAdmins();
-        // Could show a toast notification here instead
-        alert('Failed to delete admin: ' + (error.error?.message || 'Unknown error'));
+        // Show error toast
+        this.alerts
+          .open('Failed to delete admin: ' + (error.error?.message || 'Unknown error'), {
+            appearance: 'error',
+            label: 'Delete Failed',
+            autoClose: 5000,
+          })
+          .subscribe();
       },
     });
   }
