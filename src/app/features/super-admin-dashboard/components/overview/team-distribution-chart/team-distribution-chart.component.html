@@ -7,11 +7,12 @@
   @if (data() && data().length > 0 && total() > 0) {
     <div class="chart-content">
       <div class="pie-chart-wrapper">
-        <tui-pie-chart 
+        <tui-pie-chart
+          size="l"
           [tuiHintContent]="hintContent"
           [value]="chartValue()"
         />
-        
+
         <ng-template
           #hintContent
           let-index
