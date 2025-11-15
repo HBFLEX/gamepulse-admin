@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiIcon } from '@taiga-ui/core';
 import { DashboardStats } from '../../../../../core/models/admin.models';
@@ -22,7 +22,7 @@ interface StatCard {
 export class StatsCardsComponent {
   readonly stats = input<DashboardStats | null>();
 
-  get cards(): StatCard[] {
+  readonly cards = computed<StatCard[]>(() => {
     const data = this.stats();
     if (!data) return [];
 
@@ -58,5 +58,5 @@ export class StatsCardsComponent {
         color: '#E45E2C',
       },
     ];
-  }
+  });
 }

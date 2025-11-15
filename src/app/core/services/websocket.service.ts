@@ -130,18 +130,22 @@ export class WebSocketService implements OnDestroy {
     });
 
     this.socket.on(RealtimeEvent.MULTIPLE_GAMES_UPDATE, (games: LiveGameUpdate[]) => {
+      console.log('🔥 MULTIPLE_GAMES_UPDATE event received from server, count:', games?.length);
       this.liveGamesSubject.next(games);
     });
 
     this.socket.on(RealtimeEvent.GAME_UPDATE, (game: LiveGameUpdate) => {
+      console.log('📡 GAME_UPDATE event received from server:', game);
       this.gameUpdateSubject.next(game);
     });
 
     this.socket.on(RealtimeEvent.GAME_START, (data: any) => {
+      console.log('🎬 GAME_START event received from server:', data);
       this.gameStartSubject.next(data);
     });
 
     this.socket.on(RealtimeEvent.GAME_END, (data: any) => {
+      console.log('🏁 GAME_END event received from server:', data);
       this.gameEndSubject.next(data);
     });
 
@@ -156,7 +160,10 @@ export class WebSocketService implements OnDestroy {
 
   subscribeToLeague(): void {
     if (this.socket?.connected) {
+      console.log('📢 Subscribing to league-wide updates...');
       this.socket.emit(RealtimeEvent.SUBSCRIBE_LEAGUE, {});
+    } else {
+      console.warn('⚠️ Cannot subscribe to league: socket not connected');
     }
   }
 
