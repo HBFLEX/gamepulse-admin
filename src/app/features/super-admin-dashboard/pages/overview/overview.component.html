@@ -2,10 +2,10 @@
   <!-- WebSocket Connection Status (for debugging) -->
   @if (!isWebSocketConnected()) {
     <div class="connection-banner warning">
-      <span>⚠️ Real-time updates disconnected. Attempting to reconnect...</span>
+      <span>Real-time updates disconnected. Attempting to reconnect...</span>
     </div>
   }
-  
+
   @if (loading()) {
     <div class="loading-container">
       <tui-loader [size]="'xl'"></tui-loader>
