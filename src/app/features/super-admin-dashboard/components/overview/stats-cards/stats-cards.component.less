@@ -27,18 +27,20 @@
 }
 
 .stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--card-color), var(--card-color));
-  opacity: 0.1;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-
+  position: relative;
+  background: rgba(0, 0, 0, 0.05);
+  
   tui-icon {
-    color: var(--card-color);
-    font-size: 1.25rem;
+    font-size: 1.75rem !important;
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    display: block !important;
   }
 }
 
@@ -124,7 +126,7 @@
     }
   }
 
-  .stat-icon {
+  .stat-icon::before {
     opacity: 0.15;
   }
 }
