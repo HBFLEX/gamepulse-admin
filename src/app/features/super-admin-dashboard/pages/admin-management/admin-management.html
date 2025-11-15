@@ -119,11 +119,46 @@
           <thead>
           <tr tuiThGroup>
             <th *tuiHead="'avatar'" tuiTh></th>
-            <th *tuiHead="'name'" tuiTh>Name</th>
-            <th *tuiHead="'email'" tuiTh>Email</th>
-            <th *tuiHead="'role'" tuiTh>Role</th>
-            <th *tuiHead="'status'" tuiTh>Status</th>
-            <th *tuiHead="'lastLogin'" tuiTh>Last Login</th>
+            <th *tuiHead="'name'" tuiTh class="sortable-header" (click)="onSort('name')">
+              <span class="header-content">
+                Name
+                @if (sortColumn() === 'name') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'email'" tuiTh class="sortable-header" (click)="onSort('email')">
+              <span class="header-content">
+                Email
+                @if (sortColumn() === 'email') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'role'" tuiTh class="sortable-header" (click)="onSort('role')">
+              <span class="header-content">
+                Role
+                @if (sortColumn() === 'role') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'status'" tuiTh class="sortable-header" (click)="onSort('status')">
+              <span class="header-content">
+                Status
+                @if (sortColumn() === 'status') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'lastLogin'" tuiTh class="sortable-header" (click)="onSort('lastLogin')">
+              <span class="header-content">
+                Last Login
+                @if (sortColumn() === 'lastLogin') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
             <th *tuiHead="'actions'" tuiTh class="actions-header">Actions</th>
           </tr>
           </thead>
