@@ -5,16 +5,43 @@
       <h1 class="page-title">ADMIN MANAGEMENT</h1>
       <p class="page-subtitle">Manage system administrators and their roles</p>
     </div>
-    <button
-      tuiButton
-      appearance="primary"
-      size="l"
-      class="create-button"
-      (click)="openCreateModal()"
-    >
-      <tui-icon icon="@tui.plus" />
-      Create Admin
-    </button>
+    <div class="header-actions">
+      @if (selectedCount() > 0) {
+        <div class="bulk-actions">
+          <span class="selected-count">{{ selectedCount() }} selected</span>
+          <button
+            tuiButton
+            appearance="secondary"
+            size="l"
+            class="bulk-button"
+            (click)="openBulkRoleUpdateModal()"
+          >
+            <tui-icon icon="@tui.edit-2" />
+            Update Roles
+          </button>
+          <button
+            tuiButton
+            appearance="secondary"
+            size="l"
+            class="bulk-delete-button"
+            (click)="openBulkDeleteModal()"
+          >
+            <tui-icon icon="@tui.trash-2" />
+            Delete Selected
+          </button>
+        </div>
+      }
+      <button
+        tuiButton
+        appearance="primary"
+        size="l"
+        class="create-button"
+        (click)="openCreateModal()"
+      >
+        <tui-icon icon="@tui.plus" />
+        Create Admin
+      </button>
+    </div>
   </div>
 
   <!-- Filters Card -->
@@ -118,6 +145,15 @@
         <table tuiTable [columns]="columns" class="admins-table">
           <thead>
           <tr tuiThGroup>
+            <th *tuiHead="'select'" tuiTh class="select-header">
+              <input
+                type="checkbox"
+                class="select-checkbox"
+                [checked]="isAllSelected()"
+                [indeterminate]="isSomeSelected()"
+                (change)="toggleSelectAll()"
+              />
+            </th>
             <th *tuiHead="'avatar'" tuiTh></th>
             <th *tuiHead="'name'" tuiTh class="sortable-header" (click)="onSort('name')">
               <span class="header-content">
@@ -165,6 +201,14 @@
           <tbody tuiTbody [data]="displayedAdmins()">
             @for (admin of displayedAdmins(); track admin.id) {
               <tr tuiTr>
+                <td *tuiCell="'select'" tuiTd>
+                  <input
+                    type="checkbox"
+                    class="select-checkbox"
+                    [checked]="isAdminSelected(admin.id)"
+                    (change)="toggleSelectAdmin(admin.id)"
+                  />
+                </td>
                 <td *tuiCell="'avatar'" tuiTd>
                   <tui-avatar size="s" class="admin-avatar">
                     {{ getInitials(admin.fullName) }}
@@ -527,6 +571,103 @@
             <tui-loader size="s"></tui-loader>
           }
           Delete Admin
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Bulk Delete Modal -->
+@if (showBulkDeleteModal()) {
+  <div class="modal-overlay" (click)="closeBulkDeleteModal()">
+    <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>BULK DELETE ADMINS</h2>
+        <button tuiIconButton appearance="flat" size="s" (click)="closeBulkDeleteModal()">
+          <tui-icon icon="@tui.x" />
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="delete-warning">
+          <tui-icon icon="@tui.alert-triangle" class="warning-icon" />
+          <p>
+            Are you sure you want to delete
+            <strong>{{ selectedCount() }} admin(s)</strong>?
+          </p>
+          <p class="warning-text">This action cannot be undone.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button tuiButton appearance="secondary" size="m" (click)="closeBulkDeleteModal()">
+          Cancel
+        </button>
+        <button
+          tuiButton
+          appearance="primary"
+          size="m"
+          class="delete-confirm-button"
+          [disabled]="bulkActionLoading()"
+          (click)="onBulkDeleteConfirm()"
+        >
+          @if (bulkActionLoading()) {
+            <tui-loader size="s"></tui-loader>
+          }
+          Delete {{ selectedCount() }} Admin(s)
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Bulk Role Update Modal -->
+@if (showBulkRoleUpdateModal()) {
+  <div class="modal-overlay" (click)="closeBulkRoleUpdateModal()">
+    <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>UPDATE ROLES</h2>
+        <button tuiIconButton appearance="flat" size="s" (click)="closeBulkRoleUpdateModal()">
+          <tui-icon icon="@tui.x" />
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="bulk-info">Update role for {{ selectedCount() }} selected admin(s)</p>
+        
+        <form class="admin-form">
+          <div class="form-group">
+            <label tuiLabel>New Role *</label>
+            <select
+              class="form-select"
+              [ngModel]="bulkRoleId()"
+              (ngModelChange)="bulkRoleId.set($event)"
+              name="bulkRoleId"
+            >
+              <option [value]="undefined">Select a role...</option>
+              @for (role of roles(); track role.id) {
+                <option [value]="role.id">{{ role.name }}</option>
+              }
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button tuiButton appearance="secondary" size="m" (click)="closeBulkRoleUpdateModal()">
+          Cancel
+        </button>
+        <button
+          tuiButton
+          appearance="primary"
+          size="m"
+          [disabled]="bulkActionLoading() || !bulkRoleId()"
+          (click)="onBulkRoleUpdateConfirm()"
+        >
+          @if (bulkActionLoading()) {
+            <tui-loader size="s"></tui-loader>
+          }
+          Update {{ selectedCount() }} Admin(s)
         </button>
       </div>
     </div>

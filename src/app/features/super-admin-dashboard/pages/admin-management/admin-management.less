@@ -22,6 +22,55 @@
 
 .header-left { flex: 1; }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  @media (max-width: 768px) { flex-direction: column; width: 100%; }
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--tui-background-elevation-1);
+  border-radius: 0.5rem;
+  border: 1px solid var(--tui-border-normal);
+  @media (max-width: 768px) { width: 100%; justify-content: space-between; }
+}
+
+.selected-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.938rem;
+  letter-spacing: 0.5px;
+  color: var(--tui-text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bulk-button {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  &:hover:not([data-disabled]) {
+    background: rgba(197, 58, 52, 0.1) !important;
+    color: #C53A34 !important;
+    border-color: #C53A34 !important;
+  }
+}
+
+.bulk-delete-button {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  &:hover:not([data-disabled]) {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+    border-color: #ef4444 !important;
+  }
+}
+
 .page-title, .page-subtitle, .create-button { font-family: 'Bebas Neue', sans-serif; }
 
 .page-title {
@@ -121,6 +170,7 @@
   border-collapse: collapse;
   th { text-align: left; font-family: 'Bebas Neue', sans-serif; font-size: 0.875rem; letter-spacing: 1px; color: var(--tui-text-secondary); padding: 1rem; border-bottom: 2px solid var(--tui-border-normal); white-space: nowrap; }
   th.actions-header { text-align: right; }
+  th.select-header { width: 50px; text-align: center; }
   th.sortable-header { 
     cursor: pointer; 
     user-select: none;
@@ -139,6 +189,16 @@
   
   // Ensure interactive elements are clickable
   input, button, select, a { pointer-events: auto; cursor: pointer; }
+}
+
+.select-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #C53A34;
+  &:hover {
+    transform: scale(1.1);
+  }
 }
 
 .header-content {
@@ -221,5 +281,15 @@
 
 .delete-confirm-button { background-color: #ef4444 !important; border-color: #ef4444 !important; }
 .delete-confirm-button:hover:not([data-disabled]) { background-color: #dc2626 !important; border-color: #dc2626 !important; }
+
+.bulk-info {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  color: var(--tui-text-secondary);
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
