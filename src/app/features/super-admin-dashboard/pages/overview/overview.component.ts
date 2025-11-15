@@ -127,12 +127,8 @@ export class OverviewComponent implements OnInit, OnDestroy {
   }
 
   private setupWebSocketListeners(): void {
-    console.log('📡 Setting up WebSocket event listeners in Overview component');
-    console.log('✅ WebSocket connected:', this.websocket.connected());
-
     // Listen to real-time connection stats updates
     this.websocket.connectionStats$.pipe(takeUntil(this.destroy$)).subscribe((stats) => {
-      console.log('📊 Real-time connection stats update:', stats);
 
       const currentActivity = this.realtimeActivity();
       if (currentActivity) {
@@ -146,14 +142,12 @@ export class OverviewComponent implements OnInit, OnDestroy {
     });
 
     this.websocket.liveGames$.pipe(takeUntil(this.destroy$)).subscribe((games) => {
-      console.log('🔴 Live games from WebSocket:', games.length);
-
       // Update ONLY the live games count, preserve other activity data
       const currentActivity = this.realtimeActivity();
       if (currentActivity) {
         this.realtimeActivity.set({
           ...currentActivity,
-          liveGames: games.length, // Use WebSocket count as source of truth
+          liveGames: games.length,
         });
       }
     });
