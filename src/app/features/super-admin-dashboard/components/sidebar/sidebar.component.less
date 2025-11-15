@@ -95,7 +95,8 @@
     color: #E45E2C;
   }
 
-  &.expanded {
+  &.expanded,
+  &.active {
     background: rgba(228, 94, 44, 0.1);
     color: #E45E2C;
   }
@@ -108,7 +109,8 @@
       color: #C53A34;
     }
 
-    &.expanded {
+    &.expanded,
+    &.active {
       background: rgba(197, 58, 52, 0.1);
       color: #C53A34;
     }
@@ -155,7 +157,8 @@
   letter-spacing: 0.8px;
   transition: all 0.2s ease;
 
-  &:hover {
+  &:hover,
+  &.active {
     background: rgba(228, 94, 44, 0.1);
     color: #E45E2C;
   }
@@ -163,7 +166,8 @@
   .light-theme & {
     color: #666666;
 
-    &:hover {
+    &:hover,
+    &.active {
       background: rgba(197, 58, 52, 0.1);
       color: #C53A34;
     }

@@ -39,7 +39,11 @@
           @if (item.expanded && !isCollapsed()) {
             <div class="nav-children">
               @for (child of item.children; track child.label) {
-                <a class="nav-child" [href]="child.route">
+                <a 
+                  class="nav-child" 
+                  [routerLink]="child.route"
+                  routerLinkActive="active"
+                >
                   <tui-icon [icon]="child.icon" class="nav-icon" />
                   <span class="nav-label">{{ child.label }}</span>
                 </a>
@@ -48,7 +52,11 @@
           }
         </div>
       } @else {
-        <a class="nav-item" [href]="item.route">
+        <a 
+          class="nav-item" 
+          [routerLink]="item.route"
+          routerLinkActive="active"
+        >
           <tui-icon [icon]="item.icon" class="nav-icon" />
           @if (!isCollapsed()) {
             <span class="nav-label">{{ item.label }}</span>

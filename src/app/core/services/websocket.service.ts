@@ -73,13 +73,10 @@ export class WebSocketService implements OnDestroy {
 
   connect(token?: string): void {
     if (this.socket?.connected) {
-      console.log('Socket.IO already connected');
       return;
     }
 
     const wsUrl = environment.apiUrl.replace('/api/v1', '').replace('http', 'ws');
-
-    console.log('Connecting to Socket.IO:', `${wsUrl}/realtime`);
 
     try {
       const socketOptions: any = {
@@ -95,15 +92,12 @@ export class WebSocketService implements OnDestroy {
         socketOptions.query = {
           token: token
         };
-
-        console.log('Connecting with authentication token');
       }
 
       this.socket = io(`${wsUrl}/realtime`, socketOptions);
 
       this.setupEventHandlers();
     } catch (error) {
-      console.error('Error creating Socket.IO connection:', error);
       this.connected.set(false);
     }
   }
@@ -113,7 +107,6 @@ export class WebSocketService implements OnDestroy {
 
     // Connection events
     this.socket.on('connect', () => {
-      console.log('Socket.IO connected:', this.socket?.id);
       this.connected.set(true);
       this.reconnectAttempts = 0;
 
@@ -122,40 +115,33 @@ export class WebSocketService implements OnDestroy {
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Socket.IO disconnected:', reason);
       this.connected.set(false);
       this.clientId.set(null);
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket.IO connection error:', error);
       this.connected.set(false);
       this.reconnectAttempts++;
     });
 
     // Custom events
     this.socket.on(RealtimeEvent.CONNECTION_SUCCESS, (data: { clientId: string; timestamp: string }) => {
-      console.log('Connection success:', data);
       this.clientId.set(data.clientId);
     });
 
     this.socket.on(RealtimeEvent.MULTIPLE_GAMES_UPDATE, (games: LiveGameUpdate[]) => {
-      console.log('Live games update:', games);
       this.liveGamesSubject.next(games);
     });
 
     this.socket.on(RealtimeEvent.GAME_UPDATE, (game: LiveGameUpdate) => {
-      console.log('Game update:', game);
       this.gameUpdateSubject.next(game);
     });
 
     this.socket.on(RealtimeEvent.GAME_START, (data: any) => {
-      console.log('Game started:', data);
       this.gameStartSubject.next(data);
     });
 
     this.socket.on(RealtimeEvent.GAME_END, (data: any) => {
-      console.log('Game ended:', data);
       this.gameEndSubject.next(data);
     });
 
@@ -164,42 +150,36 @@ export class WebSocketService implements OnDestroy {
     });
 
     this.socket.on(RealtimeEvent.ERROR, (error: { message: string }) => {
-      console.error('Socket.IO error:', error);
       this.errorSubject.next(error);
     });
   }
 
   subscribeToLeague(): void {
     if (this.socket?.connected) {
-      console.log('Subscribing to league updates');
       this.socket.emit(RealtimeEvent.SUBSCRIBE_LEAGUE, {});
     }
   }
 
   subscribeToGame(gameId: number): void {
     if (this.socket?.connected) {
-      console.log('Subscribing to game:', gameId);
       this.socket.emit(RealtimeEvent.SUBSCRIBE_GAME, { gameId });
     }
   }
 
   unsubscribeFromGame(gameId: number): void {
     if (this.socket?.connected) {
-      console.log('Unsubscribing from game:', gameId);
       this.socket.emit(RealtimeEvent.UNSUBSCRIBE_GAME, { gameId });
     }
   }
 
   unsubscribeFromLeague(): void {
     if (this.socket?.connected) {
-      console.log('Unsubscribing from league updates');
       this.socket.emit(RealtimeEvent.UNSUBSCRIBE_LEAGUE, {});
     }
   }
 
   disconnect(): void {
     if (this.socket) {
-      console.log('Disconnecting Socket.IO');
       this.socket.disconnect();
       this.socket = null;
     }
