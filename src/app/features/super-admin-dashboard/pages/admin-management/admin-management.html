@@ -167,8 +167,8 @@
                       <input
                         tuiSwitch
                         type="checkbox"
-                        [checked]="admin.isActive"
-                        (click)="$event.stopPropagation(); toggleAdminStatus(admin)"
+                        [ngModel]="admin.isActive"
+                        (ngModelChange)="toggleAdminStatus(admin)"
                       />
                     </label>
                     <span [class.active]="admin.isActive" [class.inactive]="!admin.isActive">
@@ -305,7 +305,7 @@
           <div class="form-group">
             <label tuiLabel>Role *</label>
             <select class="form-select" [(ngModel)]="createForm().roleId" name="roleId">
-              @for (role of roles; track role.id) {
+              @for (role of roles(); track role.id) {
                 <option [value]="role.id">{{ role.name }}</option>
               }
             </select>
@@ -373,7 +373,8 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter full name"
-                [(ngModel)]="editForm().fullName"
+                [value]="editForm().fullName"
+                (input)="onFullNameChange($any($event.target).value)"
                 name="fullName"
               />
             </tui-textfield>
@@ -381,17 +382,27 @@
 
           <div class="form-group">
             <label tuiLabel>Role</label>
-            <select class="form-select" [(ngModel)]="editForm().roleId" name="roleId">
-              @for (role of roles; track role.id) {
+            <select
+              class="form-select"
+              [ngModel]="editForm().roleId"
+              (ngModelChange)="onRoleChange($event)"
+              name="roleId"
+            >
+              @for (role of roles(); track role.id) {
                 <option [value]="role.id">{{ role.name }}</option>
               }
             </select>
           </div>
 
-          @if (editForm().roleId === 3 && teams().length > 0) {
+          @if (shouldShowTeamDropdownInEdit()) {
             <div class="form-group">
               <label tuiLabel>Team</label>
-              <select class="form-select" [(ngModel)]="editForm().teamId" name="teamId">
+              <select
+                class="form-select"
+                [ngModel]="editForm().teamId"
+                (ngModelChange)="onTeamChange($event)"
+                name="teamId"
+              >
                 <option [value]="undefined">No team</option>
                 @for (team of teams(); track team.id) {
                   <option [value]="team.id">{{ team.name }}</option>
@@ -405,7 +416,8 @@
               <input
                 tuiSwitch
                 type="checkbox"
-                [(ngModel)]="editForm().isActive"
+                [checked]="editForm().isActive"
+                (change)="onActiveChange($any($event.target).checked)"
                 name="isActive"
               />
               <span>Active</span>

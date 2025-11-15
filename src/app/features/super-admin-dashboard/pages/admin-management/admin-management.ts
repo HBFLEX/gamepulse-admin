@@ -84,13 +84,13 @@ export class AdminManagement {
   readonly deleteError = signal<string | null>(null);
 
   // Data
-  readonly roles: RoleOption[] = [
+  readonly roles = signal<RoleOption[]>([
     { id: 1, name: 'Super Admin' },
     { id: 2, name: 'League Admin' },
     { id: 3, name: 'Team Admin' },
     { id: 4, name: 'Content Admin' },
     { id: 5, name: 'Game Admin' },
-  ];
+  ]);
 
   readonly teams = signal<Team[]>([]);
   readonly columns = ['avatar', 'name', 'email', 'role', 'status', 'lastLogin', 'actions'];
@@ -98,13 +98,13 @@ export class AdminManagement {
   // Client-side filtered list for display
   readonly displayedAdmins = computed(() => {
     let filtered = this.admins();
-    
+
     // Filter by team if team_admin is selected and a specific team is chosen
     const teamFilterValue = this.teamFilter();
     if (this.roleFilter() === 'team_admin' && teamFilterValue !== 'all') {
       filtered = filtered.filter(admin => admin.team?.id === Number(teamFilterValue));
     }
-    
+
     // Filter by search term
     const search = this.searchTerm().toLowerCase().trim();
     if (search) {
@@ -120,6 +120,11 @@ export class AdminManagement {
   });
 
   readonly totalPages = computed(() => Math.ceil(this.totalAdmins() / this.pageSize()));
+
+  readonly shouldShowTeamDropdownInEdit = computed(() => {
+    return this.editForm().roleId === 3 && this.teams().length > 0;
+  });
+
 
   ngOnInit(): void {
     this.loadAdmins();
@@ -148,7 +153,10 @@ export class AdminManagement {
 
   loadTeams(): void {
     this.teamsApi.getTeams().subscribe({
-      next: (teams) => this.teams.set(teams || []),
+      next: (teams) => {
+        this.teams.set(teams || []);
+        console.log('TEAMS DATA', this.teams())
+      },
       error: (error) => console.error('Error loading teams:', error),
     });
   }
@@ -163,6 +171,37 @@ export class AdminManagement {
     this.teamFilter.set('all');
     this.currentPage.set(1);
     this.loadAdmins();
+  }
+
+  onFullNameChange(newFullName: string): void {
+    this.editForm.set({
+      ...this.editForm(),
+      fullName: newFullName,
+    });
+  }
+
+  onRoleChange(newRoleId: number | string): void {
+    const roleId = typeof newRoleId === 'string' ? +newRoleId : newRoleId;
+    this.editForm.set({
+      ...this.editForm(), // Spread previous state
+      roleId: roleId,
+      teamId: undefined, // Reset team if role is not Team Admin
+    });
+  }
+
+  onTeamChange(newTeamId: number | string | undefined): void {
+    const teamId = newTeamId ? (typeof newTeamId === 'string' ? +newTeamId : newTeamId) : undefined;
+    this.editForm.set({
+      ...this.editForm(),
+      teamId: teamId,
+    });
+  }
+
+  onActiveChange(isActive: boolean): void {
+    this.editForm.set({
+      ...this.editForm(),
+      isActive: isActive,
+    });
   }
 
   onStatusFilterChange(value: 'all' | 'active' | 'inactive'): void {
@@ -182,6 +221,7 @@ export class AdminManagement {
     this.currentPage.set(page);
     this.loadAdmins();
   }
+
 
   openCreateModal(): void {
     this.createForm.set({
@@ -224,12 +264,22 @@ export class AdminManagement {
 
   openEditModal(admin: AdminUser): void {
     this.selectedAdmin.set(admin);
+
+    console.log('Opening edit modal for admin:', {
+      fullName: admin.fullName,
+      role: admin.role,
+      team: admin.team,
+      isActive: admin.isActive
+    });
+
     this.editForm.set({
       fullName: admin.fullName,
       roleId: admin.role?.id,
-      teamId: admin.team?.id,
+      teamId: admin.team?.id || undefined,
       isActive: admin.isActive,
     });
+
+    console.log('Edit form set to:', this.editForm());
     this.editError.set(null);
     this.showEditModal.set(true);
   }
@@ -246,13 +296,17 @@ export class AdminManagement {
     this.editError.set(null);
     this.loading.set(true);
 
+    console.log('Submitting edit with data:', this.editForm());
+
     this.adminApi.updateAdmin(admin.id, this.editForm()).subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('Update response:', response);
         this.loading.set(false);
         this.closeEditModal();
         this.loadAdmins();
       },
       error: (error) => {
+        console.error('Update error:', error);
         this.loading.set(false);
         this.editError.set(error.error?.message || 'Failed to update admin');
       },
@@ -291,9 +345,29 @@ export class AdminManagement {
   }
 
   toggleAdminStatus(admin: AdminUser): void {
+    // Optimistically update the UI
+    const adminIndex = this.admins().findIndex(a => a.id === admin.id);
+    if (adminIndex !== -1) {
+      const updatedAdmins = [...this.admins()];
+      updatedAdmins[adminIndex] = {
+        ...updatedAdmins[adminIndex],
+        isActive: !updatedAdmins[adminIndex].isActive
+      };
+      this.admins.set(updatedAdmins);
+    }
+
+    // Then update on the server
     this.adminApi.toggleActive(admin.id).subscribe({
-      next: () => this.loadAdmins(),
-      error: (error) => console.error('Error toggling admin status:', error),
+      next: () => {
+        console.log('Admin status toggled successfully');
+        // Optionally reload to ensure consistency
+        this.loadAdmins();
+      },
+      error: (error) => {
+        console.error('Error toggling admin status:', error);
+        // Revert the optimistic update on error
+        this.loadAdmins();
+      },
     });
   }
 
@@ -328,7 +402,7 @@ export class AdminManagement {
     };
     return roleColors[roleName] || '#6b7280';
   }
-  
+
   getRoleDisplayName(roleName: string): string {
     const roleNames: Record<string, string> = {
       'super_admin': 'Super Admin',
