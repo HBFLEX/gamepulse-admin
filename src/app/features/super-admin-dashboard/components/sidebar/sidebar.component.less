@@ -34,11 +34,11 @@
       justify-content: center;
     }
   }
-}
 
-:host-context([tuiTheme='light']) .sidebar {
-  background: #ffffff;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  &.light-theme {
+    background: #ffffff;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+  }
 }
 
 .sidebar-header {
@@ -47,10 +47,10 @@
   gap: 12px;
   padding: 20px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
 
-:host-context([tuiTheme='light']) .sidebar-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  .light-theme & {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
 }
 
 .sidebar-logo {
@@ -99,19 +99,19 @@
     background: rgba(228, 94, 44, 0.1);
     color: #E45E2C;
   }
-}
 
-:host-context([tuiTheme='light']) .nav-item {
-  color: #4a4a4a;
+  .light-theme & {
+    color: #4a4a4a;
 
-  &:hover {
-    background: rgba(197, 58, 52, 0.1);
-    color: #C53A34;
-  }
+    &:hover {
+      background: rgba(197, 58, 52, 0.1);
+      color: #C53A34;
+    }
 
-  &.expanded {
-    background: rgba(197, 58, 52, 0.1);
-    color: #C53A34;
+    &.expanded {
+      background: rgba(197, 58, 52, 0.1);
+      color: #C53A34;
+    }
   }
 }
 
@@ -137,6 +137,10 @@
 .nav-children {
   background: rgba(0, 0, 0, 0.2);
   animation: slideDown 0.3s ease-out;
+
+  .light-theme & {
+    background: rgba(0, 0, 0, 0.05);
+  }
 }
 
 .nav-child {
@@ -155,18 +159,14 @@
     background: rgba(228, 94, 44, 0.1);
     color: #E45E2C;
   }
-}
 
-:host-context([tuiTheme='light']) .nav-children {
-  background: rgba(0, 0, 0, 0.05);
-}
+  .light-theme & {
+    color: #666666;
 
-:host-context([tuiTheme='light']) .nav-child {
-  color: #666666;
-
-  &:hover {
-    background: rgba(197, 58, 52, 0.1);
-    color: #C53A34;
+    &:hover {
+      background: rgba(197, 58, 52, 0.1);
+      color: #C53A34;
+    }
   }
 }
 
@@ -233,12 +233,12 @@
   &:hover {
     background: rgba(255, 255, 255, 0.3);
   }
-}
 
-:host-context([tuiTheme='light']) .sidebar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  .light-theme & {
+    background: rgba(0, 0, 0, 0.2);
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.3);
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
   }
 }
