@@ -3,14 +3,14 @@
     <div class="stat-card" [style.--card-color]="card.color">
       <div class="stat-card-header">
         <div class="stat-icon">
-          <tui-icon [icon]="card.icon" />
+          <tui-icon [icon]="card.icon" [style.color]="card.color" />
         </div>
         <span class="stat-title">{{ card.title }}</span>
       </div>
       <div class="stat-value">{{ card.value }}</div>
       <div class="stat-footer">
         @if (card.change !== undefined) {
-          <span class="stat-change" [class.positive]="card.change > 0" [class.negative]="card.change < 0">
+          <span class="stat-change" [class.positive]="card.change >= 0" [class.negative]="card.change < 0">
             <tui-icon [icon]="card.change >= 0 ? '@tui.trending-up' : '@tui.trending-down'" />
             {{ card.change > 0 ? '+' : '' }}{{ card.change }}%
           </span>

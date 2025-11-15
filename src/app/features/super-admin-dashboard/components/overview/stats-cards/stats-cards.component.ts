@@ -28,7 +28,7 @@ export class StatsCardsComponent {
 
     return [
       {
-        icon: '@tui.play-circle',
+        icon: '@tui.bar-chart',
         title: 'Total Games',
         value: data.totalGames.toLocaleString(),
         change: data.totalGamesChange,
@@ -44,14 +44,14 @@ export class StatsCardsComponent {
         color: '#3A2634',
       },
       {
-        icon: '@tui.shield',
+        icon: '@tui.award',
         title: 'Teams',
         value: data.totalTeams,
         subtitle: 'Active',
         color: '#C53A34',
       },
       {
-        icon: '@tui.book-open',
+        icon: '@tui.file-text',
         title: 'News',
         value: data.totalNews,
         subtitle: 'Published',
