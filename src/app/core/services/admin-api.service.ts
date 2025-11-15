@@ -61,7 +61,7 @@ export class AdminApiService {
           totalGames: gamesCount,
           totalGamesChange: this.calculateTrendPercentage(response.analytics.trends),
           activeUsers: activeUsers,
-          activeUsersChange: 8, // Can be calculated from trends
+          activeUsersChange: 8,
           totalTeams: teamsCount,
           totalNews: newsCount,
         };
@@ -100,7 +100,7 @@ export class AdminApiService {
   getSystemHealth(): Observable<SystemHealth> {
     // Check multiple endpoints to determine real system health
     const startTime = Date.now();
-    
+
     const apiCheck$ = this.http.get(`${this.apiUrl}/games`, { params: new HttpParams().set('limit', '1') }).pipe(
       map(() => {
         const responseTime = Date.now() - startTime;
@@ -125,7 +125,7 @@ export class AdminApiService {
       cache: cacheCheck$,
     }).pipe(
       map((checks) => {
-        const allHealthy = checks.api.status === 'healthy' && 
+        const allHealthy = checks.api.status === 'healthy' &&
                           checks.database.status === 'healthy' &&
                           checks.cache.status === 'healthy';
 
@@ -398,6 +398,8 @@ export class AdminApiService {
       map((teams) => {
         const active = teams.filter((t) => t.is_active !== false).length;
         const inactive = teams.length - active;
+        console.log('active teams', active);
+        console.log('inactive teams', inactive);
         return {
           active,
           inactive,
