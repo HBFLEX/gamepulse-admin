@@ -1,13 +1,13 @@
-import { Component, input, output, inject, signal } from '@angular/core';
+import { Component, input, output, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TuiButton, TuiDataList, TuiDropdown, TuiIcon } from '@taiga-ui/core';
-import { TuiAvatar } from '@taiga-ui/kit';
+import { TuiAvatar, TuiSwitch } from '@taiga-ui/kit';
 import { ThemeService } from '../../../../../../core/services/theme.service';
 
 @Component({
   selector: 'app-profile-dropdown',
   standalone: true,
-  imports: [TuiButton, TuiDropdown, TuiDataList, TuiAvatar, TuiIcon, FormsModule],
+  imports: [TuiButton, TuiDropdown, TuiDataList, TuiAvatar, TuiIcon, TuiSwitch, FormsModule],
   templateUrl: './profile-dropdown.component.html',
   styleUrl: './profile-dropdown.component.less',
 })
@@ -18,6 +18,14 @@ export class ProfileDropdownComponent {
   readonly logoutClick = output<void>();
   readonly themeService = inject(ThemeService);
   readonly isOpen = signal(false);
+
+  get isDarkMode(): boolean {
+    return this.themeService.theme() === 'dark';
+  }
+
+  set isDarkMode(value: boolean) {
+    this.themeService.setTheme(value ? 'dark' : 'light');
+  }
 
   getInitials(name: string, email: string): string {
     if (name && name.trim()) {
@@ -36,9 +44,5 @@ export class ProfileDropdownComponent {
   onLogout(): void {
     this.logoutClick.emit();
     this.isOpen.set(false);
-  }
-
-  toggleTheme(): void {
-    this.themeService.toggleTheme();
   }
 }
