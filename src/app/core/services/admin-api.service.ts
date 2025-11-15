@@ -396,7 +396,6 @@ export class AdminApiService {
   getTeamsWithStatus(): Observable<{ active: number; inactive: number; total: number }> {
     return this.http.get<any>(`${this.apiUrl}/teams`).pipe(
       map((response) => {
-        // Handle both array response and object with data property
         const teams = response.data;
 
         console.log('TEAMS', teams);
