@@ -42,6 +42,7 @@
     "@taiga-ui/layout": "^4.61.0",
     "@taiga-ui/legacy": "^4.61.0",
     "rxjs": "~7.8.0",
+    "socket.io-client": "^4.8.1",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
