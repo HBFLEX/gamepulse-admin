@@ -1,0 +1,200 @@
+:host {
+  grid-area: sidebar;
+  display: flex;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 280px;
+  background: #3A2634;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex: 1;
+
+  &.collapsed {
+    width: 72px;
+
+    .sidebar-brand {
+      display: none;
+    }
+
+    .nav-label {
+      display: none;
+    }
+
+    .nav-arrow {
+      display: none;
+    }
+
+    .nav-item {
+      justify-content: center;
+    }
+  }
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-logo {
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #E45E2C;
+  white-space: nowrap;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 0;
+}
+
+.nav-item-wrapper {
+  margin-bottom: 4px;
+}
+
+.nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #d1d1d6;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 1px;
+
+  &:hover {
+    background: rgba(228, 94, 44, 0.1);
+    color: #E45E2C;
+  }
+
+  &.expanded {
+    background: rgba(228, 94, 44, 0.1);
+    color: #E45E2C;
+  }
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.nav-label {
+  flex: 1;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.nav-arrow {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+}
+
+.nav-children {
+  background: rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.3s ease-out;
+}
+
+.nav-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 48px;
+  color: #b0b0b5;
+  text-decoration: none;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(228, 94, 44, 0.1);
+    color: #E45E2C;
+  }
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 64px;
+    left: -280px;
+    bottom: 0;
+    width: 280px;
+    z-index: 200;
+    transition: left 0.3s ease;
+
+    &.mobile-open {
+      left: 0;
+    }
+
+    &.collapsed {
+      width: 280px;
+      left: -280px;
+
+      &.mobile-open {
+        left: 0;
+      }
+
+      .sidebar-brand,
+      .nav-label,
+      .nav-arrow {
+        display: block;
+      }
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}

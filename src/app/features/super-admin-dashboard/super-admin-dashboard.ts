@@ -1,8 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
-import { TuiButton, TuiIcon } from '@taiga-ui/core';
-import { TuiAccordion } from '@taiga-ui/kit';
 import { AuthService } from '../auth/services/auth-service';
-import { NgOptimizedImage } from '@angular/common';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { TopbarComponent } from './components/topbar/topbar.component';
 
 interface NavItem {
   label: string;
@@ -14,7 +13,8 @@ interface NavItem {
 
 @Component({
   selector: 'app-super-admin-dashboard',
-  imports: [TuiButton, TuiIcon, TuiAccordion, NgOptimizedImage],
+  standalone: true,
+  imports: [SidebarComponent, TopbarComponent],
   templateUrl: './super-admin-dashboard.html',
   styleUrl: './super-admin-dashboard.less',
 })
