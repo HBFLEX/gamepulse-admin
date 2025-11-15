@@ -1,8 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/services/auth-service';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TopbarComponent } from './components/topbar/topbar.component';
-import { OverviewComponent } from './pages/overview/overview.component';
 
 interface NavItem {
   label: string;
@@ -15,7 +15,7 @@ interface NavItem {
 @Component({
   selector: 'app-super-admin-dashboard',
   standalone: true,
-  imports: [SidebarComponent, TopbarComponent, OverviewComponent],
+  imports: [RouterOutlet, SidebarComponent, TopbarComponent],
   templateUrl: './super-admin-dashboard.html',
   styleUrl: './super-admin-dashboard.less',
 })
@@ -25,7 +25,7 @@ export class SuperAdminDashboard {
   readonly isMobileMenuOpen = signal(false);
 
   readonly navItems: NavItem[] = [
-    { label: 'Overview', icon: '@tui.bar-chart', route: '/super-admin' },
+    { label: 'Overview', icon: '@tui.bar-chart', route: '/super-admin/overview' },
     {
       label: 'User Management',
       icon: '@tui.users',

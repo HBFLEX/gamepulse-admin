@@ -1,4 +1,5 @@
 import { Component, input, output, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TuiIcon } from '@taiga-ui/core';
 import { NgOptimizedImage } from '@angular/common';
 import { ThemeService } from '../../../../core/services/theme.service';
@@ -14,7 +15,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [TuiIcon, NgOptimizedImage],
+  imports: [RouterLink, RouterLinkActive, TuiIcon, NgOptimizedImage],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.less',
 })
