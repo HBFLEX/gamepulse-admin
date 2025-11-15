@@ -78,18 +78,28 @@ export class WebSocketService implements OnDestroy {
     }
 
     const wsUrl = environment.apiUrl.replace('/api/v1', '').replace('http', 'ws');
-    
+
     console.log('Connecting to Socket.IO:', `${wsUrl}/realtime`);
 
     try {
-      this.socket = io(`${wsUrl}/realtime`, {
+      const socketOptions: any = {
         transports: ['websocket', 'polling'],
-        auth: token ? { token } : undefined,
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
         reconnectionAttempts: this.maxReconnectAttempts,
-      });
+      };
+
+      // Add authentication if token is provided
+      if (token) {
+        socketOptions.query = {
+          token: token
+        };
+
+        console.log('Connecting with authentication token');
+      }
+
+      this.socket = io(`${wsUrl}/realtime`, socketOptions);
 
       this.setupEventHandlers();
     } catch (error) {
@@ -106,7 +116,7 @@ export class WebSocketService implements OnDestroy {
       console.log('Socket.IO connected:', this.socket?.id);
       this.connected.set(true);
       this.reconnectAttempts = 0;
-      
+
       // Subscribe to league-wide updates
       this.subscribeToLeague();
     });
