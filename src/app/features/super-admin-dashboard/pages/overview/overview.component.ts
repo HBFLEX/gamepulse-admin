@@ -54,26 +54,20 @@ export class OverviewComponent implements OnInit, OnDestroy {
   readonly contentPerformance = signal<ContentPerformance[]>([]);
   readonly adminActions = signal<AdminAction[]>([]);
 
-  // Expose WebSocket connection state directly from the service
   readonly isWebSocketConnected = this.websocket.connected;
 
-  // Real data signals (will be populated from API)
   readonly teamDistribution = signal<any[]>([]);
   readonly contentTypes = signal<any[]>([]);
 
   ngOnInit(): void {
-    // Setup WebSocket FIRST so it's ready to receive updates
-    this.setupWebSocket();
-    // Then load dashboard data
+    this.setupWebSocketListeners();
     this.loadDashboardData();
-    // Finally setup auto-refresh
     this.setupAutoRefresh();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.websocket.disconnect();
   }
 
   private loadDashboardData(): void {
@@ -132,27 +126,14 @@ export class OverviewComponent implements OnInit, OnDestroy {
     this.loading.set(false);
   }
 
-  private setupWebSocket(): void {
-    // Get JWT token from auth service storage key
-    const token = localStorage.getItem('gp_access_token');
-
-    // Connect to Socket.IO with authentication token
-    if (token) {
-      this.websocket.connect(token);
-
-      // Log connection state after connection is established
-      setTimeout(() => {
-        console.log('✅ WebSocket connected:', this.websocket.connected());
-        console.log('📡 Setting up event listeners...');
-      }, 1000);
-    } else {
-      console.warn('No authentication token found for WebSocket connection');
-    }
+  private setupWebSocketListeners(): void {
+    console.log('📡 Setting up WebSocket event listeners in Overview component');
+    console.log('✅ WebSocket connected:', this.websocket.connected());
 
     // Listen to real-time connection stats updates
     this.websocket.connectionStats$.pipe(takeUntil(this.destroy$)).subscribe((stats) => {
       console.log('📊 Real-time connection stats update:', stats);
-      
+
       const currentActivity = this.realtimeActivity();
       if (currentActivity) {
         this.realtimeActivity.set({
@@ -164,7 +145,6 @@ export class OverviewComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Listen to live games updates - THIS IS THE SOURCE OF TRUTH
     this.websocket.liveGames$.pipe(takeUntil(this.destroy$)).subscribe((games) => {
       console.log('🔴 Live games from WebSocket:', games.length);
 
@@ -180,12 +160,11 @@ export class OverviewComponent implements OnInit, OnDestroy {
 
     // Listen to individual game updates
     this.websocket.gameUpdate$.pipe(takeUntil(this.destroy$)).subscribe((game) => {
-      console.log('Game updated:', game);
+      console.log('📡 Game updated:', game);
     });
 
-    // Listen to game start events - increment ONLY live games
+    // Listen to game start events
     this.websocket.gameStart$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
-      console.log('🎮 Game started event received:', data);
 
       // Increment live games count
       const currentActivity = this.realtimeActivity();
@@ -194,14 +173,11 @@ export class OverviewComponent implements OnInit, OnDestroy {
           ...currentActivity,
           liveGames: currentActivity.liveGames + 1,
         });
-        console.log('✅ Live games incremented to:', currentActivity.liveGames + 1);
       }
     });
 
-    // Listen to game end events - decrement ONLY live games
+    // Listen to game end events
     this.websocket.gameEnd$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
-      console.log('🏁 Game ended event received:', data);
-
       // Decrement live games count
       const currentActivity = this.realtimeActivity();
       if (currentActivity) {
@@ -209,7 +185,6 @@ export class OverviewComponent implements OnInit, OnDestroy {
           ...currentActivity,
           liveGames: Math.max(0, currentActivity.liveGames - 1),
         });
-        console.log('✅ Live games decremented to:', Math.max(0, currentActivity.liveGames - 1));
       }
     });
   }

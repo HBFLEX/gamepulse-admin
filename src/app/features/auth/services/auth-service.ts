@@ -8,6 +8,7 @@ import {
   AdminUser,
   RefreshTokenResponse,
 } from '../../../core/shared/models';
+import { WebSocketService } from '../../../core/services/websocket.service';
 
 const TOKEN_KEY = 'gp_access_token';
 const REFRESH_TOKEN_KEY = 'gp_refresh_token';
@@ -19,6 +20,7 @@ const USER_KEY = 'gp_user';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly websocket = inject(WebSocketService);
 
   private readonly _user = signal<AdminUser | null>(this.getUserFromStorage());
   private readonly _accessToken = signal<string | null>(this.getTokenFromStorage());
@@ -30,6 +32,15 @@ export class AuthService {
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
   readonly isAuthenticated = computed(() => !!this._user() && !!this._accessToken());
+
+  constructor() {
+    if (this.isAuthenticated()) {
+      const token = this._accessToken();
+      if (token) {
+        this.websocket.connect(token);
+      }
+    }
+  }
 
   async login(credentials: LoginRequest): Promise<void> {
     try {
@@ -68,6 +79,11 @@ export class AuthService {
       if (response?.access_token) {
         this._accessToken.set(response.access_token);
         localStorage.setItem(TOKEN_KEY, response.access_token);
+
+        // Reconnect WebSocket with new token
+        this.websocket.disconnect();
+        this.websocket.connect(response.access_token);
+
         return true;
       }
 
@@ -79,6 +95,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.websocket.disconnect();
     this._user.set(null);
     this._accessToken.set(null);
     this._error.set(null);
@@ -95,6 +112,8 @@ export class AuthService {
     localStorage.setItem(TOKEN_KEY, response.access_token);
     localStorage.setItem(REFRESH_TOKEN_KEY, response.refresh_token);
     localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+
+    this.websocket.connect(response.access_token);
 
     const dashboardRoute = this.getDashboardRoute(response.user.role);
     this.router.navigate([dashboardRoute]);
