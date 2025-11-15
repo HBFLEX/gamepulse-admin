@@ -393,4 +393,65 @@ export class AdminApiService {
         catchError(() => of([])),
       );
   }
+
+  // ==========================================
+  // REAL DATA FOR DASHBOARD CHARTS
+  // ==========================================
+
+  getTeamsWithStatus(): Observable<{ active: number; inactive: number; total: number }> {
+    return this.http.get<any[]>(`${this.apiUrl}/teams`).pipe(
+      map((teams) => {
+        const active = teams.filter((t) => t.is_active !== false).length;
+        const inactive = teams.length - active;
+        return {
+          active,
+          inactive,
+          total: teams.length,
+        };
+      }),
+      catchError((error) => {
+        console.error('Error fetching teams:', error);
+        return of({ active: 0, inactive: 0, total: 0 });
+      }),
+    );
+  }
+
+  getContentCounts(): Observable<{
+    news: number;
+    stories: number;
+    moments: number;
+  }> {
+    const news$ = this.http
+      .get<any>(`${this.apiUrl}/content/news`, {
+        params: new HttpParams().set('published', 'true').set('limit', '1'),
+      })
+      .pipe(
+        map((response) => response.meta?.total || response.length || 0),
+        catchError(() => of(0)),
+      );
+
+    const stories$ = this.http
+      .get<any>(`${this.apiUrl}/content/home/top-stories`, {
+        params: new HttpParams().set('limit', '1000'),
+      })
+      .pipe(
+        map((response) => (Array.isArray(response) ? response.length : 0)),
+        catchError(() => of(0)),
+      );
+
+    const moments$ = this.http
+      .get<any>(`${this.apiUrl}/content/moments`, {
+        params: new HttpParams().set('limit', '1'),
+      })
+      .pipe(
+        map((response) => response.meta?.total || response.length || 0),
+        catchError(() => of(0)),
+      );
+
+    return forkJoin({
+      news: news$,
+      stories: stories$,
+      moments: moments$,
+    });
+  }
 }
