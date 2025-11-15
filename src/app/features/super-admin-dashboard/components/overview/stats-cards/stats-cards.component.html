@@ -1,5 +1,5 @@
 <div class="stats-cards">
-  @for (card of cards; track card.title) {
+  @for (card of cards(); track card.title) {
     <div class="stat-card" [style.--card-color]="card.color">
       <div class="stat-card-header">
         <div class="stat-icon">
