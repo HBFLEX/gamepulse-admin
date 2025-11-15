@@ -1,0 +1,58 @@
+<aside
+  class="sidebar"
+  [class.collapsed]="isCollapsed()"
+  [class.mobile-open]="isMobileOpen()"
+>
+  <div class="sidebar-header">
+    <img
+      ngSrc="assets/images/gamepulse_logo.png"
+      width="40"
+      height="40"
+      alt="GamePulse Logo"
+      class="sidebar-logo"
+    />
+    @if (!isCollapsed()) {
+      <span class="sidebar-brand">GAMEPULSE</span>
+    }
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (item of navItems(); track item.label) {
+      @if (item.children) {
+        <div class="nav-item-wrapper">
+          <button
+            class="nav-item"
+            [class.expanded]="item.expanded"
+            (click)="onToggleAccordion(item)"
+          >
+            <tui-icon [icon]="item.icon" class="nav-icon" />
+            @if (!isCollapsed()) {
+              <span class="nav-label">{{ item.label }}</span>
+              <tui-icon
+                [icon]="item.expanded ? '@tui.chevron-up' : '@tui.chevron-down'"
+                class="nav-arrow"
+              />
+            }
+          </button>
+          @if (item.expanded && !isCollapsed()) {
+            <div class="nav-children">
+              @for (child of item.children; track child.label) {
+                <a class="nav-child" [href]="child.route">
+                  <tui-icon [icon]="child.icon" class="nav-icon" />
+                  <span class="nav-label">{{ child.label }}</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <a class="nav-item" [href]="item.route">
+          <tui-icon [icon]="item.icon" class="nav-icon" />
+          @if (!isCollapsed()) {
+            <span class="nav-label">{{ item.label }}</span>
+          }
+        </a>
+      }
+    }
+  </nav>
+</aside>
