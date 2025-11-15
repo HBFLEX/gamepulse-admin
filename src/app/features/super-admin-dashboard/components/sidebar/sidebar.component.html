@@ -2,6 +2,8 @@
   class="sidebar"
   [class.collapsed]="isCollapsed()"
   [class.mobile-open]="isMobileOpen()"
+  [class.light-theme]="theme() === 'light'"
+  [class.dark-theme]="theme() === 'dark'"
 >
   <div class="sidebar-header">
     <img
