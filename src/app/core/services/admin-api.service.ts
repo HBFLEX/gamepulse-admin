@@ -147,34 +147,29 @@ export class AdminApiService {
 
   getRealtimeActivity(): Observable<RealtimeActivity> {
     const liveGames$ = this.http.get<LiveGame[]>(`${this.apiUrl}/games/live`);
-
-    // Get recent analytics events (last 5 minutes for "online" users)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const analytics$ = this.http.get<AnalyticsDashboardResponse>(
-      `${this.apiUrl}/analytics/admin/dashboard`,
-      {
-        params: new HttpParams().set('startDate', fiveMinutesAgo),
-      },
-    );
+    const realtimeStats$ = this.http.get<{
+      usersOnline: number;
+      totalConnections: number;
+      activeSessions: number;
+      activeScorekeeperUsers: number;
+    }>(`${this.apiUrl}/admin/realtime/connection-stats`);
 
     return forkJoin({
       liveGames: liveGames$,
-      analytics: analytics$,
+      realtimeStats: realtimeStats$,
     }).pipe(
       map((response) => {
         const liveGamesCount = Array.isArray(response.liveGames)
           ? response.liveGames.length
           : 0;
 
-        // Estimate online users from recent events
-        const recentEvents = response.analytics.summary.totalEvents;
-        const estimatedOnline = Math.max(Math.round(recentEvents / 10), liveGamesCount * 50);
+        console.log('✅ Real-time connection stats from backend:', response.realtimeStats);
 
         return {
           liveGames: liveGamesCount,
-          usersOnline: estimatedOnline,
-          activeSessions: Math.round(estimatedOnline * 0.7),
-          activeScorekeeperUsers: Math.min(liveGamesCount * 2, 20), // 2 per game estimate
+          usersOnline: response.realtimeStats.usersOnline,
+          activeSessions: response.realtimeStats.activeSessions,
+          activeScorekeeperUsers: response.realtimeStats.activeScorekeeperUsers,
         };
       }),
       catchError((error) => {
