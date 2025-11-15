@@ -35,14 +35,13 @@
     <div class="theme-switcher">
       <div class="theme-option">
         <tui-icon icon="@tui.sun" class="theme-icon" />
-        <span class="theme-label">Light mode</span>
-        <label tuiSwitch size="s" class="theme-toggle">
-          <input
-            type="checkbox"
-            [ngModel]="themeService.theme() === 'dark'"
-            (ngModelChange)="toggleTheme()"
-          />
-        </label>
+        <span class="theme-label">Dark mode</span>
+        <input
+          tuiSwitch
+          type="checkbox"
+          [(ngModel)]="isDarkMode"
+          class="theme-toggle"
+        />
         <tui-icon icon="@tui.moon" class="theme-icon" />
       </div>
     </div>

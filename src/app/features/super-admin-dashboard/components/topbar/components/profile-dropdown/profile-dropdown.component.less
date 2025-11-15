@@ -109,6 +109,15 @@
 
 .theme-toggle {
   margin: 0 8px;
+  --tui-background-accent-1: #E45E2C;
+  --tui-background-accent-1-hover: #C53A34;
+  --tui-background-accent-1-pressed: #A32F2A;
+}
+
+:host-context([tuiTheme='light']) .theme-toggle {
+  --tui-background-accent-1: #C53A34;
+  --tui-background-accent-1-hover: #A32F2A;
+  --tui-background-accent-1-pressed: #8B2723;
 }
 
 .profile-actions {
