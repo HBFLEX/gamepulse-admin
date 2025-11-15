@@ -64,12 +64,12 @@ export class AdminManagementApiService {
   ): Observable<{
     success: boolean;
     message: string;
-    admin: { id: string; is_active: boolean; updated_at: string };
+    admin: { id: string; isActive: boolean; updatedAt: string };
   }> {
     return this.http.put<{
       success: boolean;
       message: string;
-      admin: { id: string; is_active: boolean; updated_at: string };
+      admin: { id: string; isActive: boolean; updatedAt: string };
     }>(`${this.apiUrl}/${id}/toggle-active`, {});
   }
 

@@ -1,22 +1,22 @@
 export interface AdminUser {
   id: string;
   email: string;
-  full_name: string;
-  username: string;
+  fullName: string;
+  username?: string;
   role: {
     id: number;
-    role_name: string;
+    name: string;
     permissions: string[];
   };
   team?: {
     id: number;
-    team_name: string;
-    team_city: string;
+    name: string;
+    city: string;
   } | null;
-  is_active: boolean;
-  last_login?: string;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  lastLogin?: string | null;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface AdminListResponse {

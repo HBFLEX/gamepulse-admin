@@ -371,8 +371,20 @@ export class AdminApiService {
   }
 
   getTeams(): Observable<Team[]> {
-    // Would use teams endpoint when available
-    return of([]);
+    return this.http.get<any>(`${this.apiUrl}/teams`).pipe(
+      map((response) => {
+        const teams = response.data || response || [];
+        return teams.map((team: any) => ({
+          id: team.id,
+          name: team.name || team.team_name,
+          city: team.city || team.team_city,
+        }));
+      }),
+      catchError((error) => {
+        console.error('Error fetching teams:', error);
+        return of([]);
+      }),
+    );
   }
 
   getTopStories(limit: number = 10): Observable<Story[]> {
