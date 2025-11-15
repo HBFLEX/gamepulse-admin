@@ -1,0 +1,34 @@
+<div tuiCardLarge class="performance-card">
+  <div tuiHeader class="header-content">
+    <tui-icon icon="@tui.trending-up" class="header-icon" />
+    <span>Content Performance</span>
+  </div>
+
+  <div class="performance-content">
+    @if (content().length > 0) {
+      <div class="content-list">
+        @for (item of content(); track item.id; let i = $index) {
+          <div class="content-item">
+            <div class="item-rank" [class.top-three]="i < 3">{{ i + 1 }}</div>
+            <div class="item-icon">
+              <tui-icon [icon]="getTypeIcon(item.type)" />
+            </div>
+            <div class="item-details">
+              <span class="item-title">{{ item.title }}</span>
+              <span class="item-meta">{{ item.type | titlecase }}</span>
+            </div>
+            <div class="item-views">
+              <tui-icon icon="@tui.eye" />
+              <span>{{ formatViews(item.views) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <tui-icon icon="@tui.file-text" />
+        <p>No content data available</p>
+      </div>
+    }
+  </div>
+</div>

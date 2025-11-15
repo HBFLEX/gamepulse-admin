@@ -1,0 +1,81 @@
+<div tuiCardLarge class="actions-card">
+  <div tuiHeader class="header-content">
+    <tui-icon icon="@tui.activity" class="header-icon" />
+    <span>Recent Admin Actions</span>
+    <a tuiLink class="view-all" href="/admin/logs">View All Logs →</a>
+  </div>
+
+  <div class="actions-content">
+    @if (actions() && actions().length > 0) {
+      <div class="table-wrapper">
+        <table tuiTable [columns]="columns" class="actions-table">
+          <thead>
+            <tr tuiThGroup>
+              <th *tuiHead="'user'" tuiTh>
+                <button class="sort-button" (click)="sortBy('user')">
+                  User
+                  @if (sortColumn() === 'user') {
+                    <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+                  }
+                </button>
+              </th>
+              <th *tuiHead="'action'" tuiTh>
+                <button class="sort-button" (click)="sortBy('action')">
+                  Action
+                  @if (sortColumn() === 'action') {
+                    <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+                  }
+                </button>
+              </th>
+              <th *tuiHead="'entity'" tuiTh>
+                <button class="sort-button" (click)="sortBy('entity')">
+                  Entity
+                  @if (sortColumn() === 'entity') {
+                    <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+                  }
+                </button>
+              </th>
+              <th *tuiHead="'time'" tuiTh>
+                <button class="sort-button" (click)="sortBy('time')">
+                  Time
+                  @if (sortColumn() === 'time') {
+                    <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+                  }
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody tuiTbody [data]="sortedActions()">
+            @for (action of sortedActions(); track action.id) {
+              <tr tuiTr>
+                <td *tuiCell="'user'" tuiTd>
+                  <div class="user-cell">
+                    <div class="user-avatar">{{ getUserInitial(action.user) }}</div>
+                    <span>{{ action.user }}</span>
+                  </div>
+                </td>
+                <td *tuiCell="'action'" tuiTd>
+                  <span class="action-label">{{ action.action }}</span>
+                </td>
+                <td *tuiCell="'entity'" tuiTd>
+                  <div class="entity-cell">
+                    <span class="entity-type">{{ action.entity }}</span>
+                    <span class="entity-id">#{{ action.entityId }}</span>
+                  </div>
+                </td>
+                <td *tuiCell="'time'" tuiTd>
+                  <span class="time-label">{{ getTimeAgo(action.timestamp) }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <tui-icon icon="@tui.inbox" />
+        <p>No recent actions</p>
+      </div>
+    }
+  </div>
+</div>

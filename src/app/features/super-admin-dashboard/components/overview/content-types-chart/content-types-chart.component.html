@@ -1,0 +1,36 @@
+<div tuiCardLarge class="chart-card">
+  <div tuiHeader class="header-content">
+    <tui-icon icon="@tui.bar-chart-2" class="header-icon" />
+    <span>Content by Type</span>
+  </div>
+
+  @if (data() && data().length > 0) {
+    <div class="chart-content">
+      <div class="bars-wrapper">
+        @for (item of data(); track item.type) {
+          <div class="bar-item">
+            <div class="bar-header">
+              <div class="bar-icon" [style.background-color]="item.color">
+                <tui-icon [icon]="item.icon" />
+              </div>
+              <span class="bar-label">{{ item.type }}</span>
+            </div>
+            <div class="bar-graph">
+              <div 
+                class="bar-fill" 
+                [style.width.%]="(item.count / maxValue()) * 100"
+                [style.background-color]="item.color"
+              ></div>
+            </div>
+            <span class="bar-value">{{ item.count }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <tui-icon icon="@tui.bar-chart-2" />
+      <p>No content data available</p>
+    </div>
+  }
+</div>

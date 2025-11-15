@@ -1,0 +1,130 @@
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--tui-background-elevation-1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--tui-border-normal);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-color: var(--card-color);
+  }
+}
+
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--card-color), var(--card-color));
+  opacity: 0.1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  tui-icon {
+    color: var(--card-color);
+    font-size: 1.25rem;
+  }
+}
+
+.stat-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--tui-text-secondary);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--tui-text-primary);
+  margin-bottom: 0.5rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.stat-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.813rem;
+}
+
+.stat-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+
+  &.positive {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  &.negative {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  tui-icon {
+    font-size: 0.875rem;
+  }
+}
+
+.stat-subtitle {
+  color: var(--tui-text-tertiary);
+}
+
+// Mobile responsive
+@media (max-width: 1200px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+}
+
+// Theme support
+:host-context([tuiTheme='dark']) {
+  .stat-card {
+    background: rgba(58, 38, 52, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      background: rgba(58, 38, 52, 0.5);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .stat-icon {
+    opacity: 0.15;
+  }
+}
