@@ -62,6 +62,12 @@ export class WebSocketService implements OnDestroy {
   private readonly gameEndSubject = new Subject<any>();
   private readonly heartbeatSubject = new Subject<{ timestamp: string }>();
   private readonly errorSubject = new Subject<{ message: string }>();
+  private readonly connectionStatsSubject = new Subject<{
+    usersOnline: number;
+    totalConnections: number;
+    activeSessions: number;
+    activeScorekeeperUsers: number;
+  }>();
 
   // Observables
   readonly liveGames$ = this.liveGamesSubject.asObservable();
@@ -70,6 +76,7 @@ export class WebSocketService implements OnDestroy {
   readonly gameEnd$ = this.gameEndSubject.asObservable();
   readonly heartbeat$ = this.heartbeatSubject.asObservable();
   readonly error$ = this.errorSubject.asObservable();
+  readonly connectionStats$ = this.connectionStatsSubject.asObservable();
 
   connect(token?: string): void {
     if (this.socket?.connected) {
@@ -156,6 +163,17 @@ export class WebSocketService implements OnDestroy {
     this.socket.on(RealtimeEvent.ERROR, (error: { message: string }) => {
       this.errorSubject.next(error);
     });
+
+    // Admin-specific events
+    this.socket.on('admin:stats:update', (stats: {
+      usersOnline: number;
+      totalConnections: number;
+      activeSessions: number;
+      activeScorekeeperUsers: number;
+    }) => {
+      console.log('📊 Connection stats update from server:', stats);
+      this.connectionStatsSubject.next(stats);
+    });
   }
 
   subscribeToLeague(): void {
@@ -202,5 +220,6 @@ export class WebSocketService implements OnDestroy {
     this.gameEndSubject.complete();
     this.heartbeatSubject.complete();
     this.errorSubject.complete();
+    this.connectionStatsSubject.complete();
   }
 }

@@ -53,10 +53,10 @@ export class OverviewComponent implements OnInit, OnDestroy {
   readonly userEngagement = signal<UserEngagement[]>([]);
   readonly contentPerformance = signal<ContentPerformance[]>([]);
   readonly adminActions = signal<AdminAction[]>([]);
-  
+
   // Expose WebSocket connection state directly from the service
   readonly isWebSocketConnected = this.websocket.connected;
-  
+
   // Real data signals (will be populated from API)
   readonly teamDistribution = signal<any[]>([]);
   readonly contentTypes = signal<any[]>([]);
@@ -93,22 +93,17 @@ export class OverviewComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => this.systemHealth.set(data));
 
-    // Initial load of realtime activity
-    // IMPORTANT: WebSocket will override the liveGames count if it has data
     this.adminApi
       .getRealtimeActivity()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
-        console.log('📊 Initial activity from API:', data);
-        // Only set if WebSocket hasn't already provided data
         const current = this.realtimeActivity();
         if (!current) {
           this.realtimeActivity.set(data);
         } else {
-          // Merge: keep WebSocket live games, update other metrics
           this.realtimeActivity.set({
             ...data,
-            liveGames: current.liveGames, // Keep WebSocket count
+            liveGames: current.liveGames,
           });
         }
       });
@@ -130,48 +125,55 @@ export class OverviewComponent implements OnInit, OnDestroy {
 
     // Load team distribution data
     this.loadTeamDistribution();
-    
+
     // Load content types data
     this.loadContentTypes();
-    
+
     this.loading.set(false);
   }
 
   private setupWebSocket(): void {
     // Get JWT token from auth service storage key
     const token = localStorage.getItem('gp_access_token');
-    
+
     // Connect to Socket.IO with authentication token
     if (token) {
       this.websocket.connect(token);
-      
+
       // Log connection state after connection is established
       setTimeout(() => {
         console.log('✅ WebSocket connected:', this.websocket.connected());
-        console.log('📡 Setting up game start/end event listeners...');
+        console.log('📡 Setting up event listeners...');
       }, 1000);
     } else {
       console.warn('No authentication token found for WebSocket connection');
     }
 
+    // Listen to real-time connection stats updates
+    this.websocket.connectionStats$.pipe(takeUntil(this.destroy$)).subscribe((stats) => {
+      console.log('📊 Real-time connection stats update:', stats);
+      
+      const currentActivity = this.realtimeActivity();
+      if (currentActivity) {
+        this.realtimeActivity.set({
+          liveGames: currentActivity.liveGames, // Preserve live games count
+          usersOnline: stats.usersOnline,
+          activeSessions: stats.activeSessions,
+          activeScorekeeperUsers: stats.activeScorekeeperUsers,
+        });
+      }
+    });
+
     // Listen to live games updates - THIS IS THE SOURCE OF TRUTH
     this.websocket.liveGames$.pipe(takeUntil(this.destroy$)).subscribe((games) => {
       console.log('🔴 Live games from WebSocket:', games.length);
-      
+
       // Update ONLY the live games count, preserve other activity data
       const currentActivity = this.realtimeActivity();
       if (currentActivity) {
         this.realtimeActivity.set({
           ...currentActivity,
           liveGames: games.length, // Use WebSocket count as source of truth
-        });
-      } else {
-        // Initial state - estimate other values based on live games
-        this.realtimeActivity.set({
-          liveGames: games.length,
-          usersOnline: Math.max(games.length * 50, 0),
-          activeSessions: Math.max(games.length * 35, 0),
-          activeScorekeeperUsers: Math.min(games.length * 2, 20),
         });
       }
     });
@@ -184,10 +186,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
     // Listen to game start events - increment ONLY live games
     this.websocket.gameStart$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       console.log('🎮 Game started event received:', data);
-      
-      // Note: Total games count comes from the database and should NOT be modified here
-      // Total games = all games in DB, not affected by live status changes
-      
+
       // Increment live games count
       const currentActivity = this.realtimeActivity();
       if (currentActivity) {
@@ -202,10 +201,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
     // Listen to game end events - decrement ONLY live games
     this.websocket.gameEnd$.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       console.log('🏁 Game ended event received:', data);
-      
-      // Note: Total games count comes from the database and should NOT be modified here
-      // Total games = all games in DB, not affected by live status changes
-      
+
       // Decrement live games count
       const currentActivity = this.realtimeActivity();
       if (currentActivity) {
@@ -240,7 +236,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.adminApi.getAdminActions(10).subscribe((data) => this.adminActions.set(data));
       });
-    
+
     // Refresh stats every 2 minutes
     interval(120000)
       .pipe(takeUntil(this.destroy$))
