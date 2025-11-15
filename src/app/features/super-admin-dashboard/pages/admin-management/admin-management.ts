@@ -61,6 +61,13 @@ export class AdminManagement {
   readonly sortColumn = signal<string>('');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
 
+  // Bulk Actions
+  readonly selectedAdminIds = signal<Set<string>>(new Set());
+  readonly showBulkDeleteModal = signal(false);
+  readonly showBulkRoleUpdateModal = signal(false);
+  readonly bulkRoleId = signal<number | undefined>(undefined);
+  readonly bulkActionLoading = signal(false);
+
   // Modals
   readonly showCreateModal = signal(false);
   readonly showEditModal = signal(false);
@@ -98,7 +105,7 @@ export class AdminManagement {
   ]);
 
   readonly teams = signal<Team[]>([]);
-  readonly columns = ['avatar', 'name', 'email', 'role', 'status', 'lastLogin', 'actions'];
+  readonly columns = ['select', 'avatar', 'name', 'email', 'role', 'status', 'lastLogin', 'actions'];
 
   // Client-side filtered list for display
   readonly displayedAdmins = computed(() => {
@@ -168,6 +175,17 @@ export class AdminManagement {
 
   readonly shouldShowTeamDropdownInEdit = computed(() => {
     return this.editForm().roleId === 3 && this.teams().length > 0;
+  });
+
+  readonly selectedCount = computed(() => this.selectedAdminIds().size);
+  
+  readonly isAllSelected = computed(() => {
+    const displayed = this.displayedAdmins();
+    return displayed.length > 0 && displayed.every(admin => this.selectedAdminIds().has(admin.id));
+  });
+
+  readonly isSomeSelected = computed(() => {
+    return this.selectedCount() > 0 && !this.isAllSelected();
   });
 
 
@@ -294,6 +312,211 @@ export class AdminManagement {
       this.sortColumn.set(column);
       this.sortDirection.set('asc');
     }
+  }
+
+  toggleSelectAll(): void {
+    if (this.isAllSelected()) {
+      // Deselect all
+      this.selectedAdminIds.set(new Set());
+    } else {
+      // Select all displayed admins
+      const allIds = new Set(this.displayedAdmins().map(admin => admin.id));
+      this.selectedAdminIds.set(allIds);
+    }
+  }
+
+  toggleSelectAdmin(adminId: string): void {
+    const selected = new Set(this.selectedAdminIds());
+    if (selected.has(adminId)) {
+      selected.delete(adminId);
+    } else {
+      selected.add(adminId);
+    }
+    this.selectedAdminIds.set(selected);
+  }
+
+  isAdminSelected(adminId: string): boolean {
+    return this.selectedAdminIds().has(adminId);
+  }
+
+  openBulkDeleteModal(): void {
+    if (this.selectedCount() === 0) return;
+    this.showBulkDeleteModal.set(true);
+  }
+
+  closeBulkDeleteModal(): void {
+    this.showBulkDeleteModal.set(false);
+  }
+
+  openBulkRoleUpdateModal(): void {
+    if (this.selectedCount() === 0) return;
+    this.bulkRoleId.set(undefined);
+    this.showBulkRoleUpdateModal.set(true);
+  }
+
+  closeBulkRoleUpdateModal(): void {
+    this.showBulkRoleUpdateModal.set(false);
+  }
+
+  onBulkDeleteConfirm(): void {
+    const idsToDelete = Array.from(this.selectedAdminIds());
+    if (idsToDelete.length === 0) return;
+
+    this.bulkActionLoading.set(true);
+
+    // Optimistically remove from UI
+    const updatedAdmins = this.admins().filter(admin => !idsToDelete.includes(admin.id));
+    this.admins.set(updatedAdmins);
+    this.totalAdmins.set(this.totalAdmins() - idsToDelete.length);
+    this.selectedAdminIds.set(new Set());
+    this.closeBulkDeleteModal();
+
+    // Delete on server
+    const deleteRequests = idsToDelete.map(id => this.adminApi.deleteAdmin(id));
+    
+    // Use forkJoin to wait for all deletes (you'll need to import from rxjs)
+    let completed = 0;
+    let failed = 0;
+    
+    deleteRequests.forEach(request => {
+      request.subscribe({
+        next: () => {
+          completed++;
+          if (completed + failed === idsToDelete.length) {
+            this.bulkActionLoading.set(false);
+            this.loadAdminsInBackground();
+            if (failed === 0) {
+              this.alerts
+                .open(`Successfully deleted ${completed} admin(s)`, {
+                  appearance: 'success',
+                  label: 'Success',
+                  autoClose: 3000,
+                })
+                .subscribe();
+            } else {
+              this.alerts
+                .open(`Deleted ${completed} admin(s), failed to delete ${failed}`, {
+                  appearance: 'warning',
+                  label: 'Partial Success',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            }
+          }
+        },
+        error: () => {
+          failed++;
+          if (completed + failed === idsToDelete.length) {
+            this.bulkActionLoading.set(false);
+            if (failed === idsToDelete.length) {
+              this.loadAdmins();
+              this.alerts
+                .open('Failed to delete admins', {
+                  appearance: 'error',
+                  label: 'Delete Failed',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            } else {
+              this.loadAdminsInBackground();
+              this.alerts
+                .open(`Deleted ${completed} admin(s), failed to delete ${failed}`, {
+                  appearance: 'warning',
+                  label: 'Partial Success',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            }
+          }
+        }
+      });
+    });
+  }
+
+  onBulkRoleUpdateConfirm(): void {
+    const idsToUpdate = Array.from(this.selectedAdminIds());
+    const roleId = this.bulkRoleId();
+    
+    if (idsToUpdate.length === 0 || !roleId) return;
+
+    this.bulkActionLoading.set(true);
+
+    // Optimistically update UI
+    const updatedAdmins = this.admins().map(admin => {
+      if (idsToUpdate.includes(admin.id)) {
+        const selectedRole = this.roles().find(r => r.id === roleId);
+        return {
+          ...admin,
+          role: selectedRole ? {
+            id: selectedRole.id,
+            name: this.getRoleNameFromId(selectedRole.id),
+            permissions: admin.role?.permissions || []
+          } : admin.role
+        };
+      }
+      return admin;
+    });
+    this.admins.set(updatedAdmins);
+    this.selectedAdminIds.set(new Set());
+    this.closeBulkRoleUpdateModal();
+
+    // Update on server
+    let completed = 0;
+    let failed = 0;
+    
+    idsToUpdate.forEach(id => {
+      this.adminApi.updateAdmin(id, { roleId }).subscribe({
+        next: () => {
+          completed++;
+          if (completed + failed === idsToUpdate.length) {
+            this.bulkActionLoading.set(false);
+            this.loadAdminsInBackground();
+            if (failed === 0) {
+              this.alerts
+                .open(`Successfully updated ${completed} admin(s)`, {
+                  appearance: 'success',
+                  label: 'Success',
+                  autoClose: 3000,
+                })
+                .subscribe();
+            } else {
+              this.alerts
+                .open(`Updated ${completed} admin(s), failed to update ${failed}`, {
+                  appearance: 'warning',
+                  label: 'Partial Success',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            }
+          }
+        },
+        error: () => {
+          failed++;
+          if (completed + failed === idsToUpdate.length) {
+            this.bulkActionLoading.set(false);
+            if (failed === idsToUpdate.length) {
+              this.loadAdmins();
+              this.alerts
+                .open('Failed to update admin roles', {
+                  appearance: 'error',
+                  label: 'Update Failed',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            } else {
+              this.loadAdminsInBackground();
+              this.alerts
+                .open(`Updated ${completed} admin(s), failed to update ${failed}`, {
+                  appearance: 'warning',
+                  label: 'Partial Success',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            }
+          }
+        }
+      });
+    });
   }
 
 
