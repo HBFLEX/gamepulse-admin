@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { AuthService } from '../auth/services/auth-service';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { TopbarComponent } from './components/topbar/topbar.component';
+import { OverviewComponent } from './pages/overview/overview.component';
 
 interface NavItem {
   label: string;
@@ -14,7 +15,7 @@ interface NavItem {
 @Component({
   selector: 'app-super-admin-dashboard',
   standalone: true,
-  imports: [SidebarComponent, TopbarComponent],
+  imports: [SidebarComponent, TopbarComponent, OverviewComponent],
   templateUrl: './super-admin-dashboard.html',
   styleUrl: './super-admin-dashboard.less',
 })

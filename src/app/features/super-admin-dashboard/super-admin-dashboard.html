@@ -21,11 +21,6 @@
   }
 
   <main class="main-content">
-    <div class="content-wrapper">
-      <h2>Dashboard Overview</h2>
-      <p>Welcome {{ authService.user()?.firstName }} {{ authService.user()?.lastName }}!</p>
-      <p>Email: {{ authService.user()?.email }}</p>
-      <p>Role: {{ authService.user()?.role }}</p>
-    </div>
+    <app-overview />
   </main>
 </div>
