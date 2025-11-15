@@ -56,6 +56,10 @@ export class AdminManagement {
   readonly statusFilter = signal<'all' | 'active' | 'inactive'>('all');
   readonly teamFilter = signal<string>('all');
 
+  // Sorting
+  readonly sortColumn = signal<string>('');
+  readonly sortDirection = signal<'asc' | 'desc'>('asc');
+
   // Modals
   readonly showCreateModal = signal(false);
   readonly showEditModal = signal(false);
@@ -114,6 +118,46 @@ export class AdminManagement {
           admin.email?.toLowerCase().includes(search) ||
           admin.username?.toLowerCase().includes(search)
       );
+    }
+
+    // Sort
+    const column = this.sortColumn();
+    const direction = this.sortDirection();
+    
+    if (column) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (column) {
+          case 'name':
+            aValue = a.fullName?.toLowerCase() || '';
+            bValue = b.fullName?.toLowerCase() || '';
+            break;
+          case 'email':
+            aValue = a.email?.toLowerCase() || '';
+            bValue = b.email?.toLowerCase() || '';
+            break;
+          case 'role':
+            aValue = a.role?.name?.toLowerCase() || '';
+            bValue = b.role?.name?.toLowerCase() || '';
+            break;
+          case 'status':
+            aValue = a.isActive ? 1 : 0;
+            bValue = b.isActive ? 1 : 0;
+            break;
+          case 'lastLogin':
+            aValue = a.lastLogin ? new Date(a.lastLogin).getTime() : 0;
+            bValue = b.lastLogin ? new Date(b.lastLogin).getTime() : 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
     }
 
     return filtered;
@@ -220,6 +264,17 @@ export class AdminManagement {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
     this.loadAdmins();
+  }
+
+  onSort(column: string): void {
+    // If clicking the same column, toggle direction
+    if (this.sortColumn() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, default to ascending
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+    }
   }
 
 
