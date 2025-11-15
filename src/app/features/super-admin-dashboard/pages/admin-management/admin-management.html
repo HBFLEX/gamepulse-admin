@@ -1,0 +1,463 @@
+<div class="admin-management-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">ADMIN MANAGEMENT</h1>
+      <p class="page-subtitle">Manage system administrators and their roles</p>
+    </div>
+    <button
+      tuiButton
+      appearance="primary"
+      size="l"
+      class="create-button"
+      (click)="openCreateModal()"
+    >
+      <tui-icon icon="@tui.plus" />
+      Create Admin
+    </button>
+  </div>
+
+  <!-- Filters Card -->
+  <div tuiCardLarge class="filters-card">
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-item search-filter">
+        <label tuiLabel>Search</label>
+        <tui-textfield>
+          <input
+            tuiTextfield
+            type="text"
+            placeholder="Search by name, email..."
+            [value]="searchTerm()"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+          <tui-icon icon="@tui.search" />
+        </tui-textfield>
+      </div>
+
+      <!-- Role Filter -->
+      <div class="filter-item">
+        <label tuiLabel>Role</label>
+        <select
+          class="filter-select"
+          [value]="roleFilter()"
+          (change)="onRoleFilterChange($any($event.target).value)"
+        >
+          <option value="all">All Roles</option>
+          <option value="Super Admin">Super Admin</option>
+          <option value="League Admin">League Admin</option>
+          <option value="Team Admin">Team Admin</option>
+          <option value="Content Admin">Content Admin</option>
+          <option value="Game Admin">Game Admin</option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-item">
+        <label tuiLabel>Status</label>
+        <select
+          class="filter-select"
+          [value]="statusFilter()"
+          (change)="onStatusFilterChange($any($event.target).value)"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <!-- Stats -->
+      <div class="filter-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total</span>
+          <span class="stat-value">{{ totalAdmins() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing</span>
+          <span class="stat-value">{{ filteredAdmins().length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  @if (loading()) {
+    <div class="loading-container">
+      <tui-loader size="xl"></tui-loader>
+    </div>
+  } @else if (filteredAdmins().length === 0) {
+    <div tuiCardLarge class="empty-state">
+      <tui-icon icon="@tui.users" class="empty-icon" />
+      <h3>No administrators found</h3>
+      <p>Try adjusting your filters or create a new admin</p>
+      <button tuiButton appearance="secondary" size="m" (click)="openCreateModal()">
+        <tui-icon icon="@tui.plus" />
+        Create Admin
+      </button>
+    </div>
+  } @else {
+    <div tuiCardLarge class="table-card">
+      <div class="table-wrapper">
+        <table tuiTable [columns]="columns" class="admins-table">
+          <thead>
+          <tr tuiThGroup>
+            <th *tuiHead="'avatar'" tuiTh></th>
+            <th *tuiHead="'name'" tuiTh>Name</th>
+            <th *tuiHead="'email'" tuiTh>Email</th>
+            <th *tuiHead="'role'" tuiTh>Role</th>
+            <th *tuiHead="'status'" tuiTh>Status</th>
+            <th *tuiHead="'lastLogin'" tuiTh>Last Login</th>
+            <th *tuiHead="'actions'" tuiTh class="actions-header">Actions</th>
+          </tr>
+          </thead>
+          <tbody tuiTbody [data]="filteredAdmins()">
+            @for (admin of filteredAdmins(); track admin.id) {
+              <tr tuiTr>
+                <td *tuiCell="'avatar'" tuiTd>
+                  <tui-avatar size="s" class="admin-avatar">
+                    {{ getInitials(admin.full_name) }}
+                  </tui-avatar>
+                </td>
+                <td *tuiCell="'name'" tuiTd>
+                  <div class="name-cell">
+                    <span class="admin-name">{{ admin.full_name }}</span>
+                    @if (admin.username) {
+                      <span class="admin-username">&#64;{{ admin.username }}</span>
+                    }
+                  </div>
+                </td>
+                <td *tuiCell="'email'" tuiTd>
+                  <span class="admin-email">{{ admin.email }}</span>
+                </td>
+                <td *tuiCell="'role'" tuiTd>
+                  <span
+                    class="role-badge"
+                    [style.background-color]="getRoleBadgeColor(admin.role.role_name) + '20'"
+                    [style.color]="getRoleBadgeColor(admin.role.role_name)"
+                  >
+                    {{ admin.role.role_name }}
+                  </span>
+                </td>
+                <td *tuiCell="'status'" tuiTd>
+                  <div class="status-toggle">
+                    <input
+                      tuiSwitch
+                      type="checkbox"
+                      [checked]="admin.is_active"
+                      (change)="toggleAdminStatus(admin)"
+                    />
+                    <span [class.active]="admin.is_active" [class.inactive]="!admin.is_active">
+                      {{ admin.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </td>
+                <td *tuiCell="'lastLogin'" tuiTd>
+                  @if (admin.last_login) {
+                    <span class="last-login">{{ formatDate(admin.last_login) }}</span>
+                  } @else {
+                    <span class="no-login">Never</span>
+                  }
+                </td>
+                <td *tuiCell="'actions'" tuiTd>
+                  <div class="action-buttons">
+                    <button
+                      tuiIconButton
+                      appearance="flat"
+                      size="s"
+                      [tuiHint]="'Edit admin'"
+                      (click)="openEditModal(admin)"
+                    >
+                      <tui-icon icon="@tui.edit-2" />
+                    </button>
+                    <button
+                      tuiIconButton
+                      appearance="flat"
+                      size="s"
+                      class="delete-button"
+                      [tuiHint]="'Delete admin'"
+                      (click)="openDeleteModal(admin)"
+                    >
+                      <tui-icon icon="@tui.trash-2" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalAdmins() > pageSize()) {
+        <div class="pagination">
+          <button
+            tuiButton
+            appearance="secondary"
+            size="s"
+            [disabled]="currentPage() === 1"
+            (click)="onPageChange(currentPage() - 1)"
+          >
+            <tui-icon icon="@tui.chevron-left" />
+            Previous
+          </button>
+          <span class="page-info">
+            Page {{ currentPage() }} of {{ Math.ceil(totalAdmins() / pageSize()) }}
+          </span>
+          <button
+            tuiButton
+            appearance="secondary"
+            size="s"
+            [disabled]="!hasMore()"
+            (click)="onPageChange(currentPage() + 1)"
+          >
+            Next
+            <tui-icon icon="@tui.chevron-right" />
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Create Admin Modal -->
+@if (showCreateModal()) {
+  <div class="modal-overlay" (click)="closeCreateModal()">
+    <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+      <div tuiHeader class="modal-header">
+        <h2>CREATE NEW ADMIN</h2>
+        <button tuiIconButton appearance="flat" size="s" (click)="closeCreateModal()">
+          <tui-icon icon="@tui.x" />
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (createError()) {
+          <div class="error-message">
+            <tui-icon icon="@tui.alert-circle" />
+            {{ createError() }}
+          </div>
+        }
+
+        <form class="admin-form">
+          <div class="form-group">
+            <label tuiLabel>Full Name *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter full name"
+                [(ngModel)]="createForm().fullName"
+                name="fullName"
+              />
+            </tui-textfield>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Email Address *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="email"
+                placeholder="admin@gamepulse.com"
+                [(ngModel)]="createForm().email"
+                name="email"
+              />
+            </tui-textfield>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Password *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="password"
+                placeholder="Minimum 8 characters"
+                [(ngModel)]="createForm().password"
+                name="password"
+              />
+            </tui-textfield>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Role *</label>
+            <select class="form-select" [(ngModel)]="createForm().roleId" name="roleId">
+              @for (role of roles; track role.id) {
+                <option [value]="role.id">{{ role.name }}</option>
+              }
+            </select>
+          </div>
+
+          @if (createForm().roleId === 3 && teams().length > 0) {
+            <div class="form-group">
+              <label tuiLabel>Team (Optional)</label>
+              <select class="form-select" [(ngModel)]="createForm().teamId" name="teamId">
+                <option [value]="undefined">No team</option>
+                @for (team of teams(); track team.id) {
+                  <option [value]="team.id">{{ team.name }}</option>
+                }
+              </select>
+            </div>
+          }
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button tuiButton appearance="secondary" size="m" (click)="closeCreateModal()">
+          Cancel
+        </button>
+        <button
+          tuiButton
+          appearance="primary"
+          size="m"
+          [disabled]="loading()"
+          (click)="onCreateSubmit()"
+        >
+          @if (loading()) {
+            <tui-loader size="s"></tui-loader>
+          }
+          Create Admin
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Edit Admin Modal -->
+@if (showEditModal() && selectedAdmin()) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+      <div tuiHeader class="modal-header">
+        <h2>EDIT ADMIN</h2>
+        <button tuiIconButton appearance="flat" size="s" (click)="closeEditModal()">
+          <tui-icon icon="@tui.x" />
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (editError()) {
+          <div class="error-message">
+            <tui-icon icon="@tui.alert-circle" />
+            {{ editError() }}
+          </div>
+        }
+
+        <form class="admin-form">
+          <div class="form-group">
+            <label tuiLabel>Full Name</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter full name"
+                [(ngModel)]="editForm().fullName"
+                name="fullName"
+              />
+            </tui-textfield>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Role</label>
+            <select class="form-select" [(ngModel)]="editForm().roleId" name="roleId">
+              @for (role of roles; track role.id) {
+                <option [value]="role.id">{{ role.name }}</option>
+              }
+            </select>
+          </div>
+
+          @if (editForm().roleId === 3 && teams().length > 0) {
+            <div class="form-group">
+              <label tuiLabel>Team</label>
+              <select class="form-select" [(ngModel)]="editForm().teamId" name="teamId">
+                <option [value]="undefined">No team</option>
+                @for (team of teams(); track team.id) {
+                  <option [value]="team.id">{{ team.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                tuiSwitch
+                type="checkbox"
+                [(ngModel)]="editForm().isActive"
+                name="isActive"
+              />
+              <span>Active</span>
+            </label>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button tuiButton appearance="secondary" size="m" (click)="closeEditModal()">
+          Cancel
+        </button>
+        <button
+          tuiButton
+          appearance="primary"
+          size="m"
+          [disabled]="loading()"
+          (click)="onEditSubmit()"
+        >
+          @if (loading()) {
+            <tui-loader size="s"></tui-loader>
+          }
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Admin Modal -->
+@if (showDeleteModal() && selectedAdmin()) {
+  <div class="modal-overlay" (click)="closeDeleteModal()">
+    <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+      <div tuiHeader class="modal-header">
+        <h2>DELETE ADMIN</h2>
+        <button tuiIconButton appearance="flat" size="s" (click)="closeDeleteModal()">
+          <tui-icon icon="@tui.x" />
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (deleteError()) {
+          <div class="error-message">
+            <tui-icon icon="@tui.alert-circle" />
+            {{ deleteError() }}
+          </div>
+        }
+
+        <div class="delete-warning">
+          <tui-icon icon="@tui.alert-triangle" class="warning-icon" />
+          <p>
+            Are you sure you want to delete
+            <strong>{{ selectedAdmin()!.full_name }}</strong>?
+          </p>
+          <p class="warning-text">This action cannot be undone.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button tuiButton appearance="secondary" size="m" (click)="closeDeleteModal()">
+          Cancel
+        </button>
+        <button
+          tuiButton
+          appearance="primary"
+          size="m"
+          class="delete-confirm-button"
+          [disabled]="loading()"
+          (click)="onDeleteConfirm()"
+        >
+          @if (loading()) {
+            <tui-loader size="s"></tui-loader>
+          }
+          Delete Admin
+        </button>
+      </div>
+    </div>
+  </div>
+}

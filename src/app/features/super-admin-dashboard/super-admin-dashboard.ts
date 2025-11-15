@@ -31,7 +31,7 @@ export class SuperAdminDashboard {
       icon: '@tui.users',
       expanded: false,
       children: [
-        { label: 'Admins', icon: '@tui.user-check', route: '/super-admin/admins' },
+        { label: 'Admins', icon: '@tui.user-check', route: '/super-admin/user-mgmt/admins' },
         { label: 'Users', icon: '@tui.user', route: '/super-admin/users' },
         { label: 'Roles', icon: '@tui.shield', route: '/super-admin/roles' },
       ],

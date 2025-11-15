@@ -11,11 +11,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/overview/overview.component').then((m) => m.OverviewComponent),
   },
-  // Placeholder routes for future pages
+
   {
     path: 'admins',
     loadComponent: () =>
-      import('./pages/overview/overview.component').then((m) => m.OverviewComponent), // TODO: Replace with actual component
+      import('./pages/admin-management/admin-management').then((m) => m.AdminManagement),
   },
   {
     path: 'users',
