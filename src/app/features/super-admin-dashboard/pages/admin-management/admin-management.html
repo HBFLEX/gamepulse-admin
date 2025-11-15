@@ -451,8 +451,8 @@
               <input
                 tuiSwitch
                 type="checkbox"
-                [checked]="editForm().isActive"
-                (change)="onActiveChange($any($event.target).checked)"
+                [ngModel]="editForm().isActive"
+                (ngModelChange)="onActiveChange($event)"
                 name="isActive"
               />
               <span>Active</span>

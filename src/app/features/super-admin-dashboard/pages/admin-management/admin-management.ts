@@ -195,6 +195,23 @@ export class AdminManagement {
     });
   }
 
+  loadAdminsInBackground(): void {
+    // Load admins without showing loading indicator
+    const roleParam = this.roleFilter() !== 'all' ? this.roleFilter() : undefined;
+    const isActiveParam = this.statusFilter() !== 'all' ? this.statusFilter() === 'active' : undefined;
+
+    this.adminApi.getAdmins(roleParam, isActiveParam, this.currentPage(), this.pageSize()).subscribe({
+      next: (response) => {
+        this.admins.set(response.data || []);
+        this.totalAdmins.set(response.meta?.total || 0);
+        this.hasMore.set(response.meta?.hasMore || false);
+      },
+      error: (error) => {
+        console.error('Error loading admins in background:', error);
+      },
+    });
+  }
+
   loadTeams(): void {
     this.teamsApi.getTeams().subscribe({
       next: (teams) => {
@@ -241,10 +258,11 @@ export class AdminManagement {
     });
   }
 
-  onActiveChange(isActive: boolean): void {
+  onActiveChange(isActive: boolean | string): void {
+    const active = typeof isActive === 'string' ? isActive === 'true' : isActive;
     this.editForm.set({
       ...this.editForm(),
-      isActive: isActive,
+      isActive: active,
     });
   }
 
@@ -349,21 +367,47 @@ export class AdminManagement {
     if (!admin) return;
 
     this.editError.set(null);
-    this.loading.set(true);
+    const form = this.editForm();
 
-    console.log('Submitting edit with data:', this.editForm());
+    console.log('Submitting edit with data:', form);
 
-    this.adminApi.updateAdmin(admin.id, this.editForm()).subscribe({
+    // Optimistically update the UI immediately
+    const adminIndex = this.admins().findIndex(a => a.id === admin.id);
+    if (adminIndex !== -1) {
+      const updatedAdmins = [...this.admins()];
+      const selectedRole = this.roles().find(r => r.id === form.roleId);
+      const selectedTeam = this.teams().find(t => t.id === form.teamId);
+      
+      updatedAdmins[adminIndex] = {
+        ...updatedAdmins[adminIndex],
+        fullName: form.fullName || updatedAdmins[adminIndex].fullName,
+        isActive: form.isActive !== undefined ? form.isActive : updatedAdmins[adminIndex].isActive,
+        role: selectedRole ? {
+          id: selectedRole.id,
+          name: this.getRoleNameFromId(selectedRole.id),
+          permissions: updatedAdmins[adminIndex].role?.permissions || []
+        } : updatedAdmins[adminIndex].role,
+        team: form.teamId ? (selectedTeam ? { id: selectedTeam.id, name: selectedTeam.name, city: updatedAdmins[adminIndex].team?.city || '' } : updatedAdmins[adminIndex].team) : undefined
+      };
+      this.admins.set(updatedAdmins);
+    }
+
+    // Close modal immediately for better UX
+    this.closeEditModal();
+
+    // Then update on the server in the background
+    this.adminApi.updateAdmin(admin.id, form).subscribe({
       next: (response) => {
         console.log('Update response:', response);
-        this.loading.set(false);
-        this.closeEditModal();
-        this.loadAdmins();
+        // Optionally reload to sync with server (silent background refresh)
+        this.loadAdminsInBackground();
       },
       error: (error) => {
         console.error('Update error:', error);
-        this.loading.set(false);
-        this.editError.set(error.error?.message || 'Failed to update admin');
+        // Revert the optimistic update on error and show the error
+        this.loadAdmins();
+        // Could show a toast notification here instead
+        alert('Failed to update admin: ' + (error.error?.message || 'Unknown error'));
       },
     });
   }
@@ -384,17 +428,28 @@ export class AdminManagement {
     if (!admin) return;
 
     this.deleteError.set(null);
-    this.loading.set(true);
 
+    // Optimistically remove from UI immediately
+    const updatedAdmins = this.admins().filter(a => a.id !== admin.id);
+    this.admins.set(updatedAdmins);
+    this.totalAdmins.set(this.totalAdmins() - 1);
+
+    // Close modal immediately for better UX
+    this.closeDeleteModal();
+
+    // Then delete on the server in the background
     this.adminApi.deleteAdmin(admin.id).subscribe({
       next: () => {
-        this.loading.set(false);
-        this.closeDeleteModal();
-        this.loadAdmins();
+        console.log('Admin deleted successfully');
+        // Optionally reload to sync with server
+        this.loadAdminsInBackground();
       },
       error: (error) => {
-        this.loading.set(false);
-        this.deleteError.set(error.error?.message || 'Failed to delete admin');
+        console.error('Delete error:', error);
+        // Revert the optimistic update on error
+        this.loadAdmins();
+        // Could show a toast notification here instead
+        alert('Failed to delete admin: ' + (error.error?.message || 'Unknown error'));
       },
     });
   }
@@ -411,12 +466,12 @@ export class AdminManagement {
       this.admins.set(updatedAdmins);
     }
 
-    // Then update on the server
+    // Then update on the server in the background
     this.adminApi.toggleActive(admin.id).subscribe({
       next: () => {
         console.log('Admin status toggled successfully');
-        // Optionally reload to ensure consistency
-        this.loadAdmins();
+        // Optionally reload to sync with server (silent background refresh)
+        this.loadAdminsInBackground();
       },
       error: (error) => {
         console.error('Error toggling admin status:', error);
@@ -467,6 +522,17 @@ export class AdminManagement {
       'game_admin': 'Game Admin',
     };
     return roleNames[roleName] || roleName;
+  }
+
+  getRoleNameFromId(roleId: number): string {
+    const roleMap: Record<number, string> = {
+      1: 'super_admin',
+      2: 'league_admin',
+      3: 'team_admin',
+      4: 'content_admin',
+      5: 'game_admin',
+    };
+    return roleMap[roleId] || 'unknown';
   }
 
   protected readonly Math = Math;
