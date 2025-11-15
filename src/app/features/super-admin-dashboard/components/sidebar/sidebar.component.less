@@ -14,11 +14,6 @@
   overflow-x: hidden;
   overflow-y: auto;
   flex: 1;
-}
-
-:host-context([tuiTheme='light']) .sidebar {
-  background: #ffffff;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
 
   &.collapsed {
     width: 72px;
@@ -39,6 +34,11 @@
       justify-content: center;
     }
   }
+}
+
+:host-context([tuiTheme='light']) .sidebar {
+  background: #ffffff;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-header {
