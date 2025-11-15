@@ -17,6 +17,7 @@ interface RoleOption {
 interface Team {
   id: number;
   name: string;
+  city?: string;
 }
 
 @Component({
@@ -66,6 +67,7 @@ export class AdminManagement {
   readonly showBulkDeleteModal = signal(false);
   readonly showBulkRoleUpdateModal = signal(false);
   readonly bulkRoleId = signal<number | undefined>(undefined);
+  readonly bulkTeamId = signal<number | undefined>(undefined);
   readonly bulkActionLoading = signal(false);
 
   // Modals
@@ -186,6 +188,10 @@ export class AdminManagement {
 
   readonly isSomeSelected = computed(() => {
     return this.selectedCount() > 0 && !this.isAllSelected();
+  });
+
+  readonly shouldShowTeamDropdownInBulk = computed(() => {
+    return this.bulkRoleId() === 3 && this.teams().length > 0;
   });
 
 
@@ -351,6 +357,7 @@ export class AdminManagement {
   openBulkRoleUpdateModal(): void {
     if (this.selectedCount() === 0) return;
     this.bulkRoleId.set(undefined);
+    this.bulkTeamId.set(undefined);
     this.showBulkRoleUpdateModal.set(true);
   }
 
@@ -436,6 +443,7 @@ export class AdminManagement {
   onBulkRoleUpdateConfirm(): void {
     const idsToUpdate = Array.from(this.selectedAdminIds());
     const roleId = this.bulkRoleId();
+    const teamId = this.bulkTeamId();
     
     if (idsToUpdate.length === 0 || !roleId) return;
 
@@ -445,13 +453,19 @@ export class AdminManagement {
     const updatedAdmins = this.admins().map(admin => {
       if (idsToUpdate.includes(admin.id)) {
         const selectedRole = this.roles().find(r => r.id === roleId);
+        const selectedTeam = teamId ? this.teams().find(t => t.id === teamId) : undefined;
         return {
           ...admin,
           role: selectedRole ? {
             id: selectedRole.id,
             name: this.getRoleNameFromId(selectedRole.id),
             permissions: admin.role?.permissions || []
-          } : admin.role
+          } : admin.role,
+          team: selectedTeam ? { 
+            id: selectedTeam.id, 
+            name: selectedTeam.name, 
+            city: selectedTeam.city || '' 
+          } : (roleId === 3 ? admin.team : undefined)
         };
       }
       return admin;
@@ -464,8 +478,13 @@ export class AdminManagement {
     let completed = 0;
     let failed = 0;
     
+    const updateDto: any = { roleId };
+    if (roleId === 3 && teamId) {
+      updateDto.teamId = teamId;
+    }
+    
     idsToUpdate.forEach(id => {
-      this.adminApi.updateAdmin(id, { roleId }).subscribe({
+      this.adminApi.updateAdmin(id, updateDto).subscribe({
         next: () => {
           completed++;
           if (completed + failed === idsToUpdate.length) {

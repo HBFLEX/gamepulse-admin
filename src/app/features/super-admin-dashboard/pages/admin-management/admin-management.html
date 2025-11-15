@@ -641,7 +641,7 @@
             <select
               class="form-select"
               [ngModel]="bulkRoleId()"
-              (ngModelChange)="bulkRoleId.set($event)"
+              (ngModelChange)="bulkRoleId.set($event); bulkTeamId.set(undefined)"
               name="bulkRoleId"
             >
               <option [value]="undefined">Select a role...</option>
@@ -650,6 +650,23 @@
               }
             </select>
           </div>
+
+          @if (shouldShowTeamDropdownInBulk()) {
+            <div class="form-group">
+              <label tuiLabel>Team (Optional)</label>
+              <select
+                class="form-select"
+                [ngModel]="bulkTeamId()"
+                (ngModelChange)="bulkTeamId.set($event)"
+                name="bulkTeamId"
+              >
+                <option [value]="undefined">No team</option>
+                @for (team of teams(); track team.id) {
+                  <option [value]="team.id">{{ team.name }}</option>
+                }
+              </select>
+            </div>
+          }
         </form>
       </div>
 
