@@ -163,12 +163,14 @@
                 </td>
                 <td *tuiCell="'status'" tuiTd>
                   <div class="status-toggle">
-                    <input
-                      tuiSwitch
-                      type="checkbox"
-                      [checked]="admin.isActive"
-                      (change)="toggleAdminStatus(admin)"
-                    />
+                    <label class="switch-wrapper">
+                      <input
+                        tuiSwitch
+                        type="checkbox"
+                        [checked]="admin.isActive"
+                        (click)="$event.stopPropagation(); toggleAdminStatus(admin)"
+                      />
+                    </label>
                     <span [class.active]="admin.isActive" [class.inactive]="!admin.isActive">
                       {{ admin.isActive ? 'Active' : 'Inactive' }}
                     </span>
