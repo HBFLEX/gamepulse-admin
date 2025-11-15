@@ -1,5 +1,4 @@
 <div class="overview-page">
-  <!-- WebSocket Connection Status (for debugging) -->
   @if (!isWebSocketConnected()) {
     <div class="connection-banner warning">
       <span>Real-time updates disconnected. Attempting to reconnect...</span>
@@ -8,7 +7,7 @@
 
   @if (loading()) {
     <div class="loading-container">
-      <tui-loader [size]="'xl'"></tui-loader>
+      <tui-loader size="l"></tui-loader>
     </div>
   } @else {
     <!-- Quick Stats Cards -->
