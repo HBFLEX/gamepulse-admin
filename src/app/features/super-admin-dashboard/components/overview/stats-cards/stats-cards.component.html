@@ -9,12 +9,12 @@
       </div>
       <div class="stat-value">{{ card.value }}</div>
       <div class="stat-footer">
-        @if (card.change !== undefined) {
-          <span class="stat-change" [class.positive]="card.change >= 0" [class.negative]="card.change < 0">
-            <tui-icon [icon]="card.change >= 0 ? '@tui.trending-up' : '@tui.trending-down'" />
-            {{ card.change > 0 ? '+' : '' }}{{ card.change }}%
-          </span>
-        }
+<!--        @if (card.change !== undefined) {-->
+<!--          <span class="stat-change" [class.positive]="card.change >= 0" [class.negative]="card.change < 0">-->
+<!--            <tui-icon [icon]="card.change >= 0 ? '@tui.trending-up' : '@tui.trending-down'" />-->
+<!--            {{ card.change > 0 ? '+' : '' }}{{ card.change }}%-->
+<!--          </span>-->
+<!--        }-->
         <span class="stat-subtitle">{{ card.subtitle }}</span>
       </div>
     </div>

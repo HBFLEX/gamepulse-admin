@@ -32,7 +32,7 @@ export class StatsCardsComponent {
         title: 'Total Games',
         value: data.totalGames.toLocaleString(),
         change: data.totalGamesChange,
-        subtitle: 'vs Last Week',
+        subtitle: 'All-time',
         color: '#E45E2C',
       },
       {
@@ -40,7 +40,7 @@ export class StatsCardsComponent {
         title: 'Active Users',
         value: data.activeUsers.toLocaleString(),
         change: data.activeUsersChange,
-        subtitle: 'vs Last Week',
+        subtitle: 'authenticated',
         color: '#3A2634',
       },
       {
