@@ -1,0 +1,139 @@
+.chart-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+
+  .header-icon {
+    color: #E45E2C;
+  }
+}
+
+.chart-content {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-legends {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.813rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.legend-label {
+  color: var(--tui-text-secondary);
+}
+
+.chart-wrapper {
+  flex: 1;
+  position: relative;
+  min-height: 250px;
+  margin-bottom: 1rem;
+}
+
+.chart-axes {
+  width: 100%;
+  height: 100%;
+}
+
+.chart {
+  --tui-chart-primary: #E45E2C;
+  --tui-chart-accent: #3A2634;
+}
+
+.chart-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.stat-box {
+  padding: 0.75rem;
+  background: var(--tui-background-elevation-1);
+  border-radius: 8px;
+  border: 1px solid var(--tui-border-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--tui-text-secondary);
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--tui-text-primary);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: var(--tui-text-tertiary);
+
+  tui-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .chart-content {
+    padding: 1rem;
+  }
+
+  .chart-wrapper {
+    min-height: 200px;
+  }
+
+  .chart-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-value {
+    font-size: 1.125rem;
+  }
+}
+
+// Theme support
+:host-context([tuiTheme='dark']) {
+  .stat-box {
+    background: rgba(58, 38, 52, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}

@@ -1,0 +1,149 @@
+:host {
+  display: block;
+  
+  // Brand colors for pie chart
+  --tui-chart-categorical-00: #10b981; // Active teams (green)
+  --tui-chart-categorical-01: #ef4444; // Inactive teams (red)
+  --tui-chart-categorical-02: #E45E2C; // Brand orange (if needed)
+  --tui-chart-categorical-03: #3A2634; // Brand purple (if needed)
+  --tui-chart-categorical-04: #C53A34; // Brand red (if needed)
+}
+
+.chart-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .header-icon {
+    color: var(--tui-text-secondary);
+    font-size: 1.25rem;
+  }
+
+  span {
+    font-weight: 600;
+    font-size: 1.125rem;
+  }
+}
+
+.chart-content {
+  flex: 1;
+  display: flex;
+  gap: 2rem;
+  padding: 1.5rem;
+  align-items: center;
+}
+
+.pie-chart-wrapper {
+  flex-shrink: 0;
+  width: 200px;
+  height: 200px;
+}
+
+.legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: grid;
+  grid-template-columns: 16px 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--tui-background-elevation-1);
+  }
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  
+  // Match Taiga UI chart colors by index
+  &[data-index='0'] {
+    background-color: var(--tui-chart-categorical-00);
+  }
+  
+  &[data-index='1'] {
+    background-color: var(--tui-chart-categorical-01);
+  }
+  
+  &[data-index='2'] {
+    background-color: var(--tui-chart-categorical-02);
+  }
+  
+  &[data-index='3'] {
+    background-color: var(--tui-chart-categorical-03);
+  }
+  
+  &[data-index='4'] {
+    background-color: var(--tui-chart-categorical-04);
+  }
+}
+
+.legend-label {
+  font-size: 0.875rem;
+  color: var(--tui-text-primary);
+}
+
+.legend-value {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--tui-text-primary);
+}
+
+.legend-percentage {
+  font-size: 0.75rem;
+  color: var(--tui-text-secondary);
+  min-width: 3rem;
+  text-align: right;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: var(--tui-text-tertiary);
+
+  tui-icon {
+    font-size: 3rem;
+    opacity: 0.3;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+.hint-content {
+  text-align: center;
+  padding: 0.5rem;
+  
+  strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+  }
+  
+  div {
+    font-size: 0.75rem;
+    color: var(--tui-text-secondary);
+  }
+}

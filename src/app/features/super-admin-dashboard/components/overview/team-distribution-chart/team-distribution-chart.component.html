@@ -1,0 +1,46 @@
+<div tuiCardLarge class="chart-card">
+  <div tuiHeader class="header-content">
+    <tui-icon icon="@tui.pie-chart" class="header-icon" />
+    <span>Team Activity Distribution</span>
+  </div>
+
+  @if (data() && data().length > 0 && total() > 0) {
+    <div class="chart-content">
+      <div class="pie-chart-wrapper">
+        <tui-pie-chart 
+          [tuiHintContent]="hintContent"
+          [value]="chartValue()"
+        />
+        
+        <ng-template
+          #hintContent
+          let-index
+        >
+          <div class="hint-content">
+            <strong>{{ chartLabels()[index] }}</strong>
+            <div>{{ chartValue()[index] }} teams</div>
+            <div>{{ ((chartValue()[index] / total()) * 100).toFixed(1) }}%</div>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="legend">
+        @for (item of data(); track item.name; let i = $index) {
+          <div class="legend-item">
+            <div class="legend-color" [attr.data-index]="i"></div>
+            <span class="legend-label">{{ item.name }}</span>
+            <span class="legend-value">{{ item.value }}</span>
+            <span class="legend-percentage">
+              {{ ((item.value / total()) * 100).toFixed(1) }}%
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <tui-icon icon="@tui.pie-chart" />
+      <p>No team data available</p>
+    </div>
+  }
+</div>

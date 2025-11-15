@@ -1,0 +1,61 @@
+<div tuiCardLarge class="health-card">
+  <div tuiHeader class="header-content">
+    <tui-icon icon="@tui.activity" class="header-icon" />
+    <span>System Health</span>
+  </div>
+
+  @if (health(); as data) {
+    <div class="health-content">
+      <div class="overall-status" [style.--status-color]="getStatusColor(data.status)">
+        <tui-icon [icon]="getStatusIcon(data.status)" class="status-icon" />
+        <span class="status-text">
+          {{ data.status === 'operational' ? 'All Systems Operational' : 'System ' + data.status }}
+        </span>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-item">
+          <div class="metric-label">
+            <tui-icon icon="@tui.database" />
+            <span>Database</span>
+          </div>
+          <div class="metric-value">
+            <span class="value">{{ data.database.uptime }}% uptime</span>
+            <tui-icon
+              [icon]="getStatusIcon(data.database.status)"
+              [style.color]="getStatusColor(data.database.status)"
+            />
+          </div>
+        </div>
+
+        <div class="metric-item">
+          <div class="metric-label">
+            <tui-icon icon="@tui.zap" />
+            <span>Cache Hit Rate</span>
+          </div>
+          <div class="metric-value">
+            <span class="value">{{ data.cache.hitRate }}%</span>
+            <tui-icon
+              [icon]="getStatusIcon(data.cache.status)"
+              [style.color]="getStatusColor(data.cache.status)"
+            />
+          </div>
+        </div>
+
+        <div class="metric-item">
+          <div class="metric-label">
+            <tui-icon icon="@tui.wifi" />
+            <span>API Response</span>
+          </div>
+          <div class="metric-value">
+            <span class="value">{{ data.api.avgResponseTime }}ms avg</span>
+            <tui-icon
+              [icon]="getStatusIcon(data.api.status)"
+              [style.color]="getStatusColor(data.api.status)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

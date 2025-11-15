@@ -1,0 +1,54 @@
+<div tuiCardLarge class="chart-card">
+  <div tuiHeader class="header-content">
+    <tui-icon icon="@tui.trending-up" class="header-icon" />
+    <span>User Engagement (30 days)</span>
+  </div>
+
+  <div class="chart-content">
+    @if (data().length > 0) {
+      <div class="chart-legends">
+        <div class="legend-item">
+          <span class="legend-dot" style="background: #E45E2C"></span>
+          <span class="legend-label">Daily Active Users</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: #3A2634"></span>
+          <span class="legend-label">Page Views (×100)</span>
+        </div>
+      </div>
+
+      <div class="chart-wrapper">
+        <tui-axes class="chart-axes" [axisXLabels]="['Start', '', '', '', 'End']" [axisYLabels]="[]">
+          <tui-line-chart
+            class="chart"
+            [value]="activeUsersData()"
+            [y]="maxY()"
+            [smoothingFactor]="40"
+            [filled]="true"
+            [x]="0"
+            [width]="data().length"
+            [height]="maxY()"
+            [xStringify]="xStringify"
+            [yStringify]="yStringify"
+          ></tui-line-chart>
+        </tui-axes>
+      </div>
+
+      <div class="chart-stats">
+        <div class="stat-box">
+          <span class="stat-label">Avg Daily Users</span>
+          <span class="stat-value">{{ avgDailyUsers() | number }}</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Avg Session Time</span>
+          <span class="stat-value">{{ avgSessionTime() }} min</span>
+        </div>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <tui-icon icon="@tui.bar-chart-2" />
+        <p>No engagement data available</p>
+      </div>
+    }
+  </div>
+</div>

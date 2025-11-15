@@ -1,0 +1,55 @@
+<div tuiCardLarge class="activity-card">
+  <div tuiHeader class="header-content">
+    <tui-icon icon="@tui.radio" class="header-icon pulse" />
+    <span>Real-time Activity</span>
+    @if (activity() && activity()!.liveGames > 0) {
+      <span class="live-badge">LIVE</span>
+    }
+  </div>
+
+  @if (activity(); as data) {
+    <div class="activity-content">
+      <div class="activity-grid">
+        <div class="activity-item">
+          <div class="activity-icon" style="--item-color: #E45E2C">
+            <tui-icon icon="@tui.play-circle" />
+          </div>
+          <div class="activity-details">
+            <span class="activity-label">Live Games</span>
+            <span class="activity-value">{{ data.liveGames }}</span>
+          </div>
+        </div>
+
+        <div class="activity-item">
+          <div class="activity-icon" style="--item-color: #10b981">
+            <tui-icon icon="@tui.users" />
+          </div>
+          <div class="activity-details">
+            <span class="activity-label">Users Online</span>
+            <span class="activity-value">{{ data.usersOnline.toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <div class="activity-item">
+          <div class="activity-icon" style="--item-color: #3A2634">
+            <tui-icon icon="@tui.activity" />
+          </div>
+          <div class="activity-details">
+            <span class="activity-label">Active Sessions</span>
+            <span class="activity-value">{{ data.activeSessions.toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <div class="activity-item">
+          <div class="activity-icon" style="--item-color: #C53A34">
+            <tui-icon icon="@tui.edit-2" />
+          </div>
+          <div class="activity-details">
+            <span class="activity-label">Scorekeeper Users</span>
+            <span class="activity-value">{{ data.activeScorekeeperUsers }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
