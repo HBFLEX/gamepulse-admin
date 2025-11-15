@@ -1,6 +1,8 @@
 <div class="admin-layout">
   <app-topbar
     [userName]="authService.user()?.firstName || ''"
+    [userEmail]="authService.user()?.email || ''"
+    [userRole]="authService.user()?.role || ''"
     [isSidebarCollapsed]="isSidebarCollapsed()"
     (sidebarToggle)="toggleSidebar()"
     (mobileMenuToggle)="toggleMobileMenu()"

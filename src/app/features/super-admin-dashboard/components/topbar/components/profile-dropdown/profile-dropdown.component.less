@@ -1,0 +1,177 @@
+.profile-button {
+  padding: 4px !important;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.profile-avatar {
+  background: linear-gradient(135deg, #E45E2C 0%, #C53A34 100%);
+  color: white;
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 500;
+}
+
+.profile-dropdown {
+  min-width: 280px;
+  padding: 16px 0;
+  background: var(--tui-background-base);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+
+.profile-avatar-large {
+  background: linear-gradient(135deg, #E45E2C 0%, #C53A34 100%);
+  color: white;
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  color: var(--tui-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: var(--tui-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.profile-role {
+  font-size: 12px;
+  color: var(--tui-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: var(--tui-background-neutral-1);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.profile-divider {
+  height: 1px;
+  background: var(--tui-border-normal);
+  margin: 8px 0;
+}
+
+.theme-switcher {
+  padding: 8px 16px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.theme-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--tui-text-secondary);
+  flex-shrink: 0;
+}
+
+.theme-label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--tui-text-primary);
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.theme-toggle {
+  margin: 0 8px;
+}
+
+.profile-actions {
+  padding: 8px 0;
+}
+
+.profile-action-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.8px;
+  color: var(--tui-text-primary);
+
+  &:hover {
+    background: var(--tui-background-neutral-1-hover);
+  }
+
+  &.logout {
+    color: #ef4444;
+
+    .action-icon {
+      color: #ef4444;
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+}
+
+.action-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--tui-text-secondary);
+  flex-shrink: 0;
+}
+
+:host-context([tuiTheme='dark']) {
+  .profile-dropdown {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .profile-role {
+    background: rgba(228, 94, 44, 0.2);
+    color: #E45E2C;
+  }
+}
+
+:host-context([tuiTheme='light']) {
+  .profile-dropdown {
+    background: white;
+  }
+
+  .profile-role {
+    background: rgba(197, 58, 52, 0.1);
+    color: #C53A34;
+  }
+}

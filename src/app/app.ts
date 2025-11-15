@@ -1,7 +1,8 @@
 import { TuiRoot } from '@taiga-ui/core';
 import { LoadingBar, NetworkStatus } from './core/components';
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -11,4 +12,5 @@ import { RouterOutlet } from '@angular/router';
 })
 export class App {
   protected readonly title = signal('gamepulse-admin');
+  protected readonly themeService = inject(ThemeService);
 }

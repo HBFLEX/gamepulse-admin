@@ -13,6 +13,11 @@
   grid-area: content;
   overflow-y: auto;
   background: #f8f9fa;
+  transition: background-color 0.3s ease;
+}
+
+:host-context([tuiTheme='dark']) .main-content {
+  background: #1a1a1a;
 }
 
 .content-wrapper {
@@ -25,6 +30,7 @@
     letter-spacing: 2px;
     margin: 0 0 24px;
     color: #1a1a1a;
+    transition: color 0.3s ease;
   }
 
   p {
@@ -33,6 +39,17 @@
     letter-spacing: 1px;
     margin: 8px 0;
     color: #4a4a4a;
+    transition: color 0.3s ease;
+  }
+}
+
+:host-context([tuiTheme='dark']) .content-wrapper {
+  h2 {
+    color: #ffffff;
+  }
+
+  p {
+    color: #d1d1d6;
   }
 }
 
@@ -74,8 +91,16 @@
 }
 
 .main-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+:host-context([tuiTheme='dark']) .main-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);

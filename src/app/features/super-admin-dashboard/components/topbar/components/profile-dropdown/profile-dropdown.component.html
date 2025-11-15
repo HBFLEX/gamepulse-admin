@@ -1,0 +1,77 @@
+<button
+  tuiIconButton
+  appearance="flat"
+  size="m"
+  class="profile-button"
+  [tuiDropdown]="dropdown"
+  [(tuiDropdownOpen)]="isOpen"
+>
+  <tui-avatar
+    size="s"
+    class="profile-avatar"
+  >
+    {{ getInitials(userName(), userEmail()) }}
+  </tui-avatar>
+</button>
+
+<ng-template #dropdown>
+  <div class="profile-dropdown">
+    <div class="profile-header">
+      <tui-avatar
+        size="m"
+        class="profile-avatar-large"
+      >
+        {{ getInitials(userName(), userEmail()) }}
+      </tui-avatar>
+      <div class="profile-info">
+        <div class="profile-name">{{ userName() }}</div>
+        <div class="profile-email">{{ userEmail() }}</div>
+        <div class="profile-role">{{ userRole() }}</div>
+      </div>
+    </div>
+
+    <div class="profile-divider"></div>
+
+    <div class="theme-switcher">
+      <div class="theme-option">
+        <tui-icon icon="@tui.sun" class="theme-icon" />
+        <span class="theme-label">Light mode</span>
+        <label tuiSwitch size="s" class="theme-toggle">
+          <input
+            type="checkbox"
+            [ngModel]="themeService.theme() === 'dark'"
+            (ngModelChange)="toggleTheme()"
+          />
+        </label>
+        <tui-icon icon="@tui.moon" class="theme-icon" />
+      </div>
+    </div>
+
+    <div class="profile-divider"></div>
+
+    <div tuiDataList class="profile-actions">
+      <button
+        tuiOption
+        class="profile-action-item"
+      >
+        <tui-icon icon="@tui.user" class="action-icon" />
+        <span>My Profile</span>
+      </button>
+      <button
+        tuiOption
+        class="profile-action-item"
+      >
+        <tui-icon icon="@tui.settings" class="action-icon" />
+        <span>Settings</span>
+      </button>
+      <button
+        tuiOption
+        class="profile-action-item logout"
+        (click)="onLogout()"
+      >
+        <tui-icon icon="@tui.log-out" class="action-icon" />
+        <span>Logout</span>
+      </button>
+    </div>
+  </div>
+</ng-template>
