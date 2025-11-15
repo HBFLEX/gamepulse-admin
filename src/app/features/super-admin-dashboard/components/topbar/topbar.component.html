@@ -1,0 +1,35 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <button
+      tuiButton
+      appearance="flat"
+      size="s"
+      class="menu-toggle"
+      (click)="onMobileMenuToggle()"
+    >
+      <tui-icon icon="@tui.menu" />
+    </button>
+    <button
+      tuiButton
+      appearance="flat"
+      size="s"
+      class="sidebar-toggle"
+      (click)="onSidebarToggle()"
+    >
+      <tui-icon [icon]="isSidebarCollapsed() ? '@tui.chevrons-right' : '@tui.chevrons-left'" />
+    </button>
+    <h1 class="topbar-title">SUPER ADMIN</h1>
+  </div>
+
+  <div class="topbar-right">
+    <button tuiIconButton appearance="flat" size="s" class="icon-button">
+      <tui-icon icon="@tui.bell" />
+    </button>
+    <app-profile-dropdown
+      [userName]="userName()"
+      [userEmail]="userEmail()"
+      [userRole]="userRole()"
+      (logoutClick)="onLogout()"
+    />
+  </div>
+</header>
