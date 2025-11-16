@@ -49,7 +49,7 @@ interface ConnectionStats {
 
       @if (loading()) {
         <div class="loading-state">
-          <tui-loader size="xl"></tui-loader>
+          <tui-loader size="m"></tui-loader>
           <p>Loading connection stats...</p>
         </div>
       } @else if (error()) {
@@ -248,7 +248,7 @@ interface ConnectionStats {
       width: 0.5rem;
       height: 0.5rem;
       border-radius: 50%;
-      
+
       .connected & {
         background: #22c55e;
         animation: pulse 2s infinite;
@@ -369,7 +369,7 @@ interface ConnectionStats {
       width: 0.75rem;
       height: 0.75rem;
       border-radius: 50%;
-      
+
       &.active {
         background: #22c55e;
         animation: pulse 2s infinite;
@@ -610,7 +610,7 @@ export class ConnectionStatsTabComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     console.log('🔌 Connection Stats Tab initialized');
     this.setupWebSocketListeners();
-    
+
     // Connect to WebSocket if not already connected
     if (!this.websocket.connected()) {
       console.log('📡 Connecting to WebSocket...');

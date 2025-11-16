@@ -100,7 +100,7 @@ interface AuditLogResponse {
       <div tuiCardLarge class="logs-card">
         @if (loading()) {
           <div class="loading-state">
-            <tui-loader size="xl"></tui-loader>
+            <tui-loader size="m"></tui-loader>
             <p>Loading admin activity...</p>
           </div>
         } @else if (error()) {
@@ -217,7 +217,7 @@ interface AuditLogResponse {
                 <div>
                   <h3 class="modal-title">Audit Log Details</h3>
                   <p class="modal-subtitle">
-                    {{ formatEntityType(selectedLog()!.entity_type) }} 
+                    {{ formatEntityType(selectedLog()!.entity_type) }}
                     @if (selectedLog()!.entity_id) {
                       <span class="entity-id-inline">#{{ selectedLog()!.entity_id }}</span>
                     }
@@ -889,9 +889,9 @@ export class AuditLogsTabComponent implements OnInit {
         error: (error) => {
           console.error('❌ Error in subscription:', error);
           this.logs.set([]);
-          const errorMsg = error.status === 401 
-            ? 'Unauthorized. Please log in again.' 
-            : error.status === 403 
+          const errorMsg = error.status === 401
+            ? 'Unauthorized. Please log in again.'
+            : error.status === 403
             ? 'You do not have permission to view audit logs.'
             : error.status === 0
             ? 'Unable to connect to the server. Please check your connection.'
