@@ -8,13 +8,7 @@ import { TuiTable } from '@taiga-ui/addon-table';
 import { UserManagementApiService } from '../../../../core/services/user-management-api.service';
 import { AdminApiService } from '../../../../core/services/admin-api.service';
 import { User, CreateUserDto, UpdateUserDto } from '../../../../core/models/user-management.model';
-import { UserFiltersComponent } from './components/user-filters.component';
 
-import { UserListComponent } from './components/user-list.component';
-import { UserFormModalComponent } from './components/user-form-modal.component';
-import { UserDeleteModalComponent } from './components/user-delete-modal.component';
-import { UserBulkStatusModalComponent } from './components/user-bulk-status-modal.component';
-import { UserBulkDeleteModalComponent } from './components/user-bulk-delete-modal.component';
 
 interface Team {
   id: number;
