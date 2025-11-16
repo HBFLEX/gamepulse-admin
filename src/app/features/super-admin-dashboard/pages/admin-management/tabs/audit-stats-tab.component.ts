@@ -2,8 +2,50 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiButton, TuiIcon, TuiLoader } from '@taiga-ui/core';
 import { TuiCardLarge } from '@taiga-ui/layout';
-import { AdminManagementApiService } from '../../../../../core/services/admin-management-api-service';
-import { AdminUser } from '../../../../../core/models/admin-management.model';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../../environments/environment';
+import { catchError, map, of } from 'rxjs';
+
+interface AuditApiResponse {
+   totalActions: number;
+   actionBreakdown: {
+     UPDATE: number;
+     CREATE: number;
+     DELETE: number;
+   };
+   recentLogs: Array<{
+     id: number;
+     user_id: string;
+     action: string;
+     entity_type: string;
+     entity_id: string | null;
+     old_values: any;
+     new_values: any;
+     ip_address: string | null;
+     user_agent: string | null;
+     created_at: string;
+     user: {
+       email: string;
+       full_name: string;
+     };
+   }>;
+}
+
+interface AuditStats {
+   totalEvents: number;
+   lastUpdated: string;
+   actionCounts: {
+     CREATE: number;
+     UPDATE: number;
+     DELETE: number;
+   };
+   topActors: Array<{
+     userId: string;
+     email: string;
+     actionCount: number;
+   }>;
+   entityTypeDistribution: Record<string, number>;
+}
 
 @Component({
   selector: 'app-audit-stats-tab',
@@ -36,11 +78,11 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
         <div class="stats-grid">
           <div tuiCardLarge class="stat-card">
             <div class="stat-icon total">
-              <tui-icon icon="@tui.users" />
+              <tui-icon icon="@tui.activity" />
             </div>
             <div class="stat-content">
-              <span class="stat-label">Total Admins</span>
-              <span class="stat-value">{{ stats().totalAdmins.toLocaleString() }}</span>
+              <span class="stat-label">Total Events</span>
+               <span class="stat-value">{{ (stats()?.totalEvents || 0).toLocaleString() }}</span>
             </div>
           </div>
 
@@ -49,18 +91,18 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
               <tui-icon icon="@tui.check-circle" />
             </div>
             <div class="stat-content">
-              <span class="stat-label">Active Admins</span>
-              <span class="stat-value">{{ stats().activeAdmins.toLocaleString() }}</span>
+              <span class="stat-label">Create Actions</span>
+               <span class="stat-value">{{ (stats()?.actionCounts?.CREATE || 0).toLocaleString() }}</span>
             </div>
           </div>
 
           <div tuiCardLarge class="stat-card">
             <div class="stat-icon update">
-              <tui-icon icon="@tui.activity" />
+              <tui-icon icon="@tui.edit-2" />
             </div>
             <div class="stat-content">
-              <span class="stat-label">Recently Active (7d)</span>
-              <span class="stat-value">{{ stats().recentlyActive.toLocaleString() }}</span>
+              <span class="stat-label">Update Actions</span>
+               <span class="stat-value">{{ (stats()?.actionCounts?.UPDATE || 0).toLocaleString() }}</span>
             </div>
           </div>
 
@@ -69,79 +111,76 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
               <tui-icon icon="@tui.x-circle" />
             </div>
             <div class="stat-content">
-              <span class="stat-label">Inactive Admins</span>
-              <span class="stat-value">{{ stats().inactiveAdmins.toLocaleString() }}</span>
+              <span class="stat-label">Delete Actions</span>
+               <span class="stat-value">{{ (stats()?.actionCounts?.DELETE || 0).toLocaleString() }}</span>
             </div>
           </div>
         </div>
 
         <!-- Charts Row -->
         <div class="charts-row">
-          <!-- Status Distribution -->
+          <!-- Action Distribution -->
           <div tuiCardLarge class="chart-card">
-            <h3 class="chart-title">ADMIN STATUS DISTRIBUTION</h3>
-            <div class="chart-container">
-              <div class="pie-chart" [style.background]="'conic-gradient(' +
-                statusChartData()[0].color + ' 0% ' + statusChartData()[0].percentage + '%, ' +
-                statusChartData()[1].color + ' ' + statusChartData()[0].percentage + '% 100%)'">
-              </div>
-              <div class="chart-legend">
-                @for (status of statusChartData(); track status.name) {
-                  <div class="legend-item">
-                    <span class="legend-color" [style.background]="status.color"></span>
-                    <span class="legend-label">{{ status.name }}</span>
-                    <span class="legend-value">{{ status.value }} ({{ status.percentage.toFixed(1) }}%)</span>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-
-          <!-- Role Distribution -->
-          <div tuiCardLarge class="chart-card">
-            <h3 class="chart-title">ADMIN ROLE DISTRIBUTION</h3>
+            <h3 class="chart-title">ACTION DISTRIBUTION</h3>
             <div class="bar-chart">
-              @for (role of roleChartData(); track role.name) {
+              @for (action of actionChartData(); track action.name) {
                 <div class="bar-item">
-                  <div class="bar-label">{{ role.name }}</div>
+                  <div class="bar-label">{{ action.name }}</div>
                   <div class="bar-wrapper">
                     <div
                       class="bar-fill"
-                      [style.width.%]="role.percentage"
-                      [style.background]="role.color"
+                      [style.width.%]="action.percentage"
+                      [style.background]="action.color"
                     ></div>
                   </div>
-                  <div class="bar-value">{{ role.value }}</div>
+                  <div class="bar-value">{{ action.value }}</div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Entity Type Distribution -->
+          <div tuiCardLarge class="chart-card">
+            <h3 class="chart-title">ENTITY TYPE DISTRIBUTION</h3>
+            <div class="bar-chart">
+              @for (entity of entityChartData(); track entity.name) {
+                <div class="bar-item">
+                  <div class="bar-label">{{ entity.name }}</div>
+                  <div class="bar-wrapper">
+                    <div
+                      class="bar-fill"
+                      [style.width.%]="entity.percentage"
+                      [style.background]="entity.color"
+                    ></div>
+                  </div>
+                  <div class="bar-value">{{ entity.value }}</div>
                 </div>
               }
             </div>
           </div>
         </div>
 
-        <!-- Most Active Admins -->
+        <!-- Top Actors -->
         <div tuiCardLarge class="actors-card">
-          <h3 class="section-title">MOST RECENTLY ACTIVE ADMINS</h3>
-          @if (stats().topAdmins.length === 0) {
-            <div class="empty-actors">
-              <tui-icon icon="@tui.user-x" class="empty-icon" />
-              <p>No admin activity recorded yet</p>
-            </div>
-          } @else {
-            <div class="actors-list">
-              @for (admin of stats().topAdmins; track admin.id) {
+          <h3 class="section-title">TOP ACTORS</h3>
+           @if ((topActors().length || 0) === 0) {
+             <div class="empty-actors">
+               <tui-icon icon="@tui.user-x" class="empty-icon" />
+               <p>No audit activity recorded yet</p>
+             </div>
+           } @else {
+             <div class="actors-list">
+               @for (actor of topActors() || []; track actor.userId) {
                 <div class="actor-item">
                   <div class="actor-avatar">
-                    {{ getInitials(admin.fullName) }}
+                    {{ getInitials(actor.email) }}
                   </div>
                   <div class="actor-info">
-                    <span class="actor-name">{{ admin.fullName }}</span>
-                    <span class="actor-email">{{ admin.email }}</span>
+                    <span class="actor-name">{{ actor.email }}</span>
+                    <span class="actor-email">{{ actor.userId }}</span>
                   </div>
                   <div class="actor-meta">
-                    <span class="actor-role" [style.background]="getRoleBadgeColor(admin.role ? admin.role.name : '')">
-                      {{ getRoleDisplayName(admin.role ? admin.role.name : 'Unknown') }}
-                    </span>
-                    <span class="actor-time">{{ formatLastLogin(admin.lastLogin || null) }}</span>
+                    <span class="actor-count">{{ actor.actionCount }} actions</span>
                   </div>
                 </div>
               }
@@ -155,6 +194,7 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
             <tui-icon icon="@tui.rotate-cw" />
             Refresh Stats
           </button>
+           <span class="update-time">Last updated: {{ stats()?.lastUpdated ? formatTimestamp(stats()!.lastUpdated) : currentTimestamp() }}</span>
         </div>
       }
     </div>
@@ -278,57 +318,6 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
       margin: 0 0 1.5rem 0;
     }
 
-    .chart-container {
-      display: flex;
-      gap: 2rem;
-      align-items: center;
-    }
-
-    .pie-chart {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: conic-gradient(
-        #22c55e 0% 30%,
-        #3b82f6 30% 80%,
-        #ef4444 80% 100%
-      );
-      flex-shrink: 0;
-    }
-
-    .chart-legend {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .legend-color {
-      width: 1rem;
-      height: 1rem;
-      border-radius: 0.25rem;
-      flex-shrink: 0;
-    }
-
-    .legend-label {
-      flex: 1;
-      font-size: 0.875rem;
-      color: var(--tui-text-primary);
-    }
-
-    .legend-value {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.5px;
-      color: var(--tui-text-primary);
-    }
-
     .bar-chart {
       display: flex;
       flex-direction: column;
@@ -434,19 +423,10 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
       gap: 0.25rem;
     }
 
-    .actor-role {
-      font-size: 0.65rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.75rem;
-      color: white;
+    .actor-count {
+      font-size: 0.875rem;
+      color: var(--tui-text-primary);
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .actor-time {
-      font-size: 0.75rem;
-      color: var(--tui-text-tertiary);
     }
 
     .empty-actors {
@@ -470,91 +450,94 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
     }
 
     .last-updated {
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 0.813rem;
       color: var(--tui-text-tertiary);
       padding: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .update-time {
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+
+      .bar-item {
+        grid-template-columns: 80px 1fr 50px;
+        gap: 0.5rem;
+      }
+
+      .bar-label {
+        font-size: 0.75rem;
+      }
+
+      .bar-value {
+        font-size: 0.875rem;
+      }
+
+      .last-updated {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+      }
     }
   `],
 })
 export class AuditStatsTabComponent implements OnInit {
-  private readonly adminApi = inject(AdminManagementApiService);
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
 
-  readonly admins = signal<AdminUser[]>([]);
+  readonly stats = signal<AuditStats | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
-  readonly stats = computed(() => {
-    const allAdmins = this.admins();
-    const totalAdmins = allAdmins.length;
-    const activeAdmins = allAdmins.filter(a => a.isActive).length;
-    const inactiveAdmins = totalAdmins - activeAdmins;
-
-    // Count by role
-    const roleCounts: Record<string, number> = {};
-    allAdmins.forEach(admin => {
-      const roleName = admin.role?.name || 'unknown';
-      roleCounts[roleName] = (roleCounts[roleName] || 0) + 1;
-    });
-
-    // Get recently active admins (last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentlyActive = allAdmins.filter(admin => {
-      if (!admin.lastLogin) return false;
-      return new Date(admin.lastLogin) > sevenDaysAgo;
-    }).length;
-
-    // Top active admins by last login
-    const topAdmins = [...allAdmins]
-      .filter(a => a.lastLogin)
-      .sort((a, b) => new Date(b.lastLogin!).getTime() - new Date(a.lastLogin!).getTime())
-      .slice(0, 5);
-
-    return {
-      totalAdmins,
-      activeAdmins,
-      inactiveAdmins,
-      recentlyActive,
-      roleCounts,
-      topAdmins,
-    };
-  });
-
-  readonly roleChartData = computed(() => {
+  readonly actionChartData = computed(() => {
     const s = this.stats();
-    const roles = [
-      { name: 'Super Admin', key: 'super_admin', color: '#E45E2C' },
-      { name: 'League Admin', key: 'league_admin', color: '#3A2634' },
-      { name: 'Team Admin', key: 'team_admin', color: '#C53A34' },
-      { name: 'Content Admin', key: 'content_admin', color: '#10b981' },
-      { name: 'Game Admin', key: 'game_admin', color: '#f59e0b' },
+    if (!s || !s.actionCounts) return [];
+
+    const actions = [
+      { name: 'Create', key: 'CREATE', color: '#22c55e' },
+      { name: 'Update', key: 'UPDATE', color: '#3b82f6' },
+      { name: 'Delete', key: 'DELETE', color: '#ef4444' },
     ];
 
-    return roles.map(role => ({
-      name: role.name,
-      value: s.roleCounts[role.key] || 0,
-      color: role.color,
-      percentage: s.totalAdmins > 0 ? ((s.roleCounts[role.key] || 0) / s.totalAdmins) * 100 : 0,
+    const total = (s.actionCounts.CREATE || 0) + (s.actionCounts.UPDATE || 0) + (s.actionCounts.DELETE || 0);
+
+    return actions.map(action => ({
+      name: action.name,
+      value: s.actionCounts[action.key as keyof typeof s.actionCounts] || 0,
+      color: action.color,
+      percentage: total > 0 ? ((s.actionCounts[action.key as keyof typeof s.actionCounts] || 0) / total) * 100 : 0,
     }));
   });
 
-  readonly statusChartData = computed(() => {
+  readonly topActors = computed(() => {
     const s = this.stats();
-    return [
-      {
-        name: 'Active',
-        value: s.activeAdmins,
-        percentage: s.totalAdmins > 0 ? (s.activeAdmins / s.totalAdmins) * 100 : 0,
-        color: '#22c55e',
-      },
-      {
-        name: 'Inactive',
-        value: s.inactiveAdmins,
-        percentage: s.totalAdmins > 0 ? (s.inactiveAdmins / s.totalAdmins) * 100 : 0,
-        color: '#ef4444',
-      },
-    ];
+    return s?.topActors || [];
+  });
+
+  readonly entityChartData = computed(() => {
+    const s = this.stats();
+    if (!s || !s.entityTypeDistribution) return [];
+
+    const entities = Object.keys(s.entityTypeDistribution);
+    const total = entities.reduce((sum, key) => sum + (s.entityTypeDistribution[key] || 0), 0);
+
+    const colors = ['#6366f1', '#8b5cf6', '#3b82f6', '#0ea5e9', '#22c55e', '#f59e0b'];
+
+    return entities.map((entity, index) => ({
+      name: this.formatEntityType(entity),
+      value: s.entityTypeDistribution[entity] || 0,
+      color: colors[index % colors.length],
+      percentage: total > 0 ? ((s.entityTypeDistribution[entity] || 0) / total) * 100 : 0,
+    }));
   });
 
   ngOnInit(): void {
@@ -564,83 +547,108 @@ export class AuditStatsTabComponent implements OnInit {
   loadStats(): void {
     this.loading.set(true);
     this.error.set(null);
-    console.log('📊 Loading admin statistics...');
+    console.log('🔍 Loading audit statistics...');
 
-    // Load all admins to compute stats
-    this.adminApi.getAdmins(undefined, undefined, 1, 500).subscribe({
-      next: (response) => {
-        console.log('✅ Admin statistics loaded:', response);
-        this.admins.set(response.data || []);
-        this.error.set(null);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('❌ Error loading admin statistics:', error);
-        const errorMsg = error.status === 401
-          ? 'Unauthorized. Please log in again.'
-          : error.status === 403
-          ? 'You do not have permission to view statistics.'
-          : error.status === 0
-          ? 'Unable to connect to the server. Please check your connection.'
-          : `Error loading statistics: ${error.message || 'Unknown error'}`;
-        this.error.set(errorMsg);
-        this.loading.set(false);
-      },
+    this.http
+      .get<AuditApiResponse | { data: AuditApiResponse }>(`${this.apiUrl}/admin/audit/stats`)
+      .pipe(
+        map((response) => {
+          const apiData = 'data' in response ? response.data : response;
+          return this.transformApiResponse(apiData);
+        }),
+        catchError((error) => {
+          console.error('❌ Error loading audit statistics:', error);
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (stats) => {
+          if (stats) {
+            console.log('✅ Audit statistics loaded:', stats);
+            this.stats.set(stats);
+            this.error.set(null);
+          } else {
+            this.error.set('Failed to load audit statistics');
+          }
+          this.loading.set(false);
+        },
+        error: (error) => {
+          console.error('❌ Error in subscription:', error);
+          const errorMsg = error.status === 401
+            ? 'Unauthorized. Please log in again.'
+            : error.status === 403
+            ? 'You do not have permission to view audit statistics.'
+            : error.status === 0
+            ? 'Unable to connect to the server. Please check your connection.'
+            : `Error loading audit statistics: ${error.message || 'Unknown error'}`;
+          this.error.set(errorMsg);
+          this.loading.set(false);
+        },
+      });
+  }
+
+  private transformApiResponse(apiData: AuditApiResponse): AuditStats {
+    // Compute action counts
+    const actionCounts = {
+      CREATE: apiData.actionBreakdown.CREATE || 0,
+      UPDATE: apiData.actionBreakdown.UPDATE || 0,
+      DELETE: apiData.actionBreakdown.DELETE || 0,
+    };
+
+    // Compute entity type distribution from recent logs
+    const entityTypeDistribution: Record<string, number> = {};
+    apiData.recentLogs.forEach(log => {
+      const entityType = log.entity_type;
+      entityTypeDistribution[entityType] = (entityTypeDistribution[entityType] || 0) + 1;
     });
+
+    // Compute top actors from recent logs
+    const userActionCounts: Record<string, { email: string; count: number; userId: string }> = {};
+    apiData.recentLogs.forEach(log => {
+      const userId = log.user_id;
+      const email = log.user.email;
+      if (!userActionCounts[userId]) {
+        userActionCounts[userId] = { email, count: 0, userId };
+      }
+      userActionCounts[userId].count++;
+    });
+
+    const topActors = Object.values(userActionCounts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map(user => ({
+        userId: user.userId,
+        email: user.email,
+        actionCount: user.count,
+      }));
+
+    return {
+      totalEvents: apiData.totalActions,
+      lastUpdated: new Date().toISOString(),
+      actionCounts,
+      topActors,
+      entityTypeDistribution,
+    };
   }
 
   formatTimestamp(timestamp: string): string {
     return new Date(timestamp).toLocaleString();
   }
 
-  truncateId(id: string): string {
-    return id.length > 8 ? `${id.substring(0, 8)}...` : id;
+  currentTimestamp(): string {
+    return new Date().toLocaleString();
   }
 
-  getInitials(name: string): string {
-    if (!name) return 'U';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
+  getInitials(email: string): string {
+    if (!email) return 'U';
+    return email.charAt(0).toUpperCase();
   }
 
-  getRoleBadgeColor(roleName: string): string {
-    const roleColors: Record<string, string> = {
-      'super_admin': '#E45E2C',
-      'league_admin': '#3A2634',
-      'team_admin': '#C53A34',
-      'content_admin': '#10b981',
-      'game_admin': '#f59e0b',
-    };
-    return roleColors[roleName] || '#6b7280';
-  }
-
-  getRoleDisplayName(roleName: string): string {
-    const roleNames: Record<string, string> = {
-      'super_admin': 'Super Admin',
-      'league_admin': 'League Admin',
-      'team_admin': 'Team Admin',
-      'content_admin': 'Content Admin',
-      'game_admin': 'Game Admin',
-    };
-    return roleNames[roleName] || roleName;
-  }
-
-  formatLastLogin(lastLogin: string | null | undefined): string {
-    if (!lastLogin) return 'Never';
-    const date = new Date(lastLogin);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+  formatEntityType(entityType: string): string {
+    return entityType
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 }

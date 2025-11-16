@@ -9,6 +9,7 @@ import { AdminManagementApiService } from '../../../../core/services/admin-manag
 import { AdminApiService } from '../../../../core/services/admin-api.service';
 import { AdminUser, CreateAdminDto, UpdateAdminDto } from '../../../../core/models/admin-management.model';
 import { AuditLogsTabComponent } from './tabs/audit-logs-tab.component';
+import { AdminStatsTabComponent } from './tabs/admin-stats-tab.component';
 import { AuditStatsTabComponent } from './tabs/audit-stats-tab.component';
 import { ConnectionStatsTabComponent } from './tabs/connection-stats-tab.component';
 
@@ -39,6 +40,7 @@ interface Team {
     TuiTable,
     TuiHint,
     AuditLogsTabComponent,
+    AdminStatsTabComponent,
     AuditStatsTabComponent,
     ConnectionStatsTabComponent,
   ],
@@ -47,7 +49,7 @@ interface Team {
 })
 export class AdminManagement implements OnInit {
   // Active tab
-  readonly activeTab = signal<'admins' | 'audit-logs' | 'audit-stats' | 'connection-stats'>('admins');
+  readonly activeTab = signal<'admins' | 'audit-logs' | 'admin-stats' | 'audit-stats' | 'connection-stats'>('admins');
 
 
   private readonly adminApi = inject(AdminManagementApiService);
@@ -218,7 +220,7 @@ export class AdminManagement implements OnInit {
     this.loadTeams();
   }
 
-  switchTab(tab: 'admins' | 'audit-logs' | 'audit-stats' | 'connection-stats'): void {
+  switchTab(tab: 'admins' | 'audit-logs' | 'admin-stats' | 'audit-stats' | 'connection-stats'): void {
     this.activeTab.set(tab);
   }
 
