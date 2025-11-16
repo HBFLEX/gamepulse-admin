@@ -1,0 +1,714 @@
+<div class="user-management">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">USER MANAGEMENT</h1>
+      <p class="page-subtitle">Manage registered users and their accounts</p>
+    </div>
+    <div class="header-actions">
+      @if (selectedCount() > 0) {
+        <div class="bulk-actions">
+          <span class="selected-count">{{ selectedCount() }} selected</span>
+          <button
+            tuiButton
+            appearance="secondary"
+            size="l"
+            class="bulk-button"
+            (click)="openBulkStatusUpdateModal('activate')"
+          >
+            <tui-icon icon="@tui.user-check" />
+            Activate Users
+          </button>
+          <button
+            tuiButton
+            appearance="secondary"
+            size="l"
+            class="bulk-button"
+            (click)="openBulkStatusUpdateModal('deactivate')"
+          >
+            <tui-icon icon="@tui.user-x" />
+            Deactivate Users
+          </button>
+          <button
+            tuiButton
+            appearance="secondary"
+            size="l"
+            class="bulk-delete-button"
+            (click)="openBulkDeleteModal()"
+          >
+            <tui-icon icon="@tui.trash-2" />
+            Delete Selected
+          </button>
+        </div>
+      }
+      <button
+        tuiButton
+        appearance="primary"
+        size="l"
+        class="create-button"
+        (click)="openCreateModal()"
+      >
+        <tui-icon icon="@tui.plus" />
+        Create User
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <div tuiCardLarge class="filters-card">
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-item search-filter">
+        <label tuiLabel>Search</label>
+        <tui-textfield>
+          <input
+            tuiTextfield
+            type="text"
+            placeholder="Search by name, email..."
+            [value]="searchTerm()"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+          <tui-icon icon="@tui.search" />
+        </tui-textfield>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-item">
+        <label tuiLabel>Status</label>
+        <select
+          class="filter-select"
+          [value]="statusFilter()"
+          (change)="onStatusFilterChange($any($event.target).value)"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <!-- Verification Filter -->
+      <div class="filter-item">
+        <label tuiLabel>Verification</label>
+        <select
+          class="filter-select"
+          [value]="verificationFilter()"
+          (change)="onVerificationFilterChange($any($event.target).value)"
+        >
+          <option value="all">All Users</option>
+          <option value="verified">Verified</option>
+          <option value="unverified">Unverified</option>
+        </select>
+      </div>
+
+      <!-- Team Filter -->
+      <div class="filter-item">
+        <label tuiLabel>Favorite Team</label>
+        <select
+          class="filter-select"
+          [value]="teamFilter()"
+          (change)="onTeamFilterChange($any($event.target).value)"
+        >
+          <option value="all">All Teams</option>
+          <option *ngFor="let team of teams()" [value]="team.id">{{ team.city }} {{ team.name }}</option>
+        </select>
+      </div>
+
+      <!-- Stats -->
+      <div class="filter-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total</span>
+          <span class="stat-value">{{ totalUsers() }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing</span>
+          <span class="stat-value">{{ displayedUsers().length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- List -->
+  @if (loading()) {
+    <div class="loading-container">
+      <tui-loader size="m"></tui-loader>
+    </div>
+  } @else if (displayedUsers().length === 0) {
+    <div tuiCardLarge class="empty-state">
+      <tui-icon icon="@tui.users" class="empty-icon" />
+      <h3>No users found</h3>
+      <p>Try adjusting your filters or create a new user</p>
+      <button tuiButton appearance="primary" size="m" (click)="openCreateModal()">
+        <tui-icon icon="@tui.plus" />
+        Create User
+      </button>
+    </div>
+  } @else {
+    <div tuiCardLarge class="table-card">
+      <div class="table-wrapper">
+        <table tuiTable [columns]="columns" class="users-table">
+          <thead>
+          <tr tuiThGroup>
+            <th *tuiHead="'select'" tuiTh class="select-header">
+              <input
+                type="checkbox"
+                class="select-checkbox"
+                [checked]="isAllSelected()"
+                [indeterminate]="isSomeSelected()"
+                (change)="toggleSelectAll()"
+              />
+            </th>
+            <th *tuiHead="'avatar'" tuiTh></th>
+            <th *tuiHead="'name'" tuiTh class="sortable-header" (click)="onSort('name')">
+              <span class="header-content">
+                Name
+                @if (sortColumn() === 'name') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'email'" tuiTh class="sortable-header" (click)="onSort('email')">
+              <span class="header-content">
+                Email
+                @if (sortColumn() === 'email') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'status'" tuiTh class="sortable-header" (click)="onSort('status')">
+              <span class="header-content">
+                Status
+                @if (sortColumn() === 'status') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'verification'" tuiTh class="sortable-header" (click)="onSort('verification')">
+              <span class="header-content">
+                Verification
+                @if (sortColumn() === 'verification') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'favoriteTeam'" tuiTh class="sortable-header" (click)="onSort('favoriteTeam')">
+              <span class="header-content">
+                Favorite Team
+                @if (sortColumn() === 'favoriteTeam') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'created'" tuiTh class="sortable-header" (click)="onSort('created')">
+              <span class="header-content">
+                Created
+                @if (sortColumn() === 'created') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'lastLogin'" tuiTh class="sortable-header" (click)="onSort('lastLogin')">
+              <span class="header-content">
+                Last Login
+                @if (sortColumn() === 'lastLogin') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'actions'" tuiTh class="actions-header">Actions</th>
+          </tr>
+          </thead>
+          <tbody tuiTbody [data]="displayedUsers()">
+            @for (user of displayedUsers(); track user.id) {
+              <tr tuiTr>
+                <td *tuiCell="'select'" tuiTd>
+                  <input
+                    type="checkbox"
+                    class="select-checkbox"
+                    [checked]="isUserSelected(user.id)"
+                    (change)="toggleSelectUser(user.id)"
+                  />
+                </td>
+                <td *tuiCell="'avatar'" tuiTd>
+                  <tui-avatar size="s" class="user-avatar">
+                    {{ getInitials(user.fullName) }}
+                  </tui-avatar>
+                </td>
+                <td *tuiCell="'name'" tuiTd>
+                  <div class="name-cell">
+                    <span class="user-name">{{ user.fullName || 'N/A' }}</span>
+                    @if (user.username) {
+                      <span class="user-username">&#64;{{ user.username }}</span>
+                    }
+                  </div>
+                </td>
+                <td *tuiCell="'email'" tuiTd>
+                  <span class="user-email">{{ user.email || 'N/A' }}</span>
+                </td>
+                <td *tuiCell="'status'" tuiTd>
+                  <div class="status-toggle">
+                    <label class="switch-wrapper">
+                      <input
+                        tuiSwitch
+                        type="checkbox"
+                        [ngModel]="user.isActive"
+                        (ngModelChange)="toggleUserStatus(user)"
+                      />
+                    </label>
+                    <span [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                      {{ user.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </td>
+                <td *tuiCell="'verification'" tuiTd>
+                  <span class="verification-badge" [class]="'verification-' + (user.isVerified ? 'verified' : 'unverified')">
+                    {{ user.isVerified ? 'Verified' : 'Unverified' }}
+                  </span>
+                </td>
+                <td *tuiCell="'favoriteTeam'" tuiTd>
+                  @if (getFavoriteTeamName(user)) {
+                    <span class="team-name">{{ getFavoriteTeamName(user) }}</span>
+                  } @else {
+                    <span class="no-team">—</span>
+                  }
+                </td>
+                <td *tuiCell="'created'" tuiTd>
+                  <span class="created-date">
+                    {{ formatDate(user.createdAt) }}
+                  </span>
+                </td>
+                <td *tuiCell="'lastLogin'" tuiTd>
+                  <span [class]="user.lastLogin ? 'last-login' : 'no-login'">
+                    {{ formatDate(user.lastLogin || '') }}
+                  </span>
+                </td>
+                <td *tuiCell="'actions'" tuiTd>
+                  <div class="action-buttons">
+                    <button
+                      tuiIconButton
+                      appearance="flat"
+                      size="s"
+                      class="edit-button"
+                      [tuiHint]="'Edit user'"
+                      (click)="openEditModal(user)"
+                    >
+                      <tui-icon icon="@tui.edit-2" />
+                    </button>
+                    <button
+                      tuiIconButton
+                      appearance="flat"
+                      size="s"
+                      class="delete-button"
+                      [tuiHint]="'Delete user'"
+                      (click)="openDeleteModal(user)"
+                    >
+                      <tui-icon icon="@tui.trash-2" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button
+            tuiButton
+            appearance="secondary"
+            size="s"
+            [disabled]="currentPage() === 1 || loading()"
+            (click)="onPageChange(currentPage() - 1)"
+          >
+            <tui-icon icon="@tui.chevron-left" />
+            Previous
+          </button>
+          <span class="page-info">
+            Page {{ currentPage() }} of {{ totalPages() }}
+          </span>
+          <button
+            tuiButton
+            appearance="secondary"
+            size="s"
+            [disabled]="!hasMore() || loading()"
+            (click)="onPageChange(currentPage() + 1)"
+          >
+            Next
+            <tui-icon icon="@tui.chevron-right" />
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Modals -->
+  @if (showCreateModal()) {
+    <div class="modal-overlay" (click)="closeCreateModal()">
+      <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>CREATE NEW USER</h2>
+          <button tuiIconButton appearance="flat" size="s" (click)="closeCreateModal()">
+            <tui-icon icon="@tui.x" />
+          </button>
+        </div>
+
+        <div class="modal-body">
+          @if (createError()) {
+            <div class="error-message">
+              <tui-icon icon="@tui.alert-circle" />
+              {{ createError() }}
+            </div>
+          }
+
+          <form class="admin-form" (ngSubmit)="onCreateSubmit(createForm())">
+            <div class="form-group">
+              <label tuiLabel>Full Name *</label>
+              <tui-textfield>
+                <input
+                  tuiTextfield
+                  type="text"
+                  placeholder="Enter full name"
+                  [(ngModel)]="createForm().fullName"
+                  name="fullName"
+                  required
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <label tuiLabel>Username</label>
+              <tui-textfield>
+                <input
+                  tuiTextfield
+                  type="text"
+                  placeholder="Enter username"
+                  [(ngModel)]="createForm().username"
+                  name="username"
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <label tuiLabel>Email Address *</label>
+              <tui-textfield>
+                <input
+                  tuiTextfield
+                  type="email"
+                  placeholder="user@gamepulse.com"
+                  [(ngModel)]="createForm().email"
+                  name="email"
+                  required
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <label tuiLabel>Password *</label>
+              <tui-textfield>
+                <input
+                  tuiTextfield
+                  type="password"
+                  placeholder="Minimum 8 characters"
+                  [(ngModel)]="createForm().password"
+                  name="password"
+                  required
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <label tuiLabel>Favorite Team</label>
+              <select class="form-select" [(ngModel)]="createForm().favoriteTeamId" name="favoriteTeamId">
+                <option [value]="undefined">Select a team</option>
+                <option *ngFor="let team of teams()" [value]="team.id">{{ team.city }} {{ team.name }}</option>
+              </select>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button tuiButton appearance="secondary" size="m" (click)="closeCreateModal()">
+            Cancel
+          </button>
+          <button
+            tuiButton
+            appearance="primary"
+            size="m"
+            [disabled]="loading()"
+            (click)="onCreateSubmit(createForm())"
+          >
+            @if (loading()) {
+              <tui-loader size="s"></tui-loader>
+            }
+            Create User
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showEditModal() && selectedUser()) {
+    <div class="modal-overlay" (click)="closeEditModal()">
+      <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>EDIT USER</h2>
+          <button tuiIconButton appearance="flat" size="s" (click)="closeEditModal()">
+            <tui-icon icon="@tui.x" />
+          </button>
+        </div>
+
+        <div class="modal-body">
+          @if (editError()) {
+            <div class="error-message">
+              <tui-icon icon="@tui.alert-circle" />
+              {{ editError() }}
+            </div>
+          }
+
+          <form class="admin-form" (ngSubmit)="onEditSubmit(editForm())">
+            <div class="form-group">
+              <label tuiLabel>Full Name</label>
+              <tui-textfield>
+                <input
+                  tuiTextfield
+                  type="text"
+                  placeholder="Enter full name"
+                  [value]="editForm().fullName"
+                  (input)="onEditFullNameChange($any($event.target).value)"
+                  name="fullName"
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <label tuiLabel>Username</label>
+              <tui-textfield>
+                <input
+                  tuiTextfield
+                  type="text"
+                  placeholder="Enter username"
+                  [value]="editForm().username"
+                  (input)="onEditUsernameChange($any($event.target).value)"
+                  name="username"
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <label tuiLabel>Avatar URL</label>
+              <tui-textfield>
+                <input
+                  tuiTextfield
+                  type="url"
+                  placeholder="Enter avatar URL"
+                  [value]="editForm().avatar_url"
+                  (input)="onEditAvatarChange($any($event.target).value)"
+                  name="avatar_url"
+                />
+              </tui-textfield>
+            </div>
+
+            <div class="form-group">
+              <label tuiLabel>Favorite Team</label>
+              <select
+                class="form-select"
+                [ngModel]="editForm().favoriteTeamId"
+                (ngModelChange)="onEditTeamChange($event)"
+                name="favoriteTeamId"
+              >
+                <option [value]="undefined">Select a team</option>
+                <option *ngFor="let team of teams()" [value]="team.id">{{ team.city }} {{ team.name }}</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label tuiLabel>Bio</label>
+              <textarea
+                class="form-textarea"
+                placeholder="Enter user bio"
+                [value]="editForm().bio"
+                (input)="onEditBioChange($any($event.target).value)"
+                name="bio"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input
+                  tuiSwitch
+                  type="checkbox"
+                  [ngModel]="editForm().isActive"
+                  (ngModelChange)="onEditActiveChange($event)"
+                  name="isActive"
+                />
+                <span>Active</span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input
+                  tuiSwitch
+                  type="checkbox"
+                  [ngModel]="editForm().notifications_enabled"
+                  (ngModelChange)="onEditNotificationsChange($event)"
+                  name="notifications_enabled"
+                />
+                <span>Notifications Enabled</span>
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button tuiButton appearance="secondary" size="m" (click)="closeEditModal()">
+            Cancel
+          </button>
+          <button
+            tuiButton
+            appearance="primary"
+            size="m"
+            [disabled]="loading()"
+            (click)="onEditSubmit(editForm())"
+          >
+            @if (loading()) {
+              <tui-loader size="s"></tui-loader>
+            }
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showDeleteModal() && selectedUser()) {
+    <div class="modal-overlay" (click)="closeDeleteModal()">
+      <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>DELETE USER</h2>
+          <button tuiIconButton appearance="flat" size="s" (click)="closeDeleteModal()">
+            <tui-icon icon="@tui.x" />
+          </button>
+        </div>
+
+        <div class="modal-body">
+          @if (deleteError()) {
+            <div class="error-message">
+              <tui-icon icon="@tui.alert-circle" />
+              {{ deleteError() }}
+            </div>
+          }
+
+          <div class="delete-warning">
+            <tui-icon icon="@tui.alert-triangle" class="warning-icon" />
+            <p>
+              Are you sure you want to delete
+              <strong>{{ selectedUser()!.fullName }}</strong>?
+            </p>
+            <p class="warning-text">This action cannot be undone.</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button tuiButton appearance="secondary" size="m" (click)="closeDeleteModal()">
+            Cancel
+          </button>
+          <button
+            tuiButton
+            appearance="primary"
+            size="m"
+            class="delete-confirm-button"
+            [disabled]="loading()"
+            (click)="onDeleteConfirm()"
+          >
+            @if (loading()) {
+              <tui-loader size="s"></tui-loader>
+            }
+            Delete User
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showBulkDeleteModal()) {
+    <div class="modal-overlay" (click)="closeBulkDeleteModal()">
+      <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>BULK DELETE USERS</h2>
+          <button tuiIconButton appearance="flat" size="s" (click)="closeBulkDeleteModal()">
+            <tui-icon icon="@tui.x" />
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="delete-warning">
+            <tui-icon icon="@tui.alert-triangle" class="warning-icon" />
+            <h4>Are you sure you want to delete {{ selectedCount() }} user(s)?</h4>
+            <p>This action cannot be undone.</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button tuiButton appearance="secondary" size="m" (click)="closeBulkDeleteModal()">
+            Cancel
+          </button>
+          <button
+            tuiButton
+            appearance="primary"
+            size="m"
+            class="delete-confirm-button"
+            [disabled]="bulkActionLoading()"
+            (click)="onBulkDeleteConfirm()"
+          >
+            @if (bulkActionLoading()) {
+              <tui-loader size="s"></tui-loader>
+            }
+            Delete {{ selectedCount() }} User(s)
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showBulkStatusUpdateModal()) {
+    <div class="modal-overlay" (click)="closeBulkStatusUpdateModal()">
+      <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ bulkStatusAction() === 'activate' ? 'ACTIVATE' : 'DEACTIVATE' }} USERS</h2>
+          <button tuiIconButton appearance="flat" size="s" (click)="closeBulkStatusUpdateModal()">
+            <tui-icon icon="@tui.x" />
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="delete-warning">
+            <tui-icon icon="@tui.info" class="info-icon" />
+            <h4>Are you sure you want to {{ bulkStatusAction() }} {{ selectedCount() }} user(s)?</h4>
+            <p>This will {{ bulkStatusAction() }} all selected user accounts.</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button tuiButton appearance="secondary" size="m" (click)="closeBulkStatusUpdateModal()">
+            Cancel
+          </button>
+          <button
+            tuiButton
+            appearance="primary"
+            size="m"
+            [disabled]="bulkActionLoading()"
+            (click)="onBulkStatusUpdateConfirm()"
+          >
+            @if (bulkActionLoading()) {
+              <tui-loader size="s"></tui-loader>
+            }
+            {{ bulkStatusAction() === 'activate' ? 'Activate' : 'Deactivate' }} {{ selectedCount() }} User(s)
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

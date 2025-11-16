@@ -17,11 +17,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/admin-management/admin-management').then((m) => m.AdminManagement),
   },
-  {
-    path: 'users',
-    loadComponent: () =>
-      import('./pages/overview/overview.component').then((m) => m.OverviewComponent), // TODO: Replace with actual component
-  },
+   {
+     path: 'users',
+     loadComponent: () =>
+       import('./pages/user-management/user-management').then((m) => m.UserManagement),
+   },
   {
     path: 'roles',
     loadComponent: () =>
