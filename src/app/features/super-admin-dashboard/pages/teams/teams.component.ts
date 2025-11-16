@@ -362,7 +362,7 @@ export class TeamsComponent implements OnInit {
     this.uploadProgress.set(0);
   }
 
-  async uploadLogo(): Promise<string | null> {
+  async uploadLogo(teamId?: number): Promise<string | null> {
     const file = this.selectedFile();
     if (!file) return null;
 
@@ -371,13 +371,16 @@ export class TeamsComponent implements OnInit {
     formData.append('file', file);
 
     try {
-      const response = await this.http.post<any>(
-        `${environment.apiUrl}/media/admin/upload?type=image&entityType=team`,
-        formData
-      ).toPromise();
+      // Build URL with entityType and optionally entityId
+      let uploadUrl = `${environment.apiUrl}/media/admin/upload?type=image&entityType=team`;
+      if (teamId) {
+        uploadUrl += `&entityId=${teamId}`;
+      }
+
+      const response = await this.http.post<any>(uploadUrl, formData).toPromise();
       
       this.isUploading.set(false);
-      return response.url || response.data?.url;
+      return response.data?.file_url || response.url || response.data?.url;
     } catch (error) {
       console.error('Error uploading logo:', error);
       this.isUploading.set(false);
@@ -480,10 +483,10 @@ export class TeamsComponent implements OnInit {
     this.loading.set(true);
 
     try {
-      // Upload new logo if file selected
+      // Upload new logo if file selected - pass team ID so server can update team_logo field
       let logoUrl = this.formData().logo;
       if (this.selectedFile()) {
-        logoUrl = await this.uploadLogo() || '';
+        logoUrl = await this.uploadLogo(team.id) || '';
         // Update preview with new uploaded URL
         if (logoUrl) {
           this.logoPreview.set(logoUrl);
