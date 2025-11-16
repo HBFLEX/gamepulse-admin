@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { TuiButton, TuiIcon, TuiLoader, TuiLabel, TuiAlertService, TuiHint } from '@taiga-ui/core';
+import { TuiButton, TuiIcon, TuiLoader, TuiLabel, TuiAlertService, TuiHint, TuiTextfield, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiInputModule } from '@taiga-ui/legacy';
 import { TuiCardLarge } from '@taiga-ui/layout';
 import { TuiTable } from '@taiga-ui/addon-table';
@@ -34,7 +34,7 @@ interface CreateTeamDto {
   arena: string;
   foundedYear: number;
   championshipsWon?: number;
-  leagueId: number;
+  leagueId: number | undefined;
   divisionId?: number;
   conferenceId?: number;
   coachId?: number;
@@ -64,6 +64,8 @@ interface UpdateTeamDto {
     TuiLabel,
     TuiLoader,
     TuiHint,
+    TuiTextfield,
+    TuiTextfieldComponent,
     TuiInputModule,
     TuiCardLarge,
     TuiTable,
@@ -212,6 +214,7 @@ export class TeamsComponent implements OnInit {
     );
     return Array.from(conferences).sort();
   });
+
 
   ngOnInit(): void {
     this.loadMetadata();
@@ -405,7 +408,7 @@ export class TeamsComponent implements OnInit {
     this.formError.set(null);
     const data = this.formData();
 
-    if (!data.name || !data.city || !data.arena || !data.foundedYear || !data.leagueId) {
+    if (!data.name || !data.city || !data.arena || !data.foundedYear || !data.leagueId || !data.conferenceId) {
       this.formError.set('Please fill in all required fields');
       return;
     }
@@ -443,15 +446,21 @@ export class TeamsComponent implements OnInit {
   // Edit
   openEditModal(team: Team): void {
     this.selectedTeam.set(team);
+    
+    // Find matching league, division, conference by name
+    const matchingLeague = this.leagues().find(l => l.name === team.league);
+    const matchingDivision = this.divisions().find(d => d.name === team.division);
+    const matchingConference = this.conferences().find(c => c.name === team.conference);
+    
     this.formData.set({
       name: team.name,
       city: team.city,
       arena: team.arena,
       foundedYear: team.foundedYear,
       championshipsWon: team.championships || 0,
-      leagueId: 0, // Note: League/division/conference come as strings, not IDs
-      divisionId: undefined,
-      conferenceId: undefined,
+      leagueId: matchingLeague?.id || undefined,
+      divisionId: matchingDivision?.id || undefined,
+      conferenceId: matchingConference?.id || undefined,
       coachId: team.coach?.id,
       logo: team.logo || '',
     });
@@ -655,6 +664,15 @@ export class TeamsComponent implements OnInit {
 
   getCoachName(team: Team): string {
     if (!team.coach) return '-';
-    return team.coach.name;
+    // Handle both name formats: direct name or firstName/lastName
+    if ('name' in team.coach && team.coach.name) {
+      return team.coach.name;
+    }
+    if ('firstName' in team.coach || 'lastName' in team.coach) {
+      const firstName = (team.coach as any).firstName || '';
+      const lastName = (team.coach as any).lastName || '';
+      return `${firstName} ${lastName}`.trim();
+    }
+    return '-';
   }
 }
