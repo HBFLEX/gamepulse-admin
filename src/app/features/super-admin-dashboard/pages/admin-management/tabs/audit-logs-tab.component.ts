@@ -182,27 +182,33 @@ interface AuditLogResponse {
 
           <!-- Pagination -->
           <div class="pagination">
-            <button
-              tuiButton
-              appearance="secondary"
-              size="s"
-              [disabled]="currentPage() === 1"
-              (click)="previousPage()"
-            >
-              Previous
-            </button>
-            <span class="page-info">
-              Page {{ currentPage() }} of {{ totalPages() }}
-            </span>
-            <button
-              tuiButton
-              appearance="secondary"
-              size="s"
-              [disabled]="!hasMore()"
-              (click)="nextPage()"
-            >
-              Next
-            </button>
+            <div class="pagination-info">
+              <span class="total-logs">{{ totalLogs() }} total logs</span>
+              <span class="page-separator">•</span>
+              <span class="page-info">Page {{ currentPage() }} of {{ totalPages() }}</span>
+            </div>
+            <div class="pagination-controls">
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                [disabled]="currentPage() === 1 || loading()"
+                (click)="previousPage()"
+              >
+                <tui-icon icon="@tui.chevron-left" />
+                Previous
+              </button>
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                [disabled]="!hasMore() || loading()"
+                (click)="nextPage()"
+              >
+                Next
+                <tui-icon icon="@tui.chevron-right" />
+              </button>
+            </div>
           </div>
         }
       </div>
@@ -499,19 +505,45 @@ interface AuditLogResponse {
 
     .pagination {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 1rem;
       margin-top: 1.5rem;
       padding-top: 1.5rem;
       border-top: 1px solid var(--tui-border-normal);
     }
 
+    .pagination-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .total-logs {
+      font-weight: 600;
+      color: var(--tui-text-primary);
+    }
+
+    .page-separator {
+      color: var(--tui-text-tertiary);
+    }
+
     .page-info {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.938rem;
-      letter-spacing: 0.5px;
       color: var(--tui-text-secondary);
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .pagination {
+        flex-direction: row;
+        justify-content: space-between;
+      }
     }
 
     /* Modal Styles */
@@ -853,9 +885,10 @@ export class AuditLogsTabComponent implements OnInit {
     this.error.set(null);
     console.log('🔍 Loading audit logs...');
 
+    const itemsPerPage = 20;
     let params = new HttpParams()
       .set('page', this.currentPage().toString())
-      .set('limit', '50');
+      .set('limit', itemsPerPage.toString());
 
     if (this.actionFilter) {
       params = params.set('action', this.actionFilter);
@@ -872,7 +905,7 @@ export class AuditLogsTabComponent implements OnInit {
           console.error('❌ Error loading audit logs:', error);
           return of({
             data: [],
-            meta: { total: 0, page: 1, limit: 50, hasMore: false }
+            meta: { total: 0, page: 1, limit: itemsPerPage, hasMore: false }
           } as AuditLogResponse);
         })
       )
@@ -882,7 +915,7 @@ export class AuditLogsTabComponent implements OnInit {
           this.logs.set(response.data || []);
           this.totalLogs.set(response.meta?.total || 0);
           this.hasMore.set(response.meta?.hasMore || false);
-          this.totalPages.set(Math.ceil((response.meta?.total || 0) / 50));
+          this.totalPages.set(Math.ceil((response.meta?.total || 0) / itemsPerPage));
           this.error.set(null);
           this.loading.set(false);
         },
