@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TuiButton, TuiHint, TuiIcon, TuiLabel, TuiLoader, TuiTextfield, TuiAlertService } from '@taiga-ui/core';
@@ -8,6 +8,9 @@ import { TuiTable } from '@taiga-ui/addon-table';
 import { AdminManagementApiService } from '../../../../core/services/admin-management-api-service';
 import { AdminApiService } from '../../../../core/services/admin-api.service';
 import { AdminUser, CreateAdminDto, UpdateAdminDto } from '../../../../core/models/admin-management.model';
+import { AuditLogsTabComponent } from './tabs/audit-logs-tab.component';
+import { AuditStatsTabComponent } from './tabs/audit-stats-tab.component';
+import { ConnectionStatsTabComponent } from './tabs/connection-stats-tab.component';
 
 interface RoleOption {
   id: number;
@@ -35,11 +38,18 @@ interface Team {
     TuiCardLarge,
     TuiTable,
     TuiHint,
+    AuditLogsTabComponent,
+    AuditStatsTabComponent,
+    ConnectionStatsTabComponent,
   ],
   templateUrl: './admin-management.html',
   styleUrl: './admin-management.less',
 })
-export class AdminManagement {
+export class AdminManagement implements OnInit {
+  // Active tab
+  readonly activeTab = signal<'admins' | 'audit-logs' | 'audit-stats' | 'connection-stats'>('admins');
+
+
   private readonly adminApi = inject(AdminManagementApiService);
   private readonly teamsApi = inject(AdminApiService);
   private readonly alerts = inject(TuiAlertService);
@@ -198,6 +208,10 @@ export class AdminManagement {
   ngOnInit(): void {
     this.loadAdmins();
     this.loadTeams();
+  }
+
+  switchTab(tab: 'admins' | 'audit-logs' | 'audit-stats' | 'connection-stats'): void {
+    this.activeTab.set(tab);
   }
 
   loadAdmins(): void {

@@ -1,4 +1,43 @@
 <div class="admin-management-page">
+  <!-- Tabs Navigation -->
+  <div class="tabs-navigation">
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'admins'"
+      (click)="switchTab('admins')"
+    >
+      <tui-icon icon="@tui.users" />
+      <span>Admin Management</span>
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'audit-logs'"
+      (click)="switchTab('audit-logs')"
+    >
+      <tui-icon icon="@tui.file-text" />
+      <span>Audit Logs</span>
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'audit-stats'"
+      (click)="switchTab('audit-stats')"
+    >
+      <tui-icon icon="@tui.bar-chart-2" />
+      <span>Audit Stats</span>
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'connection-stats'"
+      (click)="switchTab('connection-stats')"
+    >
+      <tui-icon icon="@tui.activity" />
+      <span>Connection Stats</span>
+    </button>
+  </div>
+
+  <!-- Admin Management Tab -->
+  @if (activeTab() === 'admins') {
+  <div class="tab-content">
   <!-- Header -->
   <div class="page-header">
     <div class="header-left">
@@ -320,7 +359,8 @@
       }
     </div>
   }
-</div>
+  </div>
+  }
 
 <!-- Create Admin Modal -->
 @if (showCreateModal()) {
@@ -690,3 +730,25 @@
     </div>
   </div>
 }
+
+<!-- Audit Logs Tab -->
+  @if (activeTab() === 'audit-logs') {
+  <div class="tab-content">
+    <app-audit-logs-tab />
+  </div>
+  }
+
+  <!-- Audit Stats Tab -->
+  @if (activeTab() === 'audit-stats') {
+  <div class="tab-content">
+    <app-audit-stats-tab />
+  </div>
+  }
+
+  <!-- Connection Stats Tab -->
+  @if (activeTab() === 'connection-stats') {
+  <div class="tab-content">
+    <app-connection-stats-tab />
+  </div>
+  }
+</div>
