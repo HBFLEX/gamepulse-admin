@@ -468,10 +468,17 @@ export class TeamsComponent implements OnInit {
       logo: team.logo || '',
     });
     this.formError.set(null);
-    this.clearFile();
+    
+    // Clear file selection but keep the preview if team has a logo
+    this.selectedFile.set(null);
+    
+    // Set logo preview to existing team logo
     if (team.logo) {
       this.logoPreview.set(team.logo);
+    } else {
+      this.logoPreview.set(null);
     }
+    
     this.showEditModal.set(true);
   }
 
