@@ -25,7 +25,7 @@ export const routes: Routes = [
   {
     path: 'roles',
     loadComponent: () =>
-      import('./pages/overview/overview.component').then((m) => m.OverviewComponent), // TODO: Replace with actual component
+      import('./pages/roles/roles.component').then((m) => m.RolesComponent),
   },
   {
     path: 'teams',
