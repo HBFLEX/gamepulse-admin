@@ -38,7 +38,7 @@ interface CreateTeamDto {
   leagueId: number | undefined;
   divisionId?: number;
   conferenceId?: number;
-  coachId?: number;
+  coachId?: number | null;
   logo?: string;
 }
 
@@ -50,7 +50,7 @@ interface UpdateTeamDto {
   championshipsWon?: number;
   conferenceId?: number;
   divisionId?: number;
-  coachId?: number;
+  coachId?: number | null;
   logo?: string;
 }
 
@@ -426,7 +426,7 @@ export class TeamsComponent implements OnInit {
       leagueId: 0,
       divisionId: undefined,
       conferenceId: undefined,
-      coachId: undefined,
+      coachId: null,  // Default to null (no coach)
       logo: '',
     });
     this.formError.set(null);
@@ -491,7 +491,7 @@ export class TeamsComponent implements OnInit {
       leagueId: matchingLeague?.id || undefined,
       divisionId: matchingDivision?.id || undefined,
       conferenceId: matchingConference?.id || undefined,
-      coachId: team.coach?.id,
+      coachId: team.coach?.id || null,  // Use null instead of undefined for teams without coaches
       logo: team.logo || '',
     });
     this.formError.set(null);
@@ -533,9 +533,12 @@ export class TeamsComponent implements OnInit {
         championshipsWon: this.formData().championshipsWon,
         conferenceId: this.formData().conferenceId,
         divisionId: this.formData().divisionId,
-        coachId: this.formData().coachId,
         logo: logoUrl || undefined,
       };
+
+      // Don't include coachId in the update DTO - we'll handle coach assignment separately
+      const coachIdChanged = this.formData().coachId !== team.coach?.id;
+      const newCoachId = this.formData().coachId;
 
       // Optimistically update the UI immediately
       const teamIndex = this.teams().findIndex(t => t.id === team.id);
@@ -544,7 +547,23 @@ export class TeamsComponent implements OnInit {
         const selectedLeague = this.leagues().find(l => l.id === this.formData().leagueId);
         const selectedDivision = this.divisions().find(d => d.id === data.divisionId);
         const selectedConference = this.conferences().find(c => c.id === data.conferenceId);
-        const selectedCoach = data.coachId ? this.coaches().find(c => c.id === data.coachId) : undefined;
+        
+        // Handle coach assignment: null means remove coach, number means assign coach
+        let coachValue: Team['coach'] = updatedTeams[teamIndex].coach;
+        if (newCoachId === null) {
+          // Explicitly removing coach
+          coachValue = undefined;
+        } else if (newCoachId) {
+          // Assigning a coach
+          const selectedCoach = this.coaches().find(c => c.id === newCoachId);
+          if (selectedCoach) {
+            coachValue = {
+              id: selectedCoach.id,
+              name: `${selectedCoach.coach_first_name} ${selectedCoach.coach_last_name}`,
+              experienceYears: selectedCoach.coach_experience_years,
+            };
+          }
+        }
         
         updatedTeams[teamIndex] = {
           ...updatedTeams[teamIndex],
@@ -557,11 +576,7 @@ export class TeamsComponent implements OnInit {
           division: selectedDivision?.name || updatedTeams[teamIndex].division,
           conference: selectedConference?.name || updatedTeams[teamIndex].conference,
           logo: logoUrl || updatedTeams[teamIndex].logo,
-          coach: selectedCoach ? {
-            id: selectedCoach.id,
-            name: `${selectedCoach.coach_first_name} ${selectedCoach.coach_last_name}`,
-            experienceYears: selectedCoach.coach_experience_years,
-          } : undefined,
+          coach: coachValue,
         };
         this.teams.set(updatedTeams);
       }
@@ -569,12 +584,43 @@ export class TeamsComponent implements OnInit {
       // Close modal immediately for better UX
       this.showEditModal.set(false);
 
-      // Then update on the server in the background
+      // Update team basic info first
       this.http.put<Team>(`${this.apiUrl}/admin/${team.id}`, data).subscribe({
         next: () => {
-          // Optionally reload to sync with server (silent background refresh)
-          this.loadTeamsInBackground();
-          this.alerts.open('Team updated successfully', { appearance: 'success' }).subscribe();
+          // If coach assignment changed, update it separately
+          if (coachIdChanged) {
+            if (newCoachId === null) {
+              // Remove coach using DELETE endpoint
+              this.http.delete(`${this.apiUrl}/admin/${team.id}/coach`).subscribe({
+                next: () => {
+                  this.loadTeamsInBackground();
+                  this.alerts.open('Team updated and coach removed successfully', { appearance: 'success' }).subscribe();
+                },
+                error: (error) => {
+                  console.error('Error removing coach:', error);
+                  this.loadTeams();
+                  this.alerts.open('Team updated but failed to remove coach', { appearance: 'warning' }).subscribe();
+                }
+              });
+            } else {
+              // Assign new coach using the dedicated endpoint
+              this.http.put(`${this.apiUrl}/admin/${team.id}/coach`, { coachId: newCoachId }).subscribe({
+                next: () => {
+                  this.loadTeamsInBackground();
+                  this.alerts.open('Team and coach updated successfully', { appearance: 'success' }).subscribe();
+                },
+                error: (error) => {
+                  console.error('Error assigning coach:', error);
+                  this.loadTeams();
+                  this.alerts.open('Team updated but failed to assign coach', { appearance: 'warning' }).subscribe();
+                }
+              });
+            }
+          } else {
+            // Optionally reload to sync with server (silent background refresh)
+            this.loadTeamsInBackground();
+            this.alerts.open('Team updated successfully', { appearance: 'success' }).subscribe();
+          }
         },
         error: (error) => {
           console.error('Error updating team:', error);
