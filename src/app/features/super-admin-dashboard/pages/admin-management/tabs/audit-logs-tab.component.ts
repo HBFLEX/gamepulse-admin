@@ -4,8 +4,35 @@ import { FormsModule } from '@angular/forms';
 import { TuiButton, TuiIcon, TuiLabel, TuiLoader } from '@taiga-ui/core';
 import { TuiCardLarge } from '@taiga-ui/layout';
 import { TuiTable } from '@taiga-ui/addon-table';
-import { AdminManagementApiService } from '../../../../../core/services/admin-management-api-service';
-import { AdminUser } from '../../../../../core/models/admin-management.model';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from '../../../../../../environments/environment';
+import { catchError, map, of } from 'rxjs';
+
+interface AuditLog {
+  id: number;
+  user_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: number | null;
+  old_values: any;
+  new_values: any;
+  created_at: string;
+  user?: {
+    id: string;
+    email: string;
+    full_name: string;
+  };
+}
+
+interface AuditLogResponse {
+  data: AuditLog[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+  };
+}
 
 @Component({
   selector: 'app-audit-logs-tab',
@@ -26,31 +53,33 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
       <div tuiCardLarge class="filters-card">
         <div class="filters-grid">
           <div class="filter-group">
-            <label tuiLabel>Role</label>
+            <label tuiLabel>Action</label>
             <select
               class="filter-select"
-              [(ngModel)]="roleFilter"
+              [(ngModel)]="actionFilter"
               (ngModelChange)="onFilterChange()"
             >
-              <option value="">All Roles</option>
-              <option value="super_admin">Super Admin</option>
-              <option value="league_admin">League Admin</option>
-              <option value="team_admin">Team Admin</option>
-              <option value="content_admin">Content Admin</option>
-              <option value="game_admin">Game Admin</option>
+              <option value="">All Actions</option>
+              <option value="CREATE">Create</option>
+              <option value="UPDATE">Update</option>
+              <option value="DELETE">Delete</option>
             </select>
           </div>
 
           <div class="filter-group">
-            <label tuiLabel>Status</label>
+            <label tuiLabel>Entity Type</label>
             <select
               class="filter-select"
-              [(ngModel)]="statusFilter"
+              [(ngModel)]="entityTypeFilter"
               (ngModelChange)="onFilterChange()"
             >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="">All Types</option>
+              <option value="admin_user">Admin User</option>
+              <option value="game">Game</option>
+              <option value="team">Team</option>
+              <option value="player">Player</option>
+              <option value="content">Content</option>
+              <option value="news">News</option>
             </select>
           </div>
 
@@ -77,7 +106,7 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
         } @else if (error()) {
           <div class="error-state">
             <tui-icon icon="@tui.alert-circle" class="error-icon" />
-            <p class="error-title">Failed to Load Admin Activity</p>
+            <p class="error-title">Failed to Load Audit Logs</p>
             <p class="error-message">{{ error() }}</p>
             <button
               tuiButton
@@ -89,10 +118,10 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
               Retry
             </button>
           </div>
-        } @else if (admins().length === 0) {
+        } @else if (logs().length === 0) {
           <div class="empty-state">
-            <tui-icon icon="@tui.users" class="empty-icon" />
-            <p class="empty-title">No Admin Users Found</p>
+            <tui-icon icon="@tui.file-text" class="empty-icon" />
+            <p class="empty-title">No Audit Logs Found</p>
             <p class="empty-subtitle">Try adjusting your filters</p>
           </div>
         } @else {
@@ -100,45 +129,50 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
             <table tuiTable [columns]="columns" class="audit-table">
               <thead>
                 <tr tuiThGroup>
-                  <th *tuiHead="'admin'" tuiTh>Admin</th>
-                  <th *tuiHead="'email'" tuiTh>Email</th>
-                  <th *tuiHead="'role'" tuiTh>Role</th>
-                  <th *tuiHead="'status'" tuiTh>Status</th>
-                  <th *tuiHead="'lastLogin'" tuiTh>Last Login</th>
-                  <th *tuiHead="'team'" tuiTh>Team</th>
-                  <th *tuiHead="'timestamp'" tuiTh>Created</th>
+                  <th *tuiHead="'timestamp'" tuiTh>Timestamp</th>
+                  <th *tuiHead="'user'" tuiTh>User</th>
+                  <th *tuiHead="'action'" tuiTh>Action</th>
+                  <th *tuiHead="'entity'" tuiTh>Entity</th>
+                  <th *tuiHead="'entityId'" tuiTh>Entity ID</th>
+                  <th *tuiHead="'changes'" tuiTh>Changes</th>
                 </tr>
               </thead>
-              <tbody tuiTbody [data]="admins()">
-                @for (admin of admins(); track admin.id) {
+              <tbody tuiTbody [data]="logs()">
+                @for (log of logs(); track log.id) {
                   <tr tuiTr>
-                    <td *tuiCell="'admin'" tuiTd>
-                      <div class="admin-cell">
-                        <div class="admin-avatar">{{ getInitials(admin.fullName) }}</div>
-                        <span class="admin-name">{{ admin.fullName }}</span>
+                    <td *tuiCell="'timestamp'" tuiTd>
+                      <span class="timestamp">{{ formatTimestamp(log.created_at) }}</span>
+                    </td>
+                    <td *tuiCell="'user'" tuiTd>
+                      <div class="user-cell">
+                        <div class="user-avatar">{{ getUserInitial(log.user?.full_name || log.user?.email || 'U') }}</div>
+                        <div class="user-info">
+                          <span class="user-name">{{ log.user?.full_name || 'Unknown User' }}</span>
+                          <span class="user-email">{{ log.user?.email || '-' }}</span>
+                        </div>
                       </div>
                     </td>
-                    <td *tuiCell="'email'" tuiTd>
-                      <span class="email">{{ admin.email }}</span>
-                    </td>
-                    <td *tuiCell="'role'" tuiTd>
-                      <span class="role-badge" [style.background]="getRoleBadgeColor(admin.role ? admin.role.name : '')">
-                        {{ getRoleDisplayName(admin.role ? admin.role.name : 'Unknown') }}
+                    <td *tuiCell="'action'" tuiTd>
+                      <span class="action-badge" [class]="'action-' + log.action.toLowerCase()">
+                        {{ log.action }}
                       </span>
                     </td>
-                    <td *tuiCell="'status'" tuiTd>
-                      <span class="status-badge" [class.active]="admin.isActive" [class.inactive]="!admin.isActive">
-                        {{ admin.isActive ? 'Active' : 'Inactive' }}
-                      </span>
+                    <td *tuiCell="'entity'" tuiTd>
+                      <span class="entity-type">{{ formatEntityType(log.entity_type) }}</span>
                     </td>
-                    <td *tuiCell="'lastLogin'" tuiTd>
-                      <span class="timestamp">{{ formatDate(admin.lastLogin || '') }}</span>
+                    <td *tuiCell="'entityId'" tuiTd>
+                      <span class="entity-id">{{ log.entity_id || '-' }}</span>
                     </td>
-                    <td *tuiCell="'team'" tuiTd>
-                      <span class="team-name">{{ admin.team?.name || '-' }}</span>
-                    </td>
-                    <td *tuiCell="'timestamp'" tuiTd>
-                      <span class="timestamp">{{ formatDate(admin.createdAt) }}</span>
+                    <td *tuiCell="'changes'" tuiTd>
+                      <button
+                        tuiButton
+                        appearance="flat"
+                        size="xs"
+                        (click)="viewChanges(log)"
+                      >
+                        <tui-icon icon="@tui.eye" />
+                        View
+                      </button>
                     </td>
                   </tr>
                 }
@@ -289,13 +323,13 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
       white-space: nowrap;
     }
 
-    .admin-cell {
+    .user-cell {
       display: flex;
       align-items: center;
       gap: 0.75rem;
     }
 
-    .admin-avatar {
+    .user-avatar {
       width: 2rem;
       height: 2rem;
       border-radius: 50%;
@@ -309,28 +343,24 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
       flex-shrink: 0;
     }
 
-    .admin-name {
-      font-weight: 500;
-      color: var(--tui-text-primary);
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
     }
 
-    .email {
-      font-size: 0.813rem;
+    .user-name {
+      font-weight: 500;
+      color: var(--tui-text-primary);
+      font-size: 0.875rem;
+    }
+
+    .user-email {
+      font-size: 0.75rem;
       color: var(--tui-text-secondary);
     }
 
-    .role-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 1rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .status-badge {
+    .action-badge {
       display: inline-block;
       padding: 0.25rem 0.75rem;
       border-radius: 1rem;
@@ -339,20 +369,32 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
       text-transform: uppercase;
       letter-spacing: 0.5px;
 
-      &.active {
+      &.action-create {
         background: rgba(34, 197, 94, 0.1);
         color: #22c55e;
       }
 
-      &.inactive {
+      &.action-update {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+      }
+
+      &.action-delete {
         background: rgba(239, 68, 68, 0.1);
         color: #ef4444;
       }
     }
 
-    .team-name {
-      font-size: 0.813rem;
+    .entity-type {
+      font-size: 0.875rem;
       color: var(--tui-text-primary);
+      font-weight: 500;
+    }
+
+    .entity-id {
+      font-size: 0.813rem;
+      color: var(--tui-text-secondary);
+      font-family: 'Courier New', monospace;
     }
 
     .pagination {
@@ -374,18 +416,20 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
   `],
 })
 export class AuditLogsTabComponent implements OnInit {
-  private readonly adminApi = inject(AdminManagementApiService);
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
 
-  readonly columns = ['timestamp', 'admin', 'email', 'role', 'status', 'lastLogin', 'team'];
-  readonly admins = signal<AdminUser[]>([]);
+  readonly columns = ['timestamp', 'user', 'action', 'entity', 'entityId', 'changes'];
+  readonly logs = signal<AuditLog[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly currentPage = signal(1);
   readonly totalPages = signal(1);
+  readonly totalLogs = signal(0);
   readonly hasMore = signal(false);
 
-  roleFilter = '';
-  statusFilter = '';
+  actionFilter = '';
+  entityTypeFilter = '';
 
   ngOnInit(): void {
     this.loadLogs();
@@ -394,36 +438,51 @@ export class AuditLogsTabComponent implements OnInit {
   loadLogs(): void {
     this.loading.set(true);
     this.error.set(null);
-    console.log('🔍 Loading admin activity logs...');
+    console.log('🔍 Loading audit logs...');
 
-    const isActive = this.statusFilter === 'active' ? true : this.statusFilter === 'inactive' ? false : undefined;
+    let params = new HttpParams()
+      .set('page', this.currentPage().toString())
+      .set('limit', '50');
 
-    this.adminApi
-      .getAdmins(
-        this.roleFilter || undefined,
-        isActive,
-        this.currentPage(),
-        50
+    if (this.actionFilter) {
+      params = params.set('action', this.actionFilter);
+    }
+    if (this.entityTypeFilter) {
+      params = params.set('entityType', this.entityTypeFilter);
+    }
+
+    this.http
+      .get<AuditLogResponse>(`${this.apiUrl}/admin/audit/logs`, { params })
+      .pipe(
+        map((response) => response),
+        catchError((error) => {
+          console.error('❌ Error loading audit logs:', error);
+          return of({
+            data: [],
+            meta: { total: 0, page: 1, limit: 50, hasMore: false }
+          } as AuditLogResponse);
+        })
       )
       .subscribe({
         next: (response) => {
-          console.log('✅ Admin activity logs loaded:', response);
-          this.admins.set(response.data || []);
+          console.log('✅ Audit logs loaded:', response);
+          this.logs.set(response.data || []);
+          this.totalLogs.set(response.meta?.total || 0);
           this.hasMore.set(response.meta?.hasMore || false);
           this.totalPages.set(Math.ceil((response.meta?.total || 0) / 50));
           this.error.set(null);
           this.loading.set(false);
         },
         error: (error) => {
-          console.error('❌ Error loading admin activity:', error);
-          this.admins.set([]);
+          console.error('❌ Error in subscription:', error);
+          this.logs.set([]);
           const errorMsg = error.status === 401 
             ? 'Unauthorized. Please log in again.' 
             : error.status === 403 
-            ? 'You do not have permission to view admin activity.'
+            ? 'You do not have permission to view audit logs.'
             : error.status === 0
             ? 'Unable to connect to the server. Please check your connection.'
-            : `Error loading admin activity: ${error.message || 'Unknown error'}`;
+            : `Error loading audit logs: ${error.message || 'Unknown error'}`;
           this.error.set(errorMsg);
           this.loading.set(false);
         },
@@ -436,8 +495,8 @@ export class AuditLogsTabComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.roleFilter = '';
-    this.statusFilter = '';
+    this.actionFilter = '';
+    this.entityTypeFilter = '';
     this.onFilterChange();
   }
 
@@ -455,9 +514,9 @@ export class AuditLogsTabComponent implements OnInit {
     }
   }
 
-  formatDate(dateString: string): string {
-    if (!dateString) return 'Never';
-    const date = new Date(dateString);
+  formatTimestamp(timestamp: string): string {
+    if (!timestamp) return '-';
+    const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -467,34 +526,24 @@ export class AuditLogsTabComponent implements OnInit {
     });
   }
 
-  getInitials(name: string): string {
+  getUserInitial(name: string): string {
     if (!name) return 'U';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
+    return name.charAt(0).toUpperCase();
   }
 
-  getRoleBadgeColor(roleName: string): string {
-    const roleColors: Record<string, string> = {
-      'super_admin': '#E45E2C',
-      'league_admin': '#3A2634',
-      'team_admin': '#C53A34',
-      'content_admin': '#10b981',
-      'game_admin': '#f59e0b',
-    };
-    return roleColors[roleName] || '#6b7280';
+  formatEntityType(entityType: string): string {
+    return entityType
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
-  getRoleDisplayName(roleName: string): string {
-    const roleNames: Record<string, string> = {
-      'super_admin': 'Super Admin',
-      'league_admin': 'League Admin',
-      'team_admin': 'Team Admin',
-      'content_admin': 'Content Admin',
-      'game_admin': 'Game Admin',
+  viewChanges(log: AuditLog): void {
+    const changes = {
+      'Old Values': log.old_values || {},
+      'New Values': log.new_values || {},
     };
-    return roleNames[roleName] || roleName;
+    alert(JSON.stringify(changes, null, 2));
   }
 }
