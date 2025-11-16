@@ -117,7 +117,7 @@ export class AdminManagement implements OnInit {
   ]);
 
   readonly teams = signal<Team[]>([]);
-  readonly columns = ['select', 'avatar', 'name', 'email', 'role', 'status', 'lastLogin', 'actions'];
+  readonly columns = ['select', 'avatar', 'name', 'email', 'role', 'status', 'team', 'created', 'lastLogin', 'actions'];
 
   // Client-side filtered list for display
   readonly displayedAdmins = computed(() => {
@@ -169,6 +169,14 @@ export class AdminManagement implements OnInit {
           case 'lastLogin':
             aValue = a.lastLogin ? new Date(a.lastLogin).getTime() : 0;
             bValue = b.lastLogin ? new Date(b.lastLogin).getTime() : 0;
+            break;
+          case 'team':
+            aValue = a.team?.name?.toLowerCase() || '';
+            bValue = b.team?.name?.toLowerCase() || '';
+            break;
+          case 'created':
+            aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            bValue = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             break;
           default:
             return 0;
