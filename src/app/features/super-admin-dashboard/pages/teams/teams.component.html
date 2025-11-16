@@ -117,7 +117,7 @@
 
   <!-- Loading State -->
   <div *ngIf="loading()" class="loading-container">
-    <tui-loader size="xl"></tui-loader>
+    <tui-loader size="m"></tui-loader>
   </div>
 
   <!-- Teams Table -->
@@ -321,49 +321,60 @@
         <div class="form-row">
           <div class="form-group">
             <label tuiLabel>Team Name *</label>
-            <tui-input
-              [ngModel]="formData().name"
-              (ngModelChange)="updateFormField('name', $event)"
-              [ngModelOptions]="{standalone: true}"
-            >
-              Enter team name
-            </tui-input>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter team name"
+                [value]="formData().name"
+                (input)="updateFormField('name', $any($event.target).value)"
+                name="name"
+              />
+            </tui-textfield>
           </div>
 
           <div class="form-group">
             <label tuiLabel>City *</label>
-            <tui-input
-              [ngModel]="formData().city"
-              (ngModelChange)="updateFormField('city', $event)"
-              [ngModelOptions]="{standalone: true}"
-            >
-              Enter city
-            </tui-input>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter city"
+                [value]="formData().city"
+                (input)="updateFormField('city', $any($event.target).value)"
+                name="city"
+              />
+            </tui-textfield>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label tuiLabel>Arena *</label>
-            <tui-input
-              [ngModel]="formData().arena"
-              (ngModelChange)="updateFormField('arena', $event)"
-              [ngModelOptions]="{standalone: true}"
-            >
-              Enter arena name
-            </tui-input>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter arena name"
+                [value]="formData().arena"
+                (input)="updateFormField('arena', $any($event.target).value)"
+                name="arena"
+              />
+            </tui-textfield>
           </div>
 
           <div class="form-group">
             <label tuiLabel>Founded Year *</label>
-            <tui-input
-              [ngModel]="formData().foundedYear"
-              (ngModelChange)="updateFormField('foundedYear', +$event)"
-              [ngModelOptions]="{standalone: true}"
-              type="number"
-            >
-              Enter year
-            </tui-input>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter year"
+                [value]="formData().foundedYear"
+                (input)="updateFormField('foundedYear', +$any($event.target).value)"
+                name="foundedYear"
+              />
+            </tui-textfield>
           </div>
         </div>
 
@@ -371,11 +382,11 @@
           <div class="form-group">
             <label tuiLabel>League *</label>
             <select
-              class="form-select"
+              class="filter-select form-control-height"
               [(ngModel)]="formData().leagueId"
               name="leagueId"
             >
-              <option [value]="undefined">Select league</option>
+              <option [value]="undefined" disabled>Select league</option>
               @for (league of leagues(); track league.id) {
                 <option [value]="league.id">{{ league.name }}</option>
               }
@@ -384,26 +395,28 @@
 
           <div class="form-group">
             <label tuiLabel>Championships Won</label>
-            <tui-input
-              [ngModel]="formData().championshipsWon || 0"
-              (ngModelChange)="updateFormField('championshipsWon', +$event)"
-              [ngModelOptions]="{standalone: true}"
-              type="number"
-            >
-              Enter number
-            </tui-input>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter number"
+                [value]="formData().championshipsWon || 0"
+                (input)="updateFormField('championshipsWon', +$any($event.target).value)"
+                name="championshipsWon"
+              />
+            </tui-textfield>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label tuiLabel>Division</label>
+            <label tuiLabel>Division *</label>
             <select
-              class="form-select"
+              class="filter-select form-control-height"
               [(ngModel)]="formData().divisionId"
               name="divisionId"
             >
-              <option [value]="undefined">Select division (optional)</option>
+              <option [value]="undefined" disabled>Select division</option>
               @for (division of divisions(); track division.id) {
                 <option [value]="division.id">{{ division.name }}</option>
               }
@@ -413,11 +426,11 @@
           <div class="form-group">
             <label tuiLabel>Conference *</label>
             <select
-              class="form-select"
+              class="filter-select form-control-height"
               [(ngModel)]="formData().conferenceId"
               name="conferenceId"
             >
-              <option [value]="undefined">Select conference</option>
+              <option [value]="undefined" disabled>Select conference</option>
               @for (conference of conferences(); track conference.id) {
                 <option [value]="conference.id">{{ conference.name }}</option>
               }
@@ -429,20 +442,22 @@
           <div class="form-group">
             <label tuiLabel>Coach</label>
             <select
-              class="form-select"
+              class="filter-select form-control-height"
               [(ngModel)]="formData().coachId"
               name="coachId"
             >
-              <option [value]="undefined">No coach assigned</option>
+              <option [value]="undefined" selected>No coach assigned</option>
+              @for (coach of coaches(); track coach.id) {
+                <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
+              }
             </select>
-            <small class="field-note">Coach assignment will be implemented when coach endpoints are ready</small>
           </div>
           <div class="form-group"></div>
         </div>
 
         <div class="form-group">
           <label tuiLabel>Team Logo</label>
-          <div 
+          <div
             class="file-upload-area"
             (drop)="onFileDrop($event)"
             (dragover)="onDragOver($event)"
@@ -661,15 +676,17 @@
               name="coachId"
             >
               <option [value]="undefined" selected>No coach assigned</option>
+              @for (coach of coaches(); track coach.id) {
+                <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
+              }
             </select>
-            <small class="field-note">Coach assignment will be implemented when coach endpoints are ready</small>
           </div>
           <div class="form-group"></div>
         </div>
 
         <div class="form-group">
           <label tuiLabel>Team Logo</label>
-          <div 
+          <div
             class="file-upload-area"
             (drop)="onFileDrop($event)"
             (dragover)="onDragOver($event)"
@@ -849,7 +866,7 @@
     <div class="modal-body">
       <!-- Loading State -->
       <div *ngIf="loading()" class="loading-container">
-        <tui-loader size="xl"></tui-loader>
+        <tui-loader size="m"></tui-loader>
       </div>
 
       <!-- Team Details -->
@@ -898,7 +915,9 @@
           <div class="detail-card">
             <div class="detail-label">Championships</div>
             <div class="detail-value championships">
-              <span *ngIf="teamDetails().team?.championships > 0">🏆 {{ teamDetails().team?.championships }}</span>
+              <span *ngIf="teamDetails().team?.championships > 0">
+                <tui-icon icon="@tui.award"></tui-icon> {{ teamDetails().team?.championships }}
+              </span>
               <span *ngIf="!teamDetails().team?.championships">-</span>
             </div>
           </div>
