@@ -17,14 +17,22 @@
       <tui-icon icon="@tui.file-text" />
       <span>Audit Logs</span>
     </button>
-    <button
-      class="tab-button"
-      [class.active]="activeTab() === 'audit-stats'"
-      (click)="switchTab('audit-stats')"
-    >
-      <tui-icon icon="@tui.bar-chart-2" />
-      <span>Audit Stats</span>
-    </button>
+     <button
+       class="tab-button"
+       [class.active]="activeTab() === 'admin-stats'"
+       (click)="switchTab('admin-stats')"
+     >
+       <tui-icon icon="@tui.bar-chart-2" />
+       <span>Admin Stats</span>
+     </button>
+     <button
+       class="tab-button"
+       [class.active]="activeTab() === 'audit-stats'"
+       (click)="switchTab('audit-stats')"
+     >
+       <tui-icon icon="@tui.activity" />
+       <span>Audit Stats</span>
+     </button>
     <button
       class="tab-button"
       [class.active]="activeTab() === 'connection-stats'"
@@ -766,12 +774,19 @@
   </div>
   }
 
-  <!-- Audit Stats Tab -->
-  @if (activeTab() === 'audit-stats') {
-  <div class="tab-content">
-    <app-audit-stats-tab />
-  </div>
-  }
+   <!-- Admin Stats Tab -->
+   @if (activeTab() === 'admin-stats') {
+   <div class="tab-content">
+     <app-admin-stats-tab />
+   </div>
+   }
+
+   <!-- Audit Stats Tab -->
+   @if (activeTab() === 'audit-stats') {
+   <div class="tab-content">
+     <app-audit-stats-tab />
+   </div>
+   }
 
   <!-- Connection Stats Tab -->
   @if (activeTab() === 'connection-stats') {
