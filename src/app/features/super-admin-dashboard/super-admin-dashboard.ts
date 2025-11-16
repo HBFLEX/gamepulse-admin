@@ -24,7 +24,7 @@ export class SuperAdminDashboard {
   readonly isSidebarCollapsed = signal(false);
   readonly isMobileMenuOpen = signal(false);
 
-  readonly navItems: NavItem[] = [
+  readonly navItems = signal<NavItem[]>([
     { label: 'Overview', icon: '@tui.bar-chart', route: '/super-admin/overview' },
     {
       label: 'User Management',
@@ -102,7 +102,7 @@ export class SuperAdminDashboard {
         { label: 'Cache Mgmt', icon: '@tui.database', route: '/super-admin/cache' },
       ],
     },
-  ];
+  ]);
 
   toggleSidebar(): void {
     this.isSidebarCollapsed.update((v) => !v);
@@ -115,6 +115,8 @@ export class SuperAdminDashboard {
   toggleAccordion(item: NavItem): void {
     if (item.children) {
       item.expanded = !item.expanded;
+      // Force signal update to trigger change detection
+      this.navItems.set([...this.navItems()]);
     }
   }
 
