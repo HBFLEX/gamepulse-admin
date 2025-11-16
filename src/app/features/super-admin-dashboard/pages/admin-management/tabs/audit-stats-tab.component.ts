@@ -557,14 +557,14 @@ export class AuditStatsTabComponent implements OnInit {
           return this.transformApiResponse(apiData);
         }),
         catchError((error) => {
-          console.error('❌ Error loading audit statistics:', error);
+          console.error('Error loading audit statistics:', error);
           return of(null);
         })
       )
       .subscribe({
         next: (stats) => {
           if (stats) {
-            console.log('✅ Audit statistics loaded:', stats);
+            console.log('Audit statistics loaded:', stats);
             this.stats.set(stats);
             this.error.set(null);
           } else {
@@ -573,7 +573,7 @@ export class AuditStatsTabComponent implements OnInit {
           this.loading.set(false);
         },
         error: (error) => {
-          console.error('❌ Error in subscription:', error);
+          console.error('Error in subscription:', error);
           const errorMsg = error.status === 401
             ? 'Unauthorized. Please log in again.'
             : error.status === 403

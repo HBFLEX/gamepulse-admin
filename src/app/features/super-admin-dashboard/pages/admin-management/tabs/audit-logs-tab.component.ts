@@ -83,16 +83,36 @@ interface AuditLogResponse {
             </select>
           </div>
 
-          <div class="filter-actions">
-            <button
-              tuiButton
-              appearance="secondary"
-              size="s"
-              (click)="clearFilters()"
-            >
-              Clear Filters
-            </button>
-          </div>
+           <div class="filter-group">
+             <label tuiLabel>Start Date</label>
+             <input
+               type="date"
+               class="filter-input"
+               [(ngModel)]="startDateFilter"
+               (ngModelChange)="onFilterChange()"
+             />
+           </div>
+
+           <div class="filter-group">
+             <label tuiLabel>End Date</label>
+             <input
+               type="date"
+               class="filter-input"
+               [(ngModel)]="endDateFilter"
+               (ngModelChange)="onFilterChange()"
+             />
+           </div>
+
+           <div class="filter-actions">
+             <button
+               tuiButton
+               appearance="secondary"
+               size="s"
+               (click)="clearFilters()"
+             >
+               Clear Filters
+             </button>
+           </div>
         </div>
       </div>
 
@@ -875,6 +895,8 @@ export class AuditLogsTabComponent implements OnInit {
 
   actionFilter = '';
   entityTypeFilter = '';
+  startDateFilter = '';
+  endDateFilter = '';
 
   ngOnInit(): void {
     this.loadLogs();
@@ -895,6 +917,12 @@ export class AuditLogsTabComponent implements OnInit {
     }
     if (this.entityTypeFilter) {
       params = params.set('entityType', this.entityTypeFilter);
+    }
+    if (this.startDateFilter) {
+      params = params.set('startDate', this.startDateFilter);
+    }
+    if (this.endDateFilter) {
+      params = params.set('endDate', this.endDateFilter);
     }
 
     this.http
@@ -943,6 +971,8 @@ export class AuditLogsTabComponent implements OnInit {
   clearFilters(): void {
     this.actionFilter = '';
     this.entityTypeFilter = '';
+    this.startDateFilter = '';
+    this.endDateFilter = '';
     this.onFilterChange();
   }
 
