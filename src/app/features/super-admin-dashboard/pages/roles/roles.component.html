@@ -1,0 +1,180 @@
+<div class="roles-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Roles & Permissions</h1>
+      <p class="page-subtitle">View system roles and their assigned permissions</p>
+    </div>
+
+    <div class="header-stats">
+      <div class="stat-card">
+        <tui-icon icon="@tui.shield-check" class="stat-icon"></tui-icon>
+        <div class="stat-content">
+          <div class="stat-value">{{ getRoleStats().totalRoles }}</div>
+          <div class="stat-label">Total Roles</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <tui-icon icon="@tui.key" class="stat-icon"></tui-icon>
+        <div class="stat-content">
+          <div class="stat-value">{{ getRoleStats().totalPermissions }}</div>
+          <div class="stat-label">Permissions</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <tui-icon icon="@tui.bar-chart-2" class="stat-icon"></tui-icon>
+        <div class="stat-content">
+          <div class="stat-value">{{ getRoleStats().avgPermissions }}</div>
+          <div class="stat-label">Avg/Role</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Banner -->
+  <div tuiCardLarge class="info-banner">
+    <div class="banner-content">
+      <tui-icon icon="@tui.info" class="banner-icon"></tui-icon>
+      <div class="banner-text">
+        <h3>Read-Only View</h3>
+        <p>Roles are predefined in the system. To assign roles to admins, visit the Admin Management page.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="roles-layout">
+    <!-- Roles List -->
+    <div class="roles-sidebar">
+      <div tuiCardLarge class="roles-card">
+        <div class="roles-header">
+          <h3>System Roles</h3>
+          <span class="roles-count">{{ roles().length }}</span>
+        </div>
+
+        <div class="roles-list">
+          <div
+            *ngFor="let role of roles()"
+            class="role-item"
+            [class.active]="selectedRole()?.id === role.id"
+            (click)="selectRole(role)"
+          >
+            <div class="role-icon-wrapper" [style.background]="role.color + '20'">
+              <tui-icon [icon]="role.icon" [style.color]="role.color"></tui-icon>
+            </div>
+            <div class="role-info">
+              <div class="role-name">{{ role.display_name }}</div>
+              <div class="role-permission-count">
+                {{ role.permissions.length }} permissions
+              </div>
+            </div>
+            <tui-icon icon="@tui.chevron-right" class="role-chevron"></tui-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role Details -->
+    <div class="role-details">
+      <div tuiCardLarge class="details-card" *ngIf="selectedRole()">
+        <div class="details-header">
+          <div class="header-top">
+            <div class="role-icon-large" [style.background]="selectedRole()!.color">
+              <tui-icon [icon]="selectedRole()!.icon"></tui-icon>
+            </div>
+            <div class="header-info">
+              <h2 class="role-title">{{ selectedRole()!.display_name }}</h2>
+              <p class="role-description">{{ selectedRole()!.description }}</p>
+            </div>
+          </div>
+
+          <div class="role-meta">
+            <div class="meta-item">
+              <span class="meta-label">Role ID:</span>
+              <span class="meta-value">{{ selectedRole()!.id }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">System Name:</span>
+              <span class="meta-value">{{ selectedRole()!.role_name }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Total Permissions:</span>
+              <span class="meta-value">{{ selectedRole()!.permissions.length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-divider"></div>
+
+        <div class="details-body">
+          <h3 class="section-title">
+            <tui-icon icon="@tui.key"></tui-icon>
+            Assigned Permissions
+          </h3>
+
+          <div class="permissions-grid">
+            <div
+              *ngFor="let permission of selectedRole()!.permissions"
+              class="permission-card"
+            >
+              <div class="permission-header">
+                <div
+                  class="permission-icon"
+                  [style.background]="getPermissionColor(permission) + '20'"
+                  [style.color]="getPermissionColor(permission)"
+                >
+                  <tui-icon icon="@tui.check"></tui-icon>
+                </div>
+                <div class="permission-info">
+                  <div class="permission-name">{{ formatPermission(permission) }}</div>
+                  <div class="permission-category">{{ getPermissionCategory(permission) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div tuiCardLarge class="details-card empty-state" *ngIf="!selectedRole()">
+        <tui-icon icon="@tui.shield-off" class="empty-icon"></tui-icon>
+        <h3>No Role Selected</h3>
+        <p>Select a role from the list to view its details and permissions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Categories Overview -->
+  <div tuiCardLarge class="categories-card">
+    <div class="categories-header">
+      <h3>Permission Categories</h3>
+      <p>Overview of all permission groups in the system</p>
+    </div>
+
+    <div class="categories-grid">
+      <div
+        *ngFor="let group of permissionGroups"
+        class="category-card"
+      >
+        <div class="category-header">
+          <div class="category-icon" [style.background]="group.color + '20'">
+            <tui-icon [icon]="group.icon" [style.color]="group.color"></tui-icon>
+          </div>
+          <h4 class="category-name">{{ group.category }}</h4>
+        </div>
+        <div class="category-count">
+          {{ group.permissions.length }} permissions
+        </div>
+        <div class="category-permissions">
+          <div
+            *ngFor="let permission of group.permissions"
+            class="category-permission"
+          >
+            <tui-icon icon="@tui.check" [style.color]="group.color"></tui-icon>
+            <span>{{ formatPermission(permission) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

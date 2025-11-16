@@ -1,0 +1,1083 @@
+<div class="teams-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Teams Management</h1>
+      <p class="page-subtitle">Manage all teams, divisions, and conferences</p>
+    </div>
+
+    <div class="header-actions">
+      <!-- Bulk Actions -->
+      <div class="bulk-actions" *ngIf="selectedCount() > 0">
+        <span class="selected-count">{{ selectedCount() }} selected</span>
+        <button
+          tuiButton
+          appearance="secondary"
+          size="s"
+          class="bulk-button"
+          (click)="clearSelection()"
+        >
+          Clear
+        </button>
+        <button
+          tuiButton
+          appearance="secondary"
+          size="s"
+          class="bulk-delete-button"
+          (click)="openBulkDeleteModal()"
+        >
+          <tui-icon icon="@tui.trash-2"></tui-icon>
+          Delete Selected
+        </button>
+      </div>
+
+      <!-- Create Button -->
+      <button
+        tuiButton
+        appearance="primary"
+        size="m"
+        class="create-button"
+        (click)="openCreateModal()"
+      >
+        <tui-icon icon="@tui.plus"></tui-icon>
+        Create Team
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div tuiCardLarge class="filters-card">
+    <div class="filters-grid">
+      <!-- Search -->
+      <div class="filter-item search-filter">
+        <label tuiLabel>Search Teams</label>
+        <tui-input
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="searchQuery.set($event)"
+          [ngModelOptions]="{standalone: true}"
+        >
+          Search by name, city, or league...
+        </tui-input>
+      </div>
+
+      <!-- League Filter -->
+      <div class="filter-item">
+        <label tuiLabel>League</label>
+        <select
+          class="filter-select"
+          [value]="filterLeague()"
+          (change)="filterLeague.set($any($event.target).value)"
+        >
+          <option value="">All Leagues</option>
+          <option *ngFor="let league of leagues()" [value]="league.name">
+            {{ league.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Division Filter -->
+      <div class="filter-item">
+        <label tuiLabel>Division</label>
+        <select
+          class="filter-select"
+          [value]="filterDivision()"
+          (change)="filterDivision.set($any($event.target).value)"
+        >
+          <option value="">All Divisions</option>
+          <option *ngFor="let division of divisions()" [value]="division.name">
+            {{ division.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Conference Filter -->
+      <div class="filter-item">
+        <label tuiLabel>Conference</label>
+        <select
+          class="filter-select"
+          [value]="filterConference()"
+          (change)="filterConference.set($any($event.target).value)"
+        >
+          <option value="">All Conferences</option>
+          <option *ngFor="let conference of conferences()" [value]="conference.name">
+            {{ conference.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Stats -->
+      <div class="filter-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total</span>
+          <span class="stat-value">{{ displayedTeams().length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <tui-loader size="xl"></tui-loader>
+  </div>
+
+  <!-- Teams Table -->
+  <div tuiCardLarge class="table-card" *ngIf="!loading()">
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="displayedTeams().length === 0">
+      <tui-icon icon="@tui.users" class="empty-icon"></tui-icon>
+      <h3>No Teams Found</h3>
+      <p>{{ teams().length === 0 ? 'Get started by creating your first team.' : 'No teams match your filters.' }}</p>
+      <button
+        *ngIf="teams().length === 0"
+        tuiButton
+        appearance="primary"
+        size="m"
+        (click)="openCreateModal()"
+      >
+        <tui-icon icon="@tui.plus"></tui-icon>
+        Create Team
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper" *ngIf="displayedTeams().length > 0">
+      <table class="teams-table">
+        <thead>
+          <tr>
+            <th class="select-header">
+              <input
+                type="checkbox"
+                class="select-checkbox"
+                [checked]="isAllSelected()"
+                [indeterminate]="isSomeSelected()"
+                (change)="toggleSelectAll()"
+              />
+            </th>
+            <th class="sortable-header" (click)="sortBy('name')">
+              <div class="header-content">
+                <span>Team</span>
+                <tui-icon
+                  *ngIf="sortColumn() === 'name'"
+                  [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"
+                ></tui-icon>
+              </div>
+            </th>
+            <th class="sortable-header" (click)="sortBy('league')">
+              <div class="header-content">
+                <span>League</span>
+                <tui-icon
+                  *ngIf="sortColumn() === 'league'"
+                  [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"
+                ></tui-icon>
+              </div>
+            </th>
+            <th class="sortable-header" (click)="sortBy('division')">
+              <div class="header-content">
+                <span>Division</span>
+                <tui-icon
+                  *ngIf="sortColumn() === 'division'"
+                  [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"
+                ></tui-icon>
+              </div>
+            </th>
+            <th>Conference</th>
+            <th class="sortable-header" (click)="sortBy('arena')">
+              <div class="header-content">
+                <span>Arena</span>
+                <tui-icon
+                  *ngIf="sortColumn() === 'arena'"
+                  [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"
+                ></tui-icon>
+              </div>
+            </th>
+            <th class="sortable-header" (click)="sortBy('foundedYear')">
+              <div class="header-content">
+                <span>Founded</span>
+                <tui-icon
+                  *ngIf="sortColumn() === 'foundedYear'"
+                  [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"
+                ></tui-icon>
+              </div>
+            </th>
+            <th>Championships</th>
+            <th>Coach</th>
+            <th class="actions-header">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let team of displayedTeams()">
+            <td class="select-cell">
+              <input
+                type="checkbox"
+                class="select-checkbox"
+                [checked]="isTeamSelected(team.id)"
+                (change)="toggleSelection(team.id)"
+              />
+            </td>
+            <td>
+              <div class="team-cell">
+                <div class="team-avatar">
+                  {{ getTeamInitials(team) }}
+                </div>
+                <div class="team-info">
+                  <div class="team-name">{{ team.name }}</div>
+                  <div class="team-city">{{ team.city }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="league-badge">{{ team.league || '-' }}</span>
+            </td>
+            <td>
+              <span class="division-text">{{ team.division || '-' }}</span>
+            </td>
+            <td>
+              <span class="conference-text">{{ team.conference || '-' }}</span>
+            </td>
+            <td>
+              <span class="arena-text">{{ team.arena }}</span>
+            </td>
+            <td>
+              <span class="founded-text">{{ team.foundedYear }}</span>
+            </td>
+            <td>
+              <span class="championships-badge" *ngIf="team.championships && team.championships > 0">
+                🏆 {{ team.championships }}
+              </span>
+              <span class="no-championships" *ngIf="!team.championships || team.championships === 0">-</span>
+            </td>
+            <td>
+              <span class="coach-name" *ngIf="team.coach">{{ team.coach.name }}</span>
+              <span class="no-coach" *ngIf="!team.coach">No coach</span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  tuiButton
+                  appearance="icon"
+                  size="s"
+                  class="view-button"
+                  (click)="openViewModal(team)"
+                  tuiHint="View Details"
+                >
+                  <tui-icon icon="@tui.eye"></tui-icon>
+                </button>
+                <button
+                  tuiButton
+                  appearance="icon"
+                  size="s"
+                  class="edit-button"
+                  (click)="openEditModal(team)"
+                  tuiHint="Edit Team"
+                >
+                  <tui-icon icon="@tui.edit"></tui-icon>
+                </button>
+                <button
+                  tuiButton
+                  appearance="icon"
+                  size="s"
+                  class="delete-button"
+                  (click)="openDeleteModal(team)"
+                  tuiHint="Delete Team"
+                >
+                  <tui-icon icon="@tui.trash-2"></tui-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal-overlay" *ngIf="showCreateModal()" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create New Team</h2>
+      <button
+        tuiButton
+        appearance="icon"
+        size="s"
+        (click)="closeAllModals()"
+      >
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="error-message" *ngIf="formError()">
+        <tui-icon icon="@tui.alert-circle"></tui-icon>
+        <span>{{ formError() }}</span>
+      </div>
+
+      <div class="team-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Team Name *</label>
+            <tui-input
+              [ngModel]="formData().name"
+              (ngModelChange)="updateFormField('name', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Enter team name
+            </tui-input>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>City *</label>
+            <tui-input
+              [ngModel]="formData().city"
+              (ngModelChange)="updateFormField('city', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Enter city
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Arena *</label>
+            <tui-input
+              [ngModel]="formData().arena"
+              (ngModelChange)="updateFormField('arena', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Enter arena name
+            </tui-input>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Founded Year *</label>
+            <tui-input
+              [ngModel]="formData().foundedYear"
+              (ngModelChange)="updateFormField('foundedYear', +$event)"
+              [ngModelOptions]="{standalone: true}"
+              type="number"
+            >
+              Enter year
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>League *</label>
+            <select
+              class="form-select"
+              [value]="formData().leagueId"
+              (change)="updateFormField('leagueId', +$any($event.target).value)"
+            >
+              <option value="0">Select league</option>
+              <option *ngFor="let league of leagues()" [value]="league.id">
+                {{ league.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Championships Won</label>
+            <tui-input
+              [ngModel]="formData().championshipsWon || 0"
+              (ngModelChange)="updateFormField('championshipsWon', +$event)"
+              [ngModelOptions]="{standalone: true}"
+              type="number"
+            >
+              Enter number
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Division</label>
+            <select
+              class="form-select"
+              [value]="formData().divisionId || ''"
+              (change)="updateFormField('divisionId', $any($event.target).value ? +$any($event.target).value : undefined)"
+            >
+              <option value="">Select division (optional)</option>
+              <option *ngFor="let division of divisions()" [value]="division.id">
+                {{ division.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Conference</label>
+            <select
+              class="form-select"
+              [value]="formData().conferenceId || ''"
+              (change)="updateFormField('conferenceId', $any($event.target).value ? +$any($event.target).value : undefined)"
+            >
+              <option value="">Select conference (optional)</option>
+              <option *ngFor="let conference of conferences()" [value]="conference.id">
+                {{ conference.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label tuiLabel>Team Logo</label>
+          <div 
+            class="file-upload-area"
+            (drop)="onFileDrop($event)"
+            (dragover)="onDragOver($event)"
+          >
+            <div class="upload-content" *ngIf="!logoPreview()">
+              <tui-icon icon="@tui.upload-cloud" class="upload-icon"></tui-icon>
+              <p class="upload-text">Drag & drop logo here or</p>
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                type="button"
+                (click)="fileInput.click()"
+              >
+                Browse Files
+              </button>
+              <input
+                #fileInput
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onFileSelected($event)"
+                style="display: none"
+              />
+              <p class="upload-hint">PNG, JPG, WEBP up to 5MB</p>
+            </div>
+
+            <div class="upload-preview" *ngIf="logoPreview()">
+              <img [src]="logoPreview()" alt="Logo preview" class="preview-image" />
+              <button
+                tuiButton
+                appearance="icon"
+                size="s"
+                type="button"
+                class="remove-image"
+                (click)="clearFile()"
+              >
+                <tui-icon icon="@tui.x"></tui-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="m"
+        (click)="closeAllModals()"
+      >
+        Cancel
+      </button>
+      <button
+        tuiButton
+        appearance="primary"
+        size="m"
+        (click)="createTeam()"
+        [disabled]="loading()"
+      >
+        <tui-loader *ngIf="loading()" size="s"></tui-loader>
+        <span *ngIf="!loading()">Create Team</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" *ngIf="showEditModal()" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Team</h2>
+      <button
+        tuiButton
+        appearance="icon"
+        size="s"
+        (click)="closeAllModals()"
+      >
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="error-message" *ngIf="formError()">
+        <tui-icon icon="@tui.alert-circle"></tui-icon>
+        <span>{{ formError() }}</span>
+      </div>
+
+      <div class="team-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Team Name *</label>
+            <tui-input
+              [ngModel]="formData().name"
+              (ngModelChange)="updateFormField('name', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Enter team name
+            </tui-input>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>City *</label>
+            <tui-input
+              [ngModel]="formData().city"
+              (ngModelChange)="updateFormField('city', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Enter city
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Arena *</label>
+            <tui-input
+              [ngModel]="formData().arena"
+              (ngModelChange)="updateFormField('arena', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Enter arena name
+            </tui-input>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Founded Year *</label>
+            <tui-input
+              [ngModel]="formData().foundedYear"
+              (ngModelChange)="updateFormField('foundedYear', +$event)"
+              [ngModelOptions]="{standalone: true}"
+              type="number"
+            >
+              Enter year
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Championships Won</label>
+            <tui-input
+              [ngModel]="formData().championshipsWon || 0"
+              (ngModelChange)="updateFormField('championshipsWon', +$event)"
+              [ngModelOptions]="{standalone: true}"
+              type="number"
+            >
+              Enter number
+            </tui-input>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Division</label>
+            <select
+              class="form-select"
+              [value]="formData().divisionId || ''"
+              (change)="updateFormField('divisionId', $any($event.target).value ? +$any($event.target).value : undefined)"
+            >
+              <option value="">Select division (optional)</option>
+              <option *ngFor="let division of divisions()" [value]="division.id">
+                {{ division.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Conference</label>
+            <select
+              class="form-select"
+              [value]="formData().conferenceId || ''"
+              (change)="updateFormField('conferenceId', $any($event.target).value ? +$any($event.target).value : undefined)"
+            >
+              <option value="">Select conference (optional)</option>
+              <option *ngFor="let conference of conferences()" [value]="conference.id">
+                {{ conference.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label tuiLabel>Coach</label>
+            <select
+              class="form-select"
+              [value]="formData().coachId || ''"
+              (change)="updateFormField('coachId', $any($event.target).value ? +$any($event.target).value : undefined)"
+            >
+              <option value="">No coach (optional)</option>
+              <option value="1">Sample Coach 1</option>
+              <option value="2">Sample Coach 2</option>
+            </select>
+            <small class="field-note">Coach assignment will be implemented when coach endpoints are ready</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label tuiLabel>Team Logo</label>
+          <div 
+            class="file-upload-area"
+            (drop)="onFileDrop($event)"
+            (dragover)="onDragOver($event)"
+          >
+            <div class="upload-content" *ngIf="!logoPreview()">
+              <tui-icon icon="@tui.upload-cloud" class="upload-icon"></tui-icon>
+              <p class="upload-text">Drag & drop logo here or</p>
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                type="button"
+                (click)="fileInputEdit.click()"
+              >
+                Browse Files
+              </button>
+              <input
+                #fileInputEdit
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onFileSelected($event)"
+                style="display: none"
+              />
+              <p class="upload-hint">PNG, JPG, WEBP up to 5MB</p>
+            </div>
+
+            <div class="upload-preview" *ngIf="logoPreview()">
+              <img [src]="logoPreview()" alt="Logo preview" class="preview-image" />
+              <button
+                tuiButton
+                appearance="icon"
+                size="s"
+                type="button"
+                class="remove-image"
+                (click)="clearFile()"
+              >
+                <tui-icon icon="@tui.x"></tui-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="m"
+        (click)="closeAllModals()"
+      >
+        Cancel
+      </button>
+      <button
+        tuiButton
+        appearance="primary"
+        size="m"
+        (click)="updateTeam()"
+        [disabled]="loading()"
+      >
+        <tui-loader *ngIf="loading()" size="s"></tui-loader>
+        <span *ngIf="!loading()">Update Team</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal()" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Team</h2>
+      <button
+        tuiButton
+        appearance="icon"
+        size="s"
+        (click)="closeAllModals()"
+      >
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedTeam()?.name }}</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="m"
+        (click)="closeAllModals()"
+      >
+        Cancel
+      </button>
+      <button
+        tuiButton
+        appearance="primary"
+        size="m"
+        class="delete-confirm-button"
+        (click)="deleteTeam()"
+        [disabled]="loading()"
+      >
+        <tui-loader *ngIf="loading()" size="s"></tui-loader>
+        <span *ngIf="!loading()">Delete Team</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Delete Modal -->
+<div class="modal-overlay" *ngIf="showBulkDeleteModal()" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Multiple Teams</h2>
+      <button
+        tuiButton
+        appearance="icon"
+        size="s"
+        (click)="closeAllModals()"
+      >
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedCount() }} team(s)</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="m"
+        (click)="closeAllModals()"
+      >
+        Cancel
+      </button>
+      <button
+        tuiButton
+        appearance="primary"
+        size="m"
+        class="delete-confirm-button"
+        (click)="bulkDeleteTeams()"
+        [disabled]="loading()"
+      >
+        <tui-loader *ngIf="loading()" size="s"></tui-loader>
+        <span *ngIf="!loading()">Delete Teams</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- View Details Modal -->
+<div class="modal-overlay" *ngIf="showViewModal()" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Team Details</h2>
+      <button
+        tuiButton
+        appearance="icon"
+        size="s"
+        (click)="closeAllModals()"
+      >
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="loading-container">
+        <tui-loader size="xl"></tui-loader>
+      </div>
+
+      <!-- Team Details -->
+      <div *ngIf="!loading() && teamDetails()" class="team-details">
+        <!-- Team Header -->
+        <div class="details-header">
+          <div class="team-logo-section">
+            <img *ngIf="teamDetails().team?.logo" [src]="teamDetails().team.logo" alt="Team Logo" class="team-logo" />
+            <div *ngIf="!teamDetails().team?.logo" class="team-logo-placeholder">
+              {{ getTeamInitials(teamDetails().team) }}
+            </div>
+          </div>
+          <div class="team-info-section">
+            <h3 class="detail-team-name">{{ teamDetails().team?.name }}</h3>
+            <div class="team-meta">
+              <div class="meta-badge">
+                <tui-icon icon="@tui.map-pin"></tui-icon>
+                {{ teamDetails().team?.city }}
+              </div>
+              <div class="meta-badge" *ngIf="teamDetails().team?.arena">
+                <tui-icon icon="@tui.home"></tui-icon>
+                {{ teamDetails().team?.arena }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Info Grid -->
+        <div class="details-grid">
+          <div class="detail-card">
+            <div class="detail-label">League</div>
+            <div class="detail-value">{{ teamDetails().team?.league || '-' }}</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Division</div>
+            <div class="detail-value">{{ teamDetails().team?.division || '-' }}</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Conference</div>
+            <div class="detail-value">{{ teamDetails().team?.conference || '-' }}</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Founded Year</div>
+            <div class="detail-value">{{ teamDetails().team?.foundedYear }}</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Championships</div>
+            <div class="detail-value championships">
+              <span *ngIf="teamDetails().team?.championships > 0">🏆 {{ teamDetails().team?.championships }}</span>
+              <span *ngIf="!teamDetails().team?.championships">-</span>
+            </div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+              <span class="status-badge" [class.active]="teamDetails().team?.is_active">
+                {{ teamDetails().team?.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coach Section -->
+        <div class="section-divider"></div>
+        <div class="coach-section" *ngIf="teamDetails().coach">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.user"></tui-icon>
+            Head Coach
+          </h4>
+          <div class="coach-info">
+            <div class="coach-detail">
+              <span class="coach-label">Name:</span>
+              <span class="coach-value">{{ teamDetails().coach.firstName }} {{ teamDetails().coach.lastName }}</span>
+            </div>
+            <div class="coach-detail" *ngIf="teamDetails().coach.experienceYears">
+              <span class="coach-label">Experience:</span>
+              <span class="coach-value">{{ teamDetails().coach.experienceYears }} years</span>
+            </div>
+          </div>
+        </div>
+        <div class="no-coach-section" *ngIf="!teamDetails().coach">
+          <tui-icon icon="@tui.user-x" class="no-coach-icon"></tui-icon>
+          <p>No head coach assigned</p>
+        </div>
+
+        <!-- Standings Section -->
+        <div class="section-divider" *ngIf="teamDetails().standings"></div>
+        <div class="standings-section" *ngIf="teamDetails().standings">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.bar-chart-2"></tui-icon>
+            Current Standings
+          </h4>
+          <div class="standings-grid">
+            <div class="standing-card">
+              <div class="standing-label">Wins</div>
+              <div class="standing-value wins">{{ teamDetails().standings.wins || 0 }}</div>
+            </div>
+            <div class="standing-card">
+              <div class="standing-label">Losses</div>
+              <div class="standing-value losses">{{ teamDetails().standings.losses || 0 }}</div>
+            </div>
+            <div class="standing-card">
+              <div class="standing-label">Win %</div>
+              <div class="standing-value">{{ (teamDetails().standings.winPercentage * 100).toFixed(1) }}%</div>
+            </div>
+            <div class="standing-card">
+              <div class="standing-label">Position</div>
+              <div class="standing-value position">{{ teamDetails().standings.position }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Statistics Section -->
+        <div class="section-divider" *ngIf="teamDetails().stats?.seasonStats"></div>
+        <div class="stats-section" *ngIf="teamDetails().stats?.seasonStats">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.bar-chart"></tui-icon>
+            Season Statistics ({{ teamDetails().stats.season }})
+          </h4>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Games Played</div>
+              <div class="stat-value">{{ teamDetails().stats.seasonStats.gamesPlayed }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Points Per Game</div>
+              <div class="stat-value">{{ teamDetails().stats.seasonStats.pointsAvg }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Rebounds Per Game</div>
+              <div class="stat-value">{{ teamDetails().stats.seasonStats.reboundsAvg }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Assists Per Game</div>
+              <div class="stat-value">{{ teamDetails().stats.seasonStats.assistsAvg }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Field Goal %</div>
+              <div class="stat-value">{{ teamDetails().stats.seasonStats.fieldGoalPct.toFixed(1) }}%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">3-Point %</div>
+              <div class="stat-value">{{ teamDetails().stats.seasonStats.threePointPct.toFixed(1) }}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Rankings Section -->
+        <div class="section-divider" *ngIf="teamDetails().stats?.teamRankings"></div>
+        <div class="rankings-section" *ngIf="teamDetails().stats?.teamRankings">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.trending-up"></tui-icon>
+            Team Rankings
+          </h4>
+          <div class="rankings-grid">
+            <div class="ranking-card offensive">
+              <div class="ranking-label">Offensive Rating</div>
+              <div class="ranking-info">
+                <div class="ranking-rank">#{{ teamDetails().stats.teamRankings.offensive.rank }}</div>
+                <div class="ranking-value">{{ teamDetails().stats.teamRankings.offensive.rating }}</div>
+              </div>
+              <div class="ranking-total">of {{ teamDetails().stats.teamRankings.offensive.totalTeams }} teams</div>
+            </div>
+            <div class="ranking-card defensive">
+              <div class="ranking-label">Defensive Rating</div>
+              <div class="ranking-info">
+                <div class="ranking-rank">#{{ teamDetails().stats.teamRankings.defensive.rank }}</div>
+                <div class="ranking-value">{{ teamDetails().stats.teamRankings.defensive.rating }}</div>
+              </div>
+              <div class="ranking-total">of {{ teamDetails().stats.teamRankings.defensive.totalTeams }} teams</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Games Section -->
+        <div class="section-divider" *ngIf="teamDetails().stats?.recentGames && teamDetails().stats.recentGames.length > 0"></div>
+        <div class="recent-games-section" *ngIf="teamDetails().stats?.recentGames && teamDetails().stats.recentGames.length > 0">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.calendar"></tui-icon>
+            Recent Games
+          </h4>
+          <div class="games-list">
+            <div *ngFor="let game of teamDetails().stats.recentGames" class="game-card">
+              <div class="game-result" [class.win]="game.result === 'W'" [class.loss]="game.result === 'L'">
+                {{ game.result }}
+              </div>
+              <div class="game-info">
+                <div class="game-opponent">
+                  <span class="game-location">{{ game.isHome ? 'vs' : '@' }}</span>
+                  {{ game.opponent.name }}
+                </div>
+                <div class="game-score" *ngIf="game.teamScore !== null && game.opponentScore !== null">
+                  {{ game.teamScore }} - {{ game.opponentScore }}
+                </div>
+                <div class="game-date">{{ formatDate(game.date) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Players Section -->
+        <div class="section-divider" *ngIf="teamDetails().stats?.playerStats && teamDetails().stats.playerStats.length > 0"></div>
+        <div class="top-players-section" *ngIf="teamDetails().stats?.playerStats && teamDetails().stats.playerStats.length > 0">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.award"></tui-icon>
+            Top Players
+          </h4>
+          <div class="players-list">
+            <div *ngFor="let player of teamDetails().stats.playerStats.slice(0, 5)" class="player-stat-card">
+              <div class="player-header">
+                <span class="player-number">#{{ player.number }}</span>
+                <span class="player-name">{{ player.playerName }}</span>
+                <span class="player-position">{{ player.position }}</span>
+              </div>
+              <div class="player-stats">
+                <div class="player-stat">
+                  <span class="stat-label">PPG</span>
+                  <span class="stat-value">{{ player.pointsAvg }}</span>
+                </div>
+                <div class="player-stat">
+                  <span class="stat-label">RPG</span>
+                  <span class="stat-value">{{ player.reboundsAvg }}</span>
+                </div>
+                <div class="player-stat">
+                  <span class="stat-label">APG</span>
+                  <span class="stat-value">{{ player.assistsAvg }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Roster Section -->
+        <div class="section-divider" *ngIf="teamDetails().roster && teamDetails().roster.length > 0"></div>
+        <div class="roster-section" *ngIf="teamDetails().roster && teamDetails().roster.length > 0">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.users"></tui-icon>
+            Roster ({{ teamDetails().roster.length }} players)
+          </h4>
+          <div class="roster-list">
+            <div *ngFor="let player of teamDetails().roster.slice(0, 5)" class="roster-player">
+              <span class="player-number">#{{ player.number }}</span>
+              <span class="player-name">{{ player.firstName }} {{ player.lastName }}</span>
+              <span class="player-position">{{ player.position }}</span>
+            </div>
+            <div *ngIf="teamDetails().roster.length > 5" class="more-players">
+              +{{ teamDetails().roster.length - 5 }} more players
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="m"
+        (click)="closeAllModals()"
+      >
+        Close
+      </button>
+      <button
+        tuiButton
+        appearance="primary"
+        size="m"
+        (click)="closeAllModals(); openEditModal(selectedTeam()!)"
+      >
+        <tui-icon icon="@tui.edit"></tui-icon>
+        Edit Team
+      </button>
+    </div>
+  </div>
+</div>
