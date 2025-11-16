@@ -226,6 +226,22 @@
                 }
               </span>
             </th>
+            <th *tuiHead="'team'" tuiTh class="sortable-header" (click)="onSort('team')">
+              <span class="header-content">
+                Team
+                @if (sortColumn() === 'team') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
+            <th *tuiHead="'created'" tuiTh class="sortable-header" (click)="onSort('created')">
+              <span class="header-content">
+                Created
+                @if (sortColumn() === 'created') {
+                  <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" class="sort-icon" />
+                }
+              </span>
+            </th>
             <th *tuiHead="'lastLogin'" tuiTh class="sortable-header" (click)="onSort('lastLogin')">
               <span class="header-content">
                 Last Login
@@ -293,6 +309,18 @@
                       {{ admin.isActive ? 'Active' : 'Inactive' }}
                     </span>
                   </div>
+                </td>
+                <td *tuiCell="'team'" tuiTd>
+                  @if (admin.team) {
+                    <span class="team-name">{{ admin.team.name }}</span>
+                  } @else {
+                    <span class="no-team">—</span>
+                  }
+                </td>
+                <td *tuiCell="'created'" tuiTd>
+                  <span class="created-date">
+                    {{ formatDate(admin.createdAt || '') }}
+                  </span>
                 </td>
                 <td *tuiCell="'lastLogin'" tuiTd>
                   <span [class]="admin.lastLogin ? 'last-login' : 'no-login'">
