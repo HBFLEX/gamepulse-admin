@@ -13,7 +13,7 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
     <div class="audit-stats-tab">
       @if (loading()) {
         <div class="loading-state">
-          <tui-loader size="xl"></tui-loader>
+          <tui-loader size="m"></tui-loader>
           <p>Loading audit statistics...</p>
         </div>
       } @else if (error()) {
@@ -81,7 +81,7 @@ import { AdminUser } from '../../../../../core/models/admin-management.model';
           <div tuiCardLarge class="chart-card">
             <h3 class="chart-title">ADMIN STATUS DISTRIBUTION</h3>
             <div class="chart-container">
-              <div class="pie-chart" [style.background]="'conic-gradient(' + 
+              <div class="pie-chart" [style.background]="'conic-gradient(' +
                 statusChartData()[0].color + ' 0% ' + statusChartData()[0].percentage + '%, ' +
                 statusChartData()[1].color + ' ' + statusChartData()[0].percentage + '% 100%)'">
               </div>
@@ -576,9 +576,9 @@ export class AuditStatsTabComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ Error loading admin statistics:', error);
-        const errorMsg = error.status === 401 
-          ? 'Unauthorized. Please log in again.' 
-          : error.status === 403 
+        const errorMsg = error.status === 401
+          ? 'Unauthorized. Please log in again.'
+          : error.status === 403
           ? 'You do not have permission to view statistics.'
           : error.status === 0
           ? 'Unable to connect to the server. Please check your connection.'
