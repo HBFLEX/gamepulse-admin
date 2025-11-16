@@ -446,7 +446,7 @@
               [(ngModel)]="formData().coachId"
               name="coachId"
             >
-              <option [value]="undefined" selected>No coach assigned</option>
+              <option [value]="null">No coach assigned</option>
               @for (coach of coaches(); track coach.id) {
                 <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
               }
@@ -675,7 +675,7 @@
               [(ngModel)]="formData().coachId"
               name="coachId"
             >
-              <option [value]="undefined" selected>No coach assigned</option>
+              <option [value]="null">No coach assigned</option>
               @for (coach of coaches(); track coach.id) {
                 <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
               }
