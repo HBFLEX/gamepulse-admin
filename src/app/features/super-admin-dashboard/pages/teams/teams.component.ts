@@ -8,6 +8,7 @@ import { TuiCardLarge } from '@taiga-ui/layout';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { environment } from '../../../../../environments/environment';
 import { TeamsApiService, League, Division, Conference } from '../../../../core/services/teams-api.service';
+import { Coach, CoachesApiService } from '../../../../core/services/coaches-api.service';
 
 interface Team {
   id: number;
@@ -77,12 +78,14 @@ export class TeamsComponent implements OnInit {
   private http = inject(HttpClient);
   private alerts = inject(TuiAlertService);
   private teamsApi = inject(TeamsApiService);
+  private coachesApi = inject(CoachesApiService);
   private apiUrl = `${environment.apiUrl}/teams`;
   
   // Metadata
   leagues = signal<League[]>([]);
   divisions = signal<Division[]>([]);
   conferences = signal<Conference[]>([]);
+  coaches = signal<Coach[]>([]);
 
   // State
   loading = signal(false);
@@ -251,6 +254,16 @@ export class TeamsComponent implements OnInit {
         console.error('Error loading conferences:', error);
       },
     });
+
+    // Load coaches
+    this.coachesApi.getCoaches({ limit: 100 }).subscribe({
+      next: (response) => {
+        this.coaches.set(response.data || []);
+      },
+      error: (error) => {
+        console.error('Error loading coaches:', error);
+      },
+    });
   }
 
   loadTeams(): void {
@@ -267,6 +280,20 @@ export class TeamsComponent implements OnInit {
         console.error('Error loading teams:', error);
         this.alerts.open('Failed to load teams', { appearance: 'error' }).subscribe();
         this.loading.set(false);
+      },
+    });
+  }
+
+  loadTeamsInBackground(): void {
+    // Load teams without showing loading indicator
+    this.http.get<{ data: Team[]; meta: { total: number } }>(this.apiUrl).subscribe({
+      next: (response) => {
+        const teams = response?.data || [];
+        this.teams.set(teams);
+        this.totalTeams.set(response?.meta?.total || teams.length);
+      },
+      error: (error) => {
+        console.error('Error loading teams in background:', error);
       },
     });
   }
@@ -487,8 +514,6 @@ export class TeamsComponent implements OnInit {
     const team = this.selectedTeam();
     if (!team) return;
 
-    this.loading.set(true);
-
     try {
       // Upload new logo if file selected - pass team ID so server can update team_logo field
       let logoUrl = this.formData().logo;
@@ -512,22 +537,55 @@ export class TeamsComponent implements OnInit {
         logo: logoUrl || undefined,
       };
 
+      // Optimistically update the UI immediately
+      const teamIndex = this.teams().findIndex(t => t.id === team.id);
+      if (teamIndex !== -1) {
+        const updatedTeams = [...this.teams()];
+        const selectedLeague = this.leagues().find(l => l.id === this.formData().leagueId);
+        const selectedDivision = this.divisions().find(d => d.id === data.divisionId);
+        const selectedConference = this.conferences().find(c => c.id === data.conferenceId);
+        const selectedCoach = data.coachId ? this.coaches().find(c => c.id === data.coachId) : undefined;
+        
+        updatedTeams[teamIndex] = {
+          ...updatedTeams[teamIndex],
+          name: data.name || updatedTeams[teamIndex].name,
+          city: data.city || updatedTeams[teamIndex].city,
+          arena: data.arena || updatedTeams[teamIndex].arena,
+          foundedYear: data.foundedYear || updatedTeams[teamIndex].foundedYear,
+          championships: data.championshipsWon,
+          league: selectedLeague?.name || updatedTeams[teamIndex].league,
+          division: selectedDivision?.name || updatedTeams[teamIndex].division,
+          conference: selectedConference?.name || updatedTeams[teamIndex].conference,
+          logo: logoUrl || updatedTeams[teamIndex].logo,
+          coach: selectedCoach ? {
+            id: selectedCoach.id,
+            name: `${selectedCoach.coach_first_name} ${selectedCoach.coach_last_name}`,
+            experienceYears: selectedCoach.coach_experience_years,
+          } : undefined,
+        };
+        this.teams.set(updatedTeams);
+      }
+
+      // Close modal immediately for better UX
+      this.showEditModal.set(false);
+
+      // Then update on the server in the background
       this.http.put<Team>(`${this.apiUrl}/admin/${team.id}`, data).subscribe({
         next: () => {
+          // Optionally reload to sync with server (silent background refresh)
+          this.loadTeamsInBackground();
           this.alerts.open('Team updated successfully', { appearance: 'success' }).subscribe();
-          this.showEditModal.set(false);
-          this.loadTeams();
         },
         error: (error) => {
           console.error('Error updating team:', error);
-          this.formError.set(error.error?.message || 'Failed to update team');
-          this.loading.set(false);
+          // Revert the optimistic update on error and show the error
+          this.loadTeams();
+          this.alerts.open(error.error?.message || 'Failed to update team', { appearance: 'error' }).subscribe();
         },
       });
     } catch (error) {
       console.error('Error uploading logo:', error);
       this.formError.set('Failed to upload logo');
-      this.loading.set(false);
     }
   }
 
@@ -573,17 +631,27 @@ export class TeamsComponent implements OnInit {
     const team = this.selectedTeam();
     if (!team) return;
 
-    this.loading.set(true);
+    // Optimistically remove from UI immediately
+    const updatedTeams = this.teams().filter(t => t.id !== team.id);
+    this.teams.set(updatedTeams);
+    this.totalTeams.set(this.totalTeams() - 1);
+
+    // Close modal immediately for better UX
+    this.showDeleteModal.set(false);
+
+    // Then delete on the server in the background
     this.http.delete(`${this.apiUrl}/admin/${team.id}`).subscribe({
       next: () => {
+        console.log('Team deleted successfully');
+        // Optionally reload to sync with server
+        this.loadTeamsInBackground();
         this.alerts.open('Team deleted successfully', { appearance: 'success' }).subscribe();
-        this.showDeleteModal.set(false);
-        this.loadTeams();
       },
       error: (error) => {
         console.error('Error deleting team:', error);
+        // Revert the optimistic update on error
+        this.loadTeams();
         this.alerts.open(error.error?.message || 'Failed to delete team', { appearance: 'error' }).subscribe();
-        this.loading.set(false);
       },
     });
   }
@@ -596,24 +664,72 @@ export class TeamsComponent implements OnInit {
 
   bulkDeleteTeams(): void {
     const ids = Array.from(this.selectedTeamIds());
-    this.loading.set(true);
+    if (ids.length === 0) return;
 
-    const deleteRequests = ids.map(id =>
-      this.http.delete(`${this.apiUrl}/admin/${id}`).toPromise()
-    );
+    // Optimistically remove from UI
+    const updatedTeams = this.teams().filter(team => !ids.includes(team.id));
+    this.teams.set(updatedTeams);
+    this.totalTeams.set(this.totalTeams() - ids.length);
+    this.selectedTeamIds.set(new Set());
+    this.showBulkDeleteModal.set(false);
 
-    Promise.all(deleteRequests)
-      .then(() => {
-        this.alerts.open(`${ids.length} team(s) deleted successfully`, { appearance: 'success' }).subscribe();
-        this.showBulkDeleteModal.set(false);
-        this.clearSelection();
-        this.loadTeams();
-      })
-      .catch((error) => {
-        console.error('Error deleting teams:', error);
-        this.alerts.open('Failed to delete some teams', { appearance: 'error' }).subscribe();
-        this.loading.set(false);
+    // Delete on server
+    const deleteRequests = ids.map(id => this.http.delete(`${this.apiUrl}/admin/${id}`));
+    
+    let completed = 0;
+    let failed = 0;
+    
+    deleteRequests.forEach(request => {
+      request.subscribe({
+        next: () => {
+          completed++;
+          if (completed + failed === ids.length) {
+            this.loadTeamsInBackground();
+            if (failed === 0) {
+              this.alerts
+                .open(`Successfully deleted ${completed} team(s)`, {
+                  appearance: 'success',
+                  label: 'Success',
+                  autoClose: 3000,
+                })
+                .subscribe();
+            } else {
+              this.alerts
+                .open(`Deleted ${completed} team(s), failed to delete ${failed}`, {
+                  appearance: 'warning',
+                  label: 'Partial Success',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            }
+          }
+        },
+        error: () => {
+          failed++;
+          if (completed + failed === ids.length) {
+            if (failed === ids.length) {
+              this.loadTeams();
+              this.alerts
+                .open('Failed to delete teams', {
+                  appearance: 'error',
+                  label: 'Delete Failed',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            } else {
+              this.loadTeamsInBackground();
+              this.alerts
+                .open(`Deleted ${completed} team(s), failed to delete ${failed}`, {
+                  appearance: 'warning',
+                  label: 'Partial Success',
+                  autoClose: 5000,
+                })
+                .subscribe();
+            }
+          }
+        }
       });
+    });
   }
 
   // Helpers
@@ -684,5 +800,12 @@ export class TeamsComponent implements OnInit {
       return `${firstName} ${lastName}`.trim();
     }
     return '-';
+  }
+
+  getCoachFullName(coachId: number | undefined): string {
+    if (!coachId) return 'No coach assigned';
+    const coach = this.coaches().find(c => c.id === coachId);
+    if (!coach) return 'No coach assigned';
+    return `${coach.coach_first_name} ${coach.coach_last_name}`;
   }
 }
