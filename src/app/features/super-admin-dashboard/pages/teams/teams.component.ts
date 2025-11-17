@@ -195,30 +195,6 @@ export class TeamsComponent implements OnInit {
 
   selectedCount = computed(() => this.selectedTeamIds().size);
 
-  uniqueLeagues = computed(() => {
-    const teams = this.teams();
-    if (!teams || !Array.isArray(teams)) return [];
-    const leagues = new Set(teams.map(t => t.league).filter(Boolean) as string[]);
-    return Array.from(leagues).sort();
-  });
-
-  uniqueDivisions = computed(() => {
-    const teams = this.teams();
-    if (!teams || !Array.isArray(teams)) return [];
-    const divisions = new Set(teams.map(t => t.division).filter(Boolean) as string[]);
-    return Array.from(divisions).sort();
-  });
-
-  uniqueConferences = computed(() => {
-    const teams = this.teams();
-    if (!teams || !Array.isArray(teams)) return [];
-    const conferences = new Set(
-      teams.map(t => t.conference).filter(Boolean) as string[]
-    );
-    return Array.from(conferences).sort();
-  });
-
-
   ngOnInit(): void {
     this.loadMetadata();
     this.loadTeams();
