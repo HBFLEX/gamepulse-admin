@@ -17,9 +17,9 @@ interface Team {
   arena: string;
   foundedYear: number;
   championships?: number;
-  league?: string;  // String, not object
-  division?: string;  // String, not object
-  conference?: string;  // String, not object
+  league?: string;
+  division?: string;
+  conference?: string;
   coach?: {
     id: number;
     name: string;
@@ -80,7 +80,7 @@ export class TeamsComponent implements OnInit {
   private teamsApi = inject(TeamsApiService);
   private coachesApi = inject(CoachesApiService);
   private apiUrl = `${environment.apiUrl}/teams`;
-  
+
   // Metadata
   leagues = signal<League[]>([]);
   divisions = signal<Division[]>([]);
@@ -91,13 +91,13 @@ export class TeamsComponent implements OnInit {
   loading = signal(false);
   teams = signal<Team[]>([]);
   selectedTeamIds = signal<Set<number>>(new Set());
-  
+
   // Filters
   searchQuery = signal('');
   filterLeague = signal('');
   filterDivision = signal('');
   filterConference = signal('');
-  
+
   // Pagination
   currentPage = signal(1);
   pageSize = signal(20);
@@ -131,7 +131,7 @@ export class TeamsComponent implements OnInit {
   });
 
   formError = signal<string | null>(null);
-  
+
   // File Upload
   selectedFile = signal<File | null>(null);
   logoPreview = signal<string | null>(null);
@@ -194,30 +194,6 @@ export class TeamsComponent implements OnInit {
   });
 
   selectedCount = computed(() => this.selectedTeamIds().size);
-
-  uniqueLeagues = computed(() => {
-    const teams = this.teams();
-    if (!teams || !Array.isArray(teams)) return [];
-    const leagues = new Set(teams.map(t => t.league).filter(Boolean) as string[]);
-    return Array.from(leagues).sort();
-  });
-
-  uniqueDivisions = computed(() => {
-    const teams = this.teams();
-    if (!teams || !Array.isArray(teams)) return [];
-    const divisions = new Set(teams.map(t => t.division).filter(Boolean) as string[]);
-    return Array.from(divisions).sort();
-  });
-
-  uniqueConferences = computed(() => {
-    const teams = this.teams();
-    if (!teams || !Array.isArray(teams)) return [];
-    const conferences = new Set(
-      teams.map(t => t.conference).filter(Boolean) as string[]
-    );
-    return Array.from(conferences).sort();
-  });
-
 
   ngOnInit(): void {
     this.loadMetadata();
@@ -312,7 +288,7 @@ export class TeamsComponent implements OnInit {
   toggleSelectAll(): void {
     const displayed = this.displayedTeams();
     const allSelected = displayed.every(team => this.selectedTeamIds().has(team.id));
-    
+
     if (allSelected) {
       this.selectedTeamIds.set(new Set());
     } else {
@@ -345,7 +321,7 @@ export class TeamsComponent implements OnInit {
   onFileDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
       this.handleFile(event.dataTransfer.files[0]);
     }
@@ -372,14 +348,14 @@ export class TeamsComponent implements OnInit {
     }
 
     this.selectedFile.set(file);
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       this.logoPreview.set(e.target?.result as string);
     };
     reader.readAsDataURL(file);
-    
+
     this.formError.set(null);
   }
 
@@ -405,7 +381,7 @@ export class TeamsComponent implements OnInit {
       }
 
       const response = await this.http.post<any>(uploadUrl, formData).toPromise();
-      
+
       this.isUploading.set(false);
       return response.data?.file_url || response.url || response.data?.url;
     } catch (error) {
@@ -476,12 +452,12 @@ export class TeamsComponent implements OnInit {
   // Edit
   openEditModal(team: Team): void {
     this.selectedTeam.set(team);
-    
+
     // Find matching league, division, conference by name
     const matchingLeague = this.leagues().find(l => l.name === team.league);
     const matchingDivision = this.divisions().find(d => d.name === team.division);
     const matchingConference = this.conferences().find(c => c.name === team.conference);
-    
+
     this.formData.set({
       name: team.name,
       city: team.city,
@@ -495,17 +471,17 @@ export class TeamsComponent implements OnInit {
       logo: team.logo || '',
     });
     this.formError.set(null);
-    
+
     // Clear file selection but keep the preview if team has a logo
     this.selectedFile.set(null);
-    
+
     // Set logo preview to existing team logo
     if (team.logo) {
       this.logoPreview.set(team.logo);
     } else {
       this.logoPreview.set(null);
     }
-    
+
     this.showEditModal.set(true);
   }
 
@@ -547,7 +523,7 @@ export class TeamsComponent implements OnInit {
         const selectedLeague = this.leagues().find(l => l.id === this.formData().leagueId);
         const selectedDivision = this.divisions().find(d => d.id === data.divisionId);
         const selectedConference = this.conferences().find(c => c.id === data.conferenceId);
-        
+
         // Handle coach assignment: null means remove coach, number means assign coach
         let coachValue: Team['coach'] = updatedTeams[teamIndex].coach;
         if (newCoachId === null) {
@@ -564,7 +540,7 @@ export class TeamsComponent implements OnInit {
             };
           }
         }
-        
+
         updatedTeams[teamIndex] = {
           ...updatedTeams[teamIndex],
           name: data.name || updatedTeams[teamIndex].name,
@@ -644,11 +620,11 @@ export class TeamsComponent implements OnInit {
 
   loadTeamDetails(teamId: number): void {
     this.loading.set(true);
-    
+
     // Fetch both team details and stats
     const detailsRequest = this.http.get<any>(`${this.apiUrl}/${teamId}`);
     const statsRequest = this.http.get<any>(`${this.apiUrl}/${teamId}/stats`);
-    
+
     // Use Promise.all to fetch both concurrently
     Promise.all([
       detailsRequest.toPromise(),
@@ -721,10 +697,10 @@ export class TeamsComponent implements OnInit {
 
     // Delete on server
     const deleteRequests = ids.map(id => this.http.delete(`${this.apiUrl}/admin/${id}`));
-    
+
     let completed = 0;
     let failed = 0;
-    
+
     deleteRequests.forEach(request => {
       request.subscribe({
         next: () => {
