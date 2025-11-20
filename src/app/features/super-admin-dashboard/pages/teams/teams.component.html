@@ -8,37 +8,19 @@
     <div class="header-actions">
       <!-- Bulk Actions -->
       @if (selectedCount() > 0) {
-        <div class="bulk-actions">
-          <span class="selected-count">{{ selectedCount() }} selected</span>
-          <button
-            tuiButton
-            appearance="secondary"
-            size="s"
-            class="bulk-button"
-            (click)="clearSelection()"
-          >
-            Clear
-          </button>
-          <button
-            tuiButton
-            appearance="secondary"
-            size="s"
-            class="bulk-delete-button"
-            (click)="openBulkDeleteModal()"
-          >
-            <tui-icon icon="@tui.trash-2"></tui-icon>
-            Delete Selected
-          </button>
-        </div>
+      <div class="bulk-actions">
+        <span class="selected-count">{{ selectedCount() }} selected</span>
+        <button tuiButton appearance="secondary" size="s" class="bulk-button" (click)="clearSelection()">
+          Clear
+        </button>
+        <button tuiButton appearance="secondary" size="s" class="bulk-delete-button" (click)="openBulkDeleteModal()">
+          <tui-icon icon="@tui.trash-2"></tui-icon>
+          Delete Selected
+        </button>
+      </div>
       }
       <!-- Create Button -->
-      <button
-        tuiButton
-        appearance="primary"
-        size="m"
-        class="create-button"
-        (click)="openCreateModal()"
-      >
+      <button tuiButton appearance="primary" size="m" class="create-button" (click)="openCreateModal()">
         <tui-icon icon="@tui.plus"></tui-icon>
         Create Team
       </button>
@@ -50,59 +32,46 @@
       <!-- Search -->
       <div class="filter-item search-filter">
         <label tuiLabel>Search Teams</label>
-        <tui-input
-          [(ngModel)]="searchQuery"
-          (ngModelChange)="searchQuery.set($event)"
-          [ngModelOptions]="{standalone: true}"
-        >
+        <tui-input [(ngModel)]="searchQuery" (ngModelChange)="searchQuery.set($event)"
+          [ngModelOptions]="{standalone: true}">
           Search by name, city, or league...
         </tui-input>
       </div>
       <!-- League Filter -->
       <div class="filter-item">
         <label tuiLabel>League</label>
-        <select
-          class="filter-select"
-          [value]="filterLeague()"
-          (change)="filterLeague.set($any($event.target).value)"
-        >
+        <select class="filter-select" [value]="filterLeague()" (change)="filterLeague.set($any($event.target).value)">
           <option value="">All Leagues</option>
           @for (league of leagues(); track league.id) {
-            <option [value]="league.name">
-              {{ league.name }}
-            </option>
+          <option [value]="league.name">
+            {{ league.name }}
+          </option>
           }
         </select>
       </div>
       <!-- Division Filter -->
       <div class="filter-item">
         <label tuiLabel>Division</label>
-        <select
-          class="filter-select"
-          [value]="filterDivision()"
-          (change)="filterDivision.set($any($event.target).value)"
-        >
+        <select class="filter-select" [value]="filterDivision()"
+          (change)="filterDivision.set($any($event.target).value)">
           <option value="">All Divisions</option>
           @for (division of divisions(); track division.id) {
-            <option [value]="division.name">
-              {{ division.name }}
-            </option>
+          <option [value]="division.name">
+            {{ division.name }}
+          </option>
           }
         </select>
       </div>
       <!-- Conference Filter -->
       <div class="filter-item">
         <label tuiLabel>Conference</label>
-        <select
-          class="filter-select"
-          [value]="filterConference()"
-          (change)="filterConference.set($any($event.target).value)"
-        >
+        <select class="filter-select" [value]="filterConference()"
+          (change)="filterConference.set($any($event.target).value)">
           <option value="">All Conferences</option>
           @for (conference of conferences(); track conference.id) {
-            <option [value]="conference.name">
-              {{ conference.name }}
-            </option>
+          <option [value]="conference.name">
+            {{ conference.name }}
+          </option>
           }
         </select>
       </div>
@@ -117,1043 +86,823 @@
   </div>
   <!-- Loading State -->
   @if (loading()) {
-    <div class="loading-container">
-      <tui-loader size="m"></tui-loader>
-    </div>
+  <div class="loading-container">
+    <tui-loader size="m"></tui-loader>
+  </div>
   }
   <!-- Teams Table -->
   @if (!loading()) {
-    <div tuiCardLarge class="table-card">
-      <!-- Empty State -->
-      @if (displayedTeams().length === 0) {
-        <div class="empty-state">
-          <tui-icon icon="@tui.users" class="empty-icon"></tui-icon>
-          <h3>No Teams Found</h3>
-          <p>{{ teams().length === 0 ? 'Get started by creating your first team.' : 'No teams match your filters.' }}</p>
-          @if (teams().length === 0) {
-            <button
-              tuiButton
-              appearance="primary"
-              size="m"
-              (click)="openCreateModal()"
-            >
-              <tui-icon icon="@tui.plus"></tui-icon>
-              Create Team
-            </button>
-          }
-        </div>
-      }
-      <!-- Table -->
-      @if (displayedTeams().length > 0) {
-        <div class="table-wrapper">
-          <table class="teams-table">
-            <thead>
-            <tr>
-              <th class="select-header">
-                <input
-                  type="checkbox"
-                  class="select-checkbox"
-                  [checked]="isAllSelected()"
-                  [indeterminate]="isSomeSelected()"
-                  (change)="toggleSelectAll()"
-                />
-              </th>
-              <th class="sortable-header" (click)="sortBy('name')">
-                <div class="header-content">
-                  <span>Team</span>
-                  @if (sortColumn() === 'name') {
-                    <tui-icon
-                      [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
-                      class="sort-icon"
-                    ></tui-icon>
-                  }
-                </div>
-              </th>
-              <th class="sortable-header" (click)="sortBy('league')">
-                <div class="header-content">
-                  <span>League</span>
-                  @if (sortColumn() === 'league') {
-                    <tui-icon
-                      [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
-                      class="sort-icon"
-                    ></tui-icon>
-                  }
-                </div>
-              </th>
-              <th class="sortable-header" (click)="sortBy('division')">
-                <div class="header-content">
-                  <span>Division</span>
-                  @if (sortColumn() === 'division') {
-                    <tui-icon
-                      [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
-                      class="sort-icon"
-                    ></tui-icon>
-                  }
-                </div>
-              </th>
-              <th>Conference</th>
-              <th class="sortable-header" (click)="sortBy('arena')">
-                <div class="header-content">
-                  <span>Arena</span>
-                  @if (sortColumn() === 'arena') {
-                    <tui-icon
-                      [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
-                      class="sort-icon"
-                    ></tui-icon>
-                  }
-                </div>
-              </th>
-              <th class="sortable-header" (click)="sortBy('foundedYear')">
-                <div class="header-content">
-                  <span>Founded</span>
-                  @if (sortColumn() === 'foundedYear') {
-                    <tui-icon
-                      [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
-                      class="sort-icon"
-                    ></tui-icon>
-                  }
-                </div>
-              </th>
-              <th>Championships</th>
-              <th>Coach</th>
-              <th class="actions-header">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-              @for (team of displayedTeams(); track team.id) {
-                <tr>
-                  <td class="select-cell">
-                    <input
-                      type="checkbox"
-                      class="select-checkbox"
-                      [checked]="isTeamSelected(team.id)"
-                      (change)="toggleSelection(team.id)"
-                    />
-                  </td>
-                  <td>
-                    <div class="team-cell">
-                      <div class="team-avatar">
-                        {{ getTeamInitials(team) }}
-                      </div>
-                      <div class="team-info">
-                        <div class="team-name">{{ team.name }}</div>
-                        <div class="team-city">{{ team.city }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="league-badge">{{ team.league || '-' }}</span>
-                  </td>
-                  <td>
-                    <span class="division-text">{{ team.division || '-' }}</span>
-                  </td>
-                  <td>
-                    <span class="conference-text">{{ team.conference || '-' }}</span>
-                  </td>
-                  <td>
-                    <span class="arena-text">{{ team.arena }}</span>
-                  </td>
-                  <td>
-                    <span class="founded-text">{{ team.foundedYear }}</span>
-                  </td>
-                  <td>
-                    @if (team.championships && team.championships > 0) {
-                      <span class="championships-badge">
-                        <tui-icon icon="@tui.award"></tui-icon> {{ team.championships }}
-                      </span>
-                    } @else {
-                      <span class="no-championships">-</span>
-                    }
-                  </td>
-                  <td>
-                    @if (team.coach) {
-                      <span class="coach-name">{{ getCoachName(team) }}</span>
-                    } @else {
-                      <span class="no-coach">No coach</span>
-                    }
-                  </td>
-                  <td>
-                    <div class="action-buttons">
-                      <button
-                        tuiButton
-                        appearance="icon"
-                        size="s"
-                        class="view-button"
-                        (click)="openViewModal(team)"
-                        tuiHint="View Details"
-                      >
-                        <tui-icon icon="@tui.eye"></tui-icon>
-                      </button>
-                      <button
-                        tuiButton
-                        appearance="icon"
-                        size="s"
-                        class="edit-button"
-                        (click)="openEditModal(team)"
-                        tuiHint="Edit Team"
-                      >
-                        <tui-icon icon="@tui.edit"></tui-icon>
-                      </button>
-                      <button
-                        tuiButton
-                        appearance="icon"
-                        size="s"
-                        class="delete-button"
-                        (click)="openDeleteModal(team)"
-                        tuiHint="Delete Team"
-                      >
-                        <tui-icon icon="@tui.trash-2"></tui-icon>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+  <div tuiCardLarge class="table-card">
+    <!-- Empty State -->
+    @if (displayedTeams().length === 0) {
+    <div class="empty-state">
+      <tui-icon icon="@tui.users" class="empty-icon"></tui-icon>
+      <h3>No Teams Found</h3>
+      <p>{{ teams().length === 0 ? 'Get started by creating your first team.' : 'No teams match your filters.' }}</p>
+      @if (teams().length === 0) {
+      <button tuiButton appearance="primary" size="m" (click)="openCreateModal()">
+        <tui-icon icon="@tui.plus"></tui-icon>
+        Create Team
+      </button>
       }
     </div>
+    }
+    <!-- Table -->
+    @if (displayedTeams().length > 0) {
+    <div class="table-wrapper">
+      <table class="teams-table">
+        <thead>
+          <tr>
+            <th class="select-header">
+              <input type="checkbox" class="select-checkbox" [checked]="isAllSelected()"
+                [indeterminate]="isSomeSelected()" (change)="toggleSelectAll()" />
+            </th>
+            <th class="sortable-header" (click)="sortBy('name')">
+              <div class="header-content">
+                <span>Team</span>
+                @if (sortColumn() === 'name') {
+                <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"></tui-icon>
+                }
+              </div>
+            </th>
+            <th class="sortable-header" (click)="sortBy('league')">
+              <div class="header-content">
+                <span>League</span>
+                @if (sortColumn() === 'league') {
+                <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"></tui-icon>
+                }
+              </div>
+            </th>
+            <th class="sortable-header" (click)="sortBy('division')">
+              <div class="header-content">
+                <span>Division</span>
+                @if (sortColumn() === 'division') {
+                <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"></tui-icon>
+                }
+              </div>
+            </th>
+            <th>Conference</th>
+            <th class="sortable-header" (click)="sortBy('arena')">
+              <div class="header-content">
+                <span>Arena</span>
+                @if (sortColumn() === 'arena') {
+                <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"></tui-icon>
+                }
+              </div>
+            </th>
+            <th class="sortable-header" (click)="sortBy('foundedYear')">
+              <div class="header-content">
+                <span>Founded</span>
+                @if (sortColumn() === 'foundedYear') {
+                <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'"
+                  class="sort-icon"></tui-icon>
+                }
+              </div>
+            </th>
+            <th>Championships</th>
+            <th>Coach</th>
+            <th class="actions-header">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (team of displayedTeams(); track team.id) {
+          <tr>
+            <td class="select-cell">
+              <input type="checkbox" class="select-checkbox" [checked]="isTeamSelected(team.id)"
+                (change)="toggleSelection(team.id)" />
+            </td>
+            <td>
+              <div class="team-cell">
+                <div class="team-avatar">
+                  {{ getTeamInitials(team) }}
+                </div>
+                <div class="team-info">
+                  <div class="team-name">{{ team.name }}</div>
+                  <div class="team-city">{{ team.city }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="league-badge">{{ team.league || '-' }}</span>
+            </td>
+            <td>
+              <span class="division-text">{{ team.division || '-' }}</span>
+            </td>
+            <td>
+              <span class="conference-text">{{ team.conference || '-' }}</span>
+            </td>
+            <td>
+              <span class="arena-text">{{ team.arena }}</span>
+            </td>
+            <td>
+              <span class="founded-text">{{ team.foundedYear }}</span>
+            </td>
+            <td>
+              @if (team.championships && team.championships > 0) {
+              <span class="championships-badge">
+                <tui-icon icon="@tui.award"></tui-icon> {{ team.championships }}
+              </span>
+              } @else {
+              <span class="no-championships">-</span>
+              }
+            </td>
+            <td>
+              @if (team.coach) {
+              <span class="coach-name">{{ getCoachName(team) }}</span>
+              } @else {
+              <span class="no-coach">No coach</span>
+              }
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button tuiButton appearance="icon" size="s" class="view-button" (click)="openViewModal(team)"
+                  tuiHint="View Details">
+                  <tui-icon icon="@tui.eye"></tui-icon>
+                </button>
+                <button tuiButton appearance="icon" size="s" class="edit-button" (click)="openEditModal(team)"
+                  tuiHint="Edit Team">
+                  <tui-icon icon="@tui.edit"></tui-icon>
+                </button>
+                <button tuiButton appearance="icon" size="s" class="delete-button" (click)="openDeleteModal(team)"
+                  tuiHint="Delete Team">
+                  <tui-icon icon="@tui.trash-2"></tui-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
   }
 </div>
 <!-- Create Modal -->
 @if (showCreateModal()) {
-  <div class="modal-overlay" (click)="closeAllModals()">
-    <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Create New Team</h2>
-        <button
-          tuiButton
-          appearance="icon"
-          size="s"
-          (click)="closeAllModals()"
-        >
-          <tui-icon icon="@tui.x"></tui-icon>
-        </button>
+<div class="modal-overlay" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Create New Team</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeAllModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      @if (formError()) {
+      <div class="error-message">
+        <tui-icon icon="@tui.alert-circle"></tui-icon>
+        <span>{{ formError() }}</span>
       </div>
-      <div class="modal-body">
-        @if (formError()) {
-          <div class="error-message">
-            <tui-icon icon="@tui.alert-circle"></tui-icon>
-            <span>{{ formError() }}</span>
-          </div>
-        }
-        <div class="team-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Team Name *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="text"
-                  placeholder="Enter team name"
-                  [value]="formData().name"
-                  (input)="updateFormField('name', $any($event.target).value)"
-                  name="name"
-                />
-              </tui-textfield>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>City *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="text"
-                  placeholder="Enter city"
-                  [value]="formData().city"
-                  (input)="updateFormField('city', $any($event.target).value)"
-                  name="city"
-                />
-              </tui-textfield>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Arena *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="text"
-                  placeholder="Enter arena name"
-                  [value]="formData().arena"
-                  (input)="updateFormField('arena', $any($event.target).value)"
-                  name="arena"
-                />
-              </tui-textfield>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>Founded Year *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="number"
-                  placeholder="Enter year"
-                  [value]="formData().foundedYear"
-                  (input)="updateFormField('foundedYear', +$any($event.target).value)"
-                  name="foundedYear"
-                />
-              </tui-textfield>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>League *</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().leagueId"
-                name="leagueId"
-              >
-                <option [value]="undefined" disabled>Select league</option>
-                @for (league of leagues(); track league.id) {
-                  <option [value]="league.id">{{ league.name }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>Championships Won</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="number"
-                  placeholder="Enter number"
-                  [value]="formData().championshipsWon || 0"
-                  (input)="updateFormField('championshipsWon', +$any($event.target).value)"
-                  name="championshipsWon"
-                />
-              </tui-textfield>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Division *</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().divisionId"
-                name="divisionId"
-              >
-                <option [value]="undefined" disabled>Select division</option>
-                @for (division of divisions(); track division.id) {
-                  <option [value]="division.id">{{ division.name }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>Conference *</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().conferenceId"
-                name="conferenceId"
-              >
-                <option [value]="undefined" disabled>Select conference</option>
-                @for (conference of conferences(); track conference.id) {
-                  <option [value]="conference.id">{{ conference.name }}</option>
-                }
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Coach</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().coachId"
-                name="coachId"
-              >
-                <option [value]="null">No coach assigned</option>
-                @for (coach of coaches(); track coach.id) {
-                  <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group"></div>
+      }
+      <div class="team-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Team Name *</label>
+            <tui-textfield>
+              <input tuiTextfield type="text" placeholder="Enter team name" [value]="formData().name"
+                (input)="updateFormField('name', $any($event.target).value)" name="name" />
+            </tui-textfield>
           </div>
           <div class="form-group">
-            <label tuiLabel>Team Logo</label>
-            <div
-              class="file-upload-area"
-              (drop)="onFileDrop($event)"
-              (dragover)="onDragOver($event)"
-            >
-              @if (!logoPreview()) {
-                <div class="upload-content">
-                  <tui-icon icon="@tui.upload-cloud" class="upload-icon"></tui-icon>
-                  <p class="upload-text">Drag & drop logo here or</p>
-                  <button
-                    tuiButton
-                    appearance="secondary"
-                    size="s"
-                    type="button"
-                    (click)="fileInput.click()"
-                  >
-                    Browse Files
-                  </button>
-                  <input
-                    #fileInput
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    (change)="onFileSelected($event)"
-                    style="display: none"
-                  />
-                  <p class="upload-hint">PNG, JPG, WEBP up to 5MB</p>
-                </div>
-              } @else {
-                <div class="upload-preview">
-                  <img [src]="logoPreview()" alt="Logo preview" class="preview-image" />
-                  <button
-                    tuiButton
-                    appearance="icon"
-                    size="s"
-                    type="button"
-                    class="remove-image"
-                    (click)="clearFile()"
-                  >
-                    <tui-icon icon="@tui.x"></tui-icon>
-                  </button>
-                </div>
+            <label tuiLabel>City *</label>
+            <tui-textfield>
+              <input tuiTextfield type="text" placeholder="Enter city" [value]="formData().city"
+                (input)="updateFormField('city', $any($event.target).value)" name="city" />
+            </tui-textfield>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Arena *</label>
+            <tui-textfield>
+              <input tuiTextfield type="text" placeholder="Enter arena name" [value]="formData().arena"
+                (input)="updateFormField('arena', $any($event.target).value)" name="arena" />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Founded Year *</label>
+            <tui-textfield>
+              <input tuiTextfield type="number" placeholder="Enter year" [value]="formData().foundedYear"
+                (input)="updateFormField('foundedYear', +$any($event.target).value)" name="foundedYear" />
+            </tui-textfield>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>League *</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().leagueId" name="leagueId">
+              <option [value]="undefined" disabled>Select league</option>
+              @for (league of leagues(); track league.id) {
+              <option [value]="league.id">{{ league.name }}</option>
               }
+            </select>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Championships Won</label>
+            <tui-textfield>
+              <input tuiTextfield type="number" placeholder="Enter number" [value]="formData().championshipsWon || 0"
+                (input)="updateFormField('championshipsWon', +$any($event.target).value)" name="championshipsWon" />
+            </tui-textfield>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Division *</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().divisionId" name="divisionId">
+              <option [value]="undefined" disabled>Select division</option>
+              @for (division of divisions(); track division.id) {
+              <option [value]="division.id">{{ division.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Conference *</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().conferenceId" name="conferenceId">
+              <option [value]="undefined" disabled>Select conference</option>
+              @for (conference of conferences(); track conference.id) {
+              <option [value]="conference.id">{{ conference.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Coach</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().coachId" name="coachId">
+              <option [value]="null">No coach assigned</option>
+              @for (coach of coaches(); track coach.id) {
+              <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group"></div>
+        </div>
+        <div class="form-group">
+          <label tuiLabel>Team Logo</label>
+          <div class="file-upload-area" (drop)="onFileDrop($event)" (dragover)="onDragOver($event)">
+            @if (!logoPreview()) {
+            <div class="upload-content">
+              <tui-icon icon="@tui.upload-cloud" class="upload-icon"></tui-icon>
+              <p class="upload-text">Drag & drop logo here or</p>
+              <button tuiButton appearance="secondary" size="s" type="button" (click)="fileInput.click()">
+                Browse Files
+              </button>
+              <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" (change)="onFileSelected($event)"
+                style="display: none" />
+              <p class="upload-hint">PNG, JPG, WEBP up to 5MB</p>
             </div>
+            } @else {
+            <div class="upload-preview">
+              <img [src]="logoPreview()" alt="Logo preview" class="preview-image" />
+              <button tuiButton appearance="icon" size="s" type="button" class="remove-image" (click)="clearFile()">
+                <tui-icon icon="@tui.x"></tui-icon>
+              </button>
+            </div>
+            }
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button
-          tuiButton
-          appearance="secondary"
-          size="m"
-          (click)="closeAllModals()"
-        >
-          Cancel
-        </button>
-        <button
-          tuiButton
-          appearance="primary"
-          size="m"
-          (click)="createTeam()"
-          [disabled]="loading()"
-        >
-          @if (loading()) {
-            <tui-loader size="s"></tui-loader>
-          } @else {
-            <span>Create Team</span>
-          }
-        </button>
-      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeAllModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="createTeam()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Create Team</span>
+        }
+      </button>
     </div>
   </div>
+</div>
 }
 <!-- Edit Modal -->
 @if (showEditModal()) {
-  <div class="modal-overlay" (click)="closeAllModals()">
-    <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Edit Team</h2>
-        <button
-          tuiButton
-          appearance="icon"
-          size="s"
-          (click)="closeAllModals()"
-        >
-          <tui-icon icon="@tui.x"></tui-icon>
-        </button>
+<div class="modal-overlay" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Team</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeAllModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      @if (formError()) {
+      <div class="error-message">
+        <tui-icon icon="@tui.alert-circle"></tui-icon>
+        <span>{{ formError() }}</span>
       </div>
-      <div class="modal-body">
-        @if (formError()) {
-          <div class="error-message">
-            <tui-icon icon="@tui.alert-circle"></tui-icon>
-            <span>{{ formError() }}</span>
-          </div>
-        }
-        <div class="team-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Team Name *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="text"
-                  placeholder="Enter team name"
-                  [value]="formData().name"
-                  (input)="updateFormField('name', $any($event.target).value)"
-                  name="name"
-                />
-              </tui-textfield>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>City *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="text"
-                  placeholder="Enter city"
-                  [value]="formData().city"
-                  (input)="updateFormField('city', $any($event.target).value)"
-                  name="city"
-                />
-              </tui-textfield>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Arena *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="text"
-                  placeholder="Enter arena name"
-                  [value]="formData().arena"
-                  (input)="updateFormField('arena', $any($event.target).value)"
-                  name="arena"
-                />
-              </tui-textfield>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>Founded Year *</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="number"
-                  placeholder="Enter year"
-                  [value]="formData().foundedYear"
-                  (input)="updateFormField('foundedYear', +$any($event.target).value)"
-                  name="foundedYear"
-                />
-              </tui-textfield>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>League *</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().leagueId"
-                name="leagueId"
-              >
-                <option [value]="undefined" disabled>Select league</option>
-                @for (league of leagues(); track league.id) {
-                  <option [value]="league.id">{{ league.name }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>Championships Won</label>
-              <tui-textfield>
-                <input
-                  tuiTextfield
-                  type="number"
-                  placeholder="Enter number"
-                  [value]="formData().championshipsWon || 0"
-                  (input)="updateFormField('championshipsWon', +$any($event.target).value)"
-                  name="championshipsWon"
-                />
-              </tui-textfield>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Division *</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().divisionId"
-                name="divisionId"
-              >
-                <option [value]="undefined" disabled>Select division</option>
-                @for (division of divisions(); track division.id) {
-                  <option [value]="division.id">{{ division.name }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
-              <label tuiLabel>Conference *</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().conferenceId"
-                name="conferenceId"
-              >
-                <option [value]="undefined" disabled>Select conference</option>
-                @for (conference of conferences(); track conference.id) {
-                  <option [value]="conference.id">{{ conference.name }}</option>
-                }
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label tuiLabel>Coach</label>
-              <select
-                class="filter-select form-control-height"
-                [(ngModel)]="formData().coachId"
-                name="coachId"
-              >
-                <option [value]="null">No coach assigned</option>
-                @for (coach of coaches(); track coach.id) {
-                  <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group"></div>
+      }
+      <div class="team-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Team Name *</label>
+            <tui-textfield>
+              <input tuiTextfield type="text" placeholder="Enter team name" [value]="formData().name"
+                (input)="updateFormField('name', $any($event.target).value)" name="name" />
+            </tui-textfield>
           </div>
           <div class="form-group">
-            <label tuiLabel>Team Logo</label>
-            <div
-              class="file-upload-area"
-              (drop)="onFileDrop($event)"
-              (dragover)="onDragOver($event)"
-            >
-              @if (!logoPreview()) {
-                <div class="upload-content">
-                  <tui-icon icon="@tui.upload-cloud" class="upload-icon"></tui-icon>
-                  <p class="upload-text">Drag & drop logo here or</p>
-                  <button
-                    tuiButton
-                    appearance="secondary"
-                    size="s"
-                    type="button"
-                    (click)="fileInputEdit.click()"
-                  >
-                    Browse Files
-                  </button>
-                  <input
-                    #fileInputEdit
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    (change)="onFileSelected($event)"
-                    style="display: none"
-                  />
-                  <p class="upload-hint">PNG, JPG, WEBP up to 5MB</p>
-                </div>
-              } @else {
-                <div class="upload-preview">
-                  <img [src]="logoPreview()" alt="Logo preview" class="preview-image" />
-                  <button
-                    tuiButton
-                    appearance="icon"
-                    size="s"
-                    type="button"
-                    class="remove-image"
-                    (click)="clearFile()"
-                  >
-                    <tui-icon icon="@tui.x"></tui-icon>
-                  </button>
-                </div>
+            <label tuiLabel>City *</label>
+            <tui-textfield>
+              <input tuiTextfield type="text" placeholder="Enter city" [value]="formData().city"
+                (input)="updateFormField('city', $any($event.target).value)" name="city" />
+            </tui-textfield>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Arena *</label>
+            <tui-textfield>
+              <input tuiTextfield type="text" placeholder="Enter arena name" [value]="formData().arena"
+                (input)="updateFormField('arena', $any($event.target).value)" name="arena" />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Founded Year *</label>
+            <tui-textfield>
+              <input tuiTextfield type="number" placeholder="Enter year" [value]="formData().foundedYear"
+                (input)="updateFormField('foundedYear', +$any($event.target).value)" name="foundedYear" />
+            </tui-textfield>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>League *</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().leagueId" name="leagueId">
+              <option [value]="undefined" disabled>Select league</option>
+              @for (league of leagues(); track league.id) {
+              <option [value]="league.id">{{ league.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Championships Won</label>
+            <tui-textfield>
+              <input tuiTextfield type="number" placeholder="Enter number" [value]="formData().championshipsWon || 0"
+                (input)="updateFormField('championshipsWon', +$any($event.target).value)" name="championshipsWon" />
+            </tui-textfield>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Division *</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().divisionId" name="divisionId">
+              <option [value]="undefined" disabled>Select division</option>
+              @for (division of divisions(); track division.id) {
+              <option [value]="division.id">{{ division.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Conference *</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().conferenceId" name="conferenceId">
+              <option [value]="undefined" disabled>Select conference</option>
+              @for (conference of conferences(); track conference.id) {
+              <option [value]="conference.id">{{ conference.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Coach</label>
+            <select class="filter-select form-control-height" [(ngModel)]="formData().coachId" name="coachId">
+              <option [value]="null">No coach assigned</option>
+              @for (coach of coaches(); track coach.id) {
+              <option [value]="coach.id">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group"></div>
+        </div>
+        <div class="form-group">
+          <label tuiLabel>Team Logo</label>
+          <div class="file-upload-area" (drop)="onFileDrop($event)" (dragover)="onDragOver($event)">
+            @if (!logoPreview()) {
+            <div class="upload-content">
+              <tui-icon icon="@tui.upload-cloud" class="upload-icon"></tui-icon>
+              <p class="upload-text">Drag & drop logo here or</p>
+              <button tuiButton appearance="secondary" size="s" type="button" (click)="fileInputEdit.click()">
+                Browse Files
+              </button>
+              <input #fileInputEdit type="file" accept="image/jpeg,image/png,image/webp"
+                (change)="onFileSelected($event)" style="display: none" />
+              <p class="upload-hint">PNG, JPG, WEBP up to 5MB</p>
+            </div>
+            } @else {
+            <div class="upload-preview">
+              <img [src]="logoPreview()" alt="Logo preview" class="preview-image" />
+              <button tuiButton appearance="icon" size="s" type="button" class="remove-image" (click)="clearFile()">
+                <tui-icon icon="@tui.x"></tui-icon>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeAllModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="updateTeam()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Update Team</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+<!-- Delete Modal -->
+@if (showDeleteModal()) {
+<div class="modal-overlay" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Team</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeAllModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedTeam()?.name }}</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeAllModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="deleteTeam()"
+        [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Team</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+<!-- Bulk Delete Modal -->
+@if (showBulkDeleteModal()) {
+<div class="modal-overlay" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Multiple Teams</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeAllModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedCount() }} team(s)</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeAllModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="bulkDeleteTeams()"
+        [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Teams</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+<!-- View Details Modal -->
+@if (showViewModal()) {
+<div class="modal-overlay" (click)="closeAllModals()">
+  <div tuiCardLarge class="modal-content modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Team Details</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeAllModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Loading State -->
+      @if (loading()) {
+      <div class="loading-container">
+        <tui-loader size="m"></tui-loader>
+      </div>
+      }
+      <!-- Team Details -->
+      @if (!loading() && teamDetails()) {
+      <div class="team-details">
+        <!-- Team Header -->
+        <div class="details-header">
+          <div class="team-logo-section">
+            @if (teamDetails().team?.logo) {
+            <img [src]="teamDetails().team.logo" alt="Team Logo" class="team-logo" />
+            } @else {
+            <div class="team-logo-placeholder">
+              {{ getTeamInitials(teamDetails().team) }}
+            </div>
+            }
+          </div>
+          <div class="team-info-section">
+            <h3 class="detail-team-name">{{ teamDetails().team?.name }}</h3>
+            <div class="team-meta">
+              <div class="meta-badge">
+                <tui-icon icon="@tui.map-pin"></tui-icon>
+                {{ teamDetails().team?.city }}
+              </div>
+              @if (teamDetails().team?.arena) {
+              <div class="meta-badge">
+                <tui-icon icon="@tui.home"></tui-icon>
+                {{ teamDetails().team?.arena }}
+              </div>
               }
             </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button
-          tuiButton
-          appearance="secondary"
-          size="m"
-          (click)="closeAllModals()"
-        >
-          Cancel
-        </button>
-        <button
-          tuiButton
-          appearance="primary"
-          size="m"
-          (click)="updateTeam()"
-          [disabled]="loading()"
-        >
-          @if (loading()) {
-            <tui-loader size="s"></tui-loader>
-          } @else {
-            <span>Update Team</span>
-          }
-        </button>
-      </div>
-    </div>
-  </div>
-}
-<!-- Delete Modal -->
-@if (showDeleteModal()) {
-  <div class="modal-overlay" (click)="closeAllModals()">
-    <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Delete Team</h2>
-        <button
-          tuiButton
-          appearance="icon"
-          size="s"
-          (click)="closeAllModals()"
-        >
-          <tui-icon icon="@tui.x"></tui-icon>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="delete-warning">
-          <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
-          <p>Are you sure you want to delete <strong>{{ selectedTeam()?.name }}</strong>?</p>
-          <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button
-          tuiButton
-          appearance="secondary"
-          size="m"
-          (click)="closeAllModals()"
-        >
-          Cancel
-        </button>
-        <button
-          tuiButton
-          appearance="primary"
-          size="m"
-          class="delete-confirm-button"
-          (click)="deleteTeam()"
-          [disabled]="loading()"
-        >
-          @if (loading()) {
-            <tui-loader size="s"></tui-loader>
-          } @else {
-            <span>Delete Team</span>
-          }
-        </button>
-      </div>
-    </div>
-  </div>
-}
-<!-- Bulk Delete Modal -->
-@if (showBulkDeleteModal()) {
-  <div class="modal-overlay" (click)="closeAllModals()">
-    <div tuiCardLarge class="modal-content modal-delete" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Delete Multiple Teams</h2>
-        <button
-          tuiButton
-          appearance="icon"
-          size="s"
-          (click)="closeAllModals()"
-        >
-          <tui-icon icon="@tui.x"></tui-icon>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="delete-warning">
-          <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
-          <p>Are you sure you want to delete <strong>{{ selectedCount() }} team(s)</strong>?</p>
-          <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button
-          tuiButton
-          appearance="secondary"
-          size="m"
-          (click)="closeAllModals()"
-        >
-          Cancel
-        </button>
-        <button
-          tuiButton
-          appearance="primary"
-          size="m"
-          class="delete-confirm-button"
-          (click)="bulkDeleteTeams()"
-          [disabled]="loading()"
-        >
-          @if (loading()) {
-            <tui-loader size="s"></tui-loader>
-          } @else {
-            <span>Delete Teams</span>
-          }
-        </button>
-      </div>
-    </div>
-  </div>
-}
-<!-- View Details Modal -->
-@if (showViewModal()) {
-  <div class="modal-overlay" (click)="closeAllModals()">
-    <div tuiCardLarge class="modal-content modal-view" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Team Details</h2>
-        <button
-          tuiButton
-          appearance="icon"
-          size="s"
-          (click)="closeAllModals()"
-        >
-          <tui-icon icon="@tui.x"></tui-icon>
-        </button>
-      </div>
-      <div class="modal-body">
-        <!-- Loading State -->
-        @if (loading()) {
-          <div class="loading-container">
-            <tui-loader size="m"></tui-loader>
+        <!-- Team Info Grid -->
+        <div class="details-grid">
+          <div class="detail-card">
+            <div class="detail-label">League</div>
+            <div class="detail-value">{{ teamDetails().team?.league || '-' }}</div>
           </div>
+          <div class="detail-card">
+            <div class="detail-label">Division</div>
+            <div class="detail-value">{{ teamDetails().team?.division || '-' }}</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Conference</div>
+            <div class="detail-value">{{ teamDetails().team?.conference || '-' }}</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Founded Year</div>
+            <div class="detail-value">{{ teamDetails().team?.foundedYear }}</div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Championships</div>
+            <div class="detail-value championships">
+              @if (teamDetails().team?.championships > 0) {
+              <span>
+                <tui-icon icon="@tui.award"></tui-icon> {{ teamDetails().team?.championships }}
+              </span>
+              } @else {
+              <span>-</span>
+              }
+            </div>
+          </div>
+          <div class="detail-card">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">
+              <span class="status-badge" [class.active]="teamDetails().team?.is_active">
+                {{ teamDetails().team?.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <!-- Coach Section -->
+        <div class="section-divider"></div>
+        @if (teamDetails().coach) {
+        <div class="coach-section">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.user"></tui-icon>
+            Head Coach
+          </h4>
+          <div class="coach-info">
+            <div class="coach-detail">
+              <span class="coach-label">Name:</span>
+              <span class="coach-value">{{ teamDetails().coach.firstName }} {{ teamDetails().coach.lastName }}</span>
+            </div>
+            @if (teamDetails().coach.experienceYears) {
+            <div class="coach-detail">
+              <span class="coach-label">Experience:</span>
+              <span class="coach-value">{{ teamDetails().coach.experienceYears }} years</span>
+            </div>
+            }
+          </div>
+        </div>
+        } @else {
+        <div class="no-coach-section">
+          <tui-icon icon="@tui.user-x" class="no-coach-icon"></tui-icon>
+          <p>No head coach assigned</p>
+        </div>
         }
-        <!-- Team Details -->
-        @if (!loading() && teamDetails()) {
-          <div class="team-details">
-            <!-- Team Header -->
-            <div class="details-header">
-              <div class="team-logo-section">
-                @if (teamDetails().team?.logo) {
-                  <img [src]="teamDetails().team.logo" alt="Team Logo" class="team-logo" />
-                } @else {
-                  <div class="team-logo-placeholder">
-                    {{ getTeamInitials(teamDetails().team) }}
-                  </div>
-                }
+        <!-- Standings Section -->
+        @if (teamDetails().standings) {
+        <div class="section-divider"></div>
+        <div class="standings-section">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.bar-chart-2"></tui-icon>
+            Current Standings
+          </h4>
+          <div class="standings-grid">
+            <div class="standing-card">
+              <div class="standing-label">Wins</div>
+              <div class="standing-value wins">{{ teamDetails().standings.wins || 0 }}</div>
+            </div>
+            <div class="standing-card">
+              <div class="standing-label">Losses</div>
+              <div class="standing-value losses">{{ teamDetails().standings.losses || 0 }}</div>
+            </div>
+            <div class="standing-card">
+              <div class="standing-label">Win %</div>
+              <div class="standing-value">{{ (teamDetails().standings.winPercentage * 100).toFixed(1) }}%</div>
+            </div>
+            <div class="standing-card">
+              <div class="standing-label">Position</div>
+              <div class="standing-value position">{{ teamDetails().standings.position }}</div>
+            </div>
+          </div>
+        </div>
+        }
+        <!-- Team Statistics Section -->
+        @if (teamDetails().stats?.seasonStats) {
+        <div class="section-divider"></div>
+        <div class="stats-section-modern">
+          <h4 class="section-title-modern">
+            Season Statistics <span class="season-badge">{{ teamDetails().stats.season }}</span>
+          </h4>
+          <div class="stats-grid-modern">
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">GP</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.gamesPlayed }}</div>
+              <div class="stat-sub-modern">Games</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">PPG</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.pointsAvg }}</div>
+              <div class="stat-sub-modern">Points</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">RPG</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.reboundsAvg }}</div>
+              <div class="stat-sub-modern">Rebounds</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">APG</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.assistsAvg }}</div>
+              <div class="stat-sub-modern">Assists</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">SPG</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.stealsAvg || '-' }}</div>
+              <div class="stat-sub-modern">Steals</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">BPG</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.blocksAvg || '-' }}</div>
+              <div class="stat-sub-modern">Blocks</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">TPG</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.turnoversAvg || '-' }}</div>
+              <div class="stat-sub-modern">Turnovers</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">FG%</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.fieldGoalPct.toFixed(1) }}%</div>
+              <div class="stat-sub-modern">Field Goal</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">3P%</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.threePointPct.toFixed(1) }}%</div>
+              <div class="stat-sub-modern">3-Point</div>
+            </div>
+            <div class="stat-card-modern">
+              <div class="stat-label-modern">FT%</div>
+              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.freeThrowPct ?
+                teamDetails().stats.seasonStats.freeThrowPct.toFixed(1) + '%' : '-' }}</div>
+              <div class="stat-sub-modern">Free Throw</div>
+            </div>
+          </div>
+        </div>
+        }
+        <!-- Team Rankings Section -->
+        @if (teamDetails().stats?.teamRankings) {
+        <div class="section-divider"></div>
+        <div class="rankings-section-modern">
+          <h4 class="section-title-modern">League Rankings</h4>
+          <div class="rankings-container">
+            <div class="ranking-row">
+              <div class="ranking-info">
+                <span class="ranking-name">Offensive Rating</span>
+                <span class="ranking-value">{{ teamDetails().stats.teamRankings.offensive.rating }}</span>
               </div>
-              <div class="team-info-section">
-                <h3 class="detail-team-name">{{ teamDetails().team?.name }}</h3>
-                <div class="team-meta">
-                  <div class="meta-badge">
-                    <tui-icon icon="@tui.map-pin"></tui-icon>
-                    {{ teamDetails().team?.city }}
-                  </div>
-                  @if (teamDetails().team?.arena) {
-                    <div class="meta-badge">
-                      <tui-icon icon="@tui.home"></tui-icon>
-                      {{ teamDetails().team?.arena }}
-                    </div>
-                  }
+              <div class="ranking-bar-container">
+                <div class="ranking-bar offensive"
+                  [style.width.%]="(1 - (teamDetails().stats.teamRankings.offensive.rank / teamDetails().stats.teamRankings.offensive.totalTeams)) * 100">
+                </div>
+              </div>
+              <div class="ranking-position">
+                <span class="rank-number">#{{ teamDetails().stats.teamRankings.offensive.rank }}</span>
+                <span class="rank-total">/ {{ teamDetails().stats.teamRankings.offensive.totalTeams }}</span>
+              </div>
+            </div>
+            <div class="ranking-row">
+              <div class="ranking-info">
+                <span class="ranking-name">Defensive Rating</span>
+                <span class="ranking-value">{{ teamDetails().stats.teamRankings.defensive.rating }}</span>
+              </div>
+              <div class="ranking-bar-container">
+                <div class="ranking-bar defensive"
+                  [style.width.%]="(1 - (teamDetails().stats.teamRankings.defensive.rank / teamDetails().stats.teamRankings.defensive.totalTeams)) * 100">
+                </div>
+              </div>
+              <div class="ranking-position">
+                <span class="rank-number">#{{ teamDetails().stats.teamRankings.defensive.rank }}</span>
+                <span class="rank-total">/ {{ teamDetails().stats.teamRankings.defensive.totalTeams }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+        <!-- Top Players Section -->
+        @if (teamDetails().stats?.playerStats && teamDetails().stats.playerStats.length > 0) {
+        <div class="section-divider"></div>
+        <div class="top-players-section">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.award"></tui-icon>
+            Top Players
+          </h4>
+          <div class="players-list">
+            @for (player of teamDetails().stats.playerStats.slice(0, 5); track player.id) {
+            <div class="player-stat-card">
+              <div class="player-header">
+                <span class="player-number">#{{ player.number }}</span>
+                <span class="player-name">{{ player.playerName }}</span>
+                <span class="player-position">{{ player.position }}</span>
+              </div>
+              <div class="player-stats">
+                <div class="player-stat">
+                  <span class="stat-label">PPG</span>
+                  <span class="stat-value">{{ player.pointsAvg }}</span>
+                </div>
+                <div class="player-stat">
+                  <span class="stat-label">RPG</span>
+                  <span class="stat-value">{{ player.reboundsAvg }}</span>
+                </div>
+                <div class="player-stat">
+                  <span class="stat-label">APG</span>
+                  <span class="stat-value">{{ player.assistsAvg }}</span>
                 </div>
               </div>
             </div>
-            <!-- Team Info Grid -->
-            <div class="details-grid">
-              <div class="detail-card">
-                <div class="detail-label">League</div>
-                <div class="detail-value">{{ teamDetails().team?.league || '-' }}</div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Division</div>
-                <div class="detail-value">{{ teamDetails().team?.division || '-' }}</div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Conference</div>
-                <div class="detail-value">{{ teamDetails().team?.conference || '-' }}</div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Founded Year</div>
-                <div class="detail-value">{{ teamDetails().team?.foundedYear }}</div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Championships</div>
-                <div class="detail-value championships">
-                  @if (teamDetails().team?.championships > 0) {
-                    <span>
-                      <tui-icon icon="@tui.award"></tui-icon> {{ teamDetails().team?.championships }}
-                    </span>
-                  } @else {
-                    <span>-</span>
-                  }
-                </div>
-              </div>
-              <div class="detail-card">
-                <div class="detail-label">Status</div>
-                <div class="detail-value">
-                  <span class="status-badge" [class.active]="teamDetails().team?.is_active">
-                    {{ teamDetails().team?.is_active ? 'Active' : 'Inactive' }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <!-- Coach Section -->
-            <div class="section-divider"></div>
-            @if (teamDetails().coach) {
-              <div class="coach-section">
-                <h4 class="section-title">
-                  <tui-icon icon="@tui.user"></tui-icon>
-                  Head Coach
-                </h4>
-                <div class="coach-info">
-                  <div class="coach-detail">
-                    <span class="coach-label">Name:</span>
-                    <span class="coach-value">{{ teamDetails().coach.firstName }} {{ teamDetails().coach.lastName }}</span>
-                  </div>
-                  @if (teamDetails().coach.experienceYears) {
-                    <div class="coach-detail">
-                      <span class="coach-label">Experience:</span>
-                      <span class="coach-value">{{ teamDetails().coach.experienceYears }} years</span>
-                    </div>
-                  }
-                </div>
-              </div>
-            } @else {
-              <div class="no-coach-section">
-                <tui-icon icon="@tui.user-x" class="no-coach-icon"></tui-icon>
-                <p>No head coach assigned</p>
-              </div>
-            }
-            <!-- Standings Section -->
-            @if (teamDetails().standings) {
-              <div class="section-divider"></div>
-              <div class="standings-section">
-                <h4 class="section-title">
-                  <tui-icon icon="@tui.bar-chart-2"></tui-icon>
-                  Current Standings
-                </h4>
-                <div class="standings-grid">
-                  <div class="standing-card">
-                    <div class="standing-label">Wins</div>
-                    <div class="standing-value wins">{{ teamDetails().standings.wins || 0 }}</div>
-                  </div>
-                  <div class="standing-card">
-                    <div class="standing-label">Losses</div>
-                    <div class="standing-value losses">{{ teamDetails().standings.losses || 0 }}</div>
-                  </div>
-                  <div class="standing-card">
-                    <div class="standing-label">Win %</div>
-                    <div class="standing-value">{{ (teamDetails().standings.winPercentage * 100).toFixed(1) }}%</div>
-                  </div>
-                  <div class="standing-card">
-                    <div class="standing-label">Position</div>
-                    <div class="standing-value position">{{ teamDetails().standings.position }}</div>
-                  </div>
-                </div>
-              </div>
-            }
-            <!-- Team Statistics Section -->
-            @if (teamDetails().stats?.seasonStats) {
-              <div class="section-divider"></div>
-              <div class="stats-section">
-                <h4 class="section-title">
-                  <tui-icon icon="@tui.bar-chart"></tui-icon>
-                  Season Statistics ({{ teamDetails().stats.season }})
-                </h4>
-                <div class="stats-grid">
-                  <div class="stat-card">
-                    <div class="stat-label">Games Played</div>
-                    <div class="stat-value">{{ teamDetails().stats.seasonStats.gamesPlayed }}</div>
-                  </div>
-                  <div class="stat-card">
-                    <div class="stat-label">Points Per Game</div>
-                    <div class="stat-value">{{ teamDetails().stats.seasonStats.pointsAvg }}</div>
-                  </div>
-                  <div class="stat-card">
-                    <div class="stat-label">Rebounds Per Game</div>
-                    <div class="stat-value">{{ teamDetails().stats.seasonStats.reboundsAvg }}</div>
-                  </div>
-                  <div class="stat-card">
-                    <div class="stat-label">Assists Per Game</div>
-                    <div class="stat-value">{{ teamDetails().stats.seasonStats.assistsAvg }}</div>
-                  </div>
-                  <div class="stat-card">
-                    <div class="stat-label">Field Goal %</div>
-                    <div class="stat-value">{{ teamDetails().stats.seasonStats.fieldGoalPct.toFixed(1) }}%</div>
-                  </div>
-                  <div class="stat-card">
-                    <div class="stat-label">3-Point %</div>
-                    <div class="stat-value">{{ teamDetails().stats.seasonStats.threePointPct.toFixed(1) }}%</div>
-                  </div>
-                </div>
-              </div>
-            }
-            <!-- Team Rankings Section -->
-            @if (teamDetails().stats?.teamRankings) {
-              <div class="section-divider"></div>
-              <div class="rankings-section">
-                <h4 class="section-title">
-                  <tui-icon icon="@tui.trending-up"></tui-icon>
-                  Team Rankings
-                </h4>
-                <div class="rankings-grid">
-                  <div class="ranking-card offensive">
-                    <div class="ranking-label">Offensive Rating</div>
-                    <div class="ranking-info">
-                      <div class="ranking-rank">#{{ teamDetails().stats.teamRankings.offensive.rank }}</div>
-                      <div class="ranking-value">{{ teamDetails().stats.teamRankings.offensive.rating }}</div>
-                    </div>
-                    <div class="ranking-total">of {{ teamDetails().stats.teamRankings.offensive.totalTeams }} teams</div>
-                  </div>
-                  <div class="ranking-card defensive">
-                    <div class="ranking-label">Defensive Rating</div>
-                    <div class="ranking-info">
-                      <div class="ranking-rank">#{{ teamDetails().stats.teamRankings.defensive.rank }}</div>
-                      <div class="ranking-value">{{ teamDetails().stats.teamRankings.defensive.rating }}</div>
-                    </div>
-                    <div class="ranking-total">of {{ teamDetails().stats.teamRankings.defensive.totalTeams }} teams</div>
-                  </div>
-                </div>
-              </div>
-            }
-            <!-- Top Players Section -->
-            @if (teamDetails().stats?.playerStats && teamDetails().stats.playerStats.length > 0) {
-              <div class="section-divider"></div>
-              <div class="top-players-section">
-                <h4 class="section-title">
-                  <tui-icon icon="@tui.award"></tui-icon>
-                  Top Players
-                </h4>
-                <div class="players-list">
-                  @for (player of teamDetails().stats.playerStats.slice(0, 5); track player.id) {
-                    <div class="player-stat-card">
-                      <div class="player-header">
-                        <span class="player-number">#{{ player.number }}</span>
-                        <span class="player-name">{{ player.playerName }}</span>
-                        <span class="player-position">{{ player.position }}</span>
-                      </div>
-                      <div class="player-stats">
-                        <div class="player-stat">
-                          <span class="stat-label">PPG</span>
-                          <span class="stat-value">{{ player.pointsAvg }}</span>
-                        </div>
-                        <div class="player-stat">
-                          <span class="stat-label">RPG</span>
-                          <span class="stat-value">{{ player.reboundsAvg }}</span>
-                        </div>
-                        <div class="player-stat">
-                          <span class="stat-label">APG</span>
-                          <span class="stat-value">{{ player.assistsAvg }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-            <!-- Roster Section -->
-            @if (teamDetails().roster && teamDetails().roster.length > 0) {
-              <div class="section-divider"></div>
-              <div class="roster-section">
-                <h4 class="section-title">
-                  <tui-icon icon="@tui.users"></tui-icon>
-                  Roster ({{ teamDetails().roster.length }} players)
-                </h4>
-                <div class="roster-list">
-                  @for (player of teamDetails().roster.slice(0, 5); track player.id) {
-                    <div class="roster-player">
-                      <span class="player-number">#{{ player.number }}</span>
-                      <span class="player-name">{{ player.firstName }} {{ player.lastName }}</span>
-                      <span class="player-position">{{ player.position }}</span>
-                    </div>
-                  }
-                  @if (teamDetails().roster.length > 5) {
-                    <div class="more-players">
-                      +{{ teamDetails().roster.length - 5 }} more players
-                    </div>
-                  }
-                </div>
-              </div>
             }
           </div>
+        </div>
+        }
+        <!-- Roster Section -->
+        @if (teamDetails().roster && teamDetails().roster.length > 0) {
+        <div class="section-divider"></div>
+        <div class="roster-section">
+          <h4 class="section-title">
+            <tui-icon icon="@tui.users"></tui-icon>
+            Roster ({{ teamDetails().roster.length }} players)
+          </h4>
+          <div class="roster-list">
+            @for (player of teamDetails().roster.slice(0, 5); track player.id) {
+            <div class="roster-player">
+              <span class="player-number">#{{ player.number }}</span>
+              <span class="player-name">{{ player.firstName }} {{ player.lastName }}</span>
+              <span class="player-position">{{ player.position }}</span>
+            </div>
+            }
+            @if (teamDetails().roster.length > 5) {
+            <div class="more-players">
+              +{{ teamDetails().roster.length - 5 }} more players
+            </div>
+            }
+          </div>
+        </div>
         }
       </div>
-      <div class="modal-footer">
-        <button
-          tuiButton
-          appearance="secondary"
-          size="m"
-          (click)="closeAllModals()"
-        >
-          Close
-        </button>
-        <button
-          tuiButton
-          appearance="primary"
-          size="m"
-          (click)="closeAllModals(); openEditModal(selectedTeam()!)"
-        >
-          <tui-icon icon="@tui.edit"></tui-icon>
-          Edit Team
-        </button>
-      </div>
+      }
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeAllModals()">
+        Close
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="closeAllModals(); openEditModal(selectedTeam()!)">
+        <tui-icon icon="@tui.edit"></tui-icon>
+        Edit Team
+      </button>
     </div>
   </div>
+</div>
 }
