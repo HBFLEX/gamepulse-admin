@@ -22,8 +22,13 @@ interface Team {
   conference?: string;
   coach?: {
     id: number;
-    name: string;
-    experienceYears: number;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    coach_first_name?: string;
+    coach_last_name?: string;
+    experienceYears?: number;
+    coach_experience_years?: number;
   };
   logo?: string;
   is_active: boolean;
@@ -248,6 +253,8 @@ export class TeamsComponent implements OnInit {
       next: (response) => {
         // Backend returns { data: Team[], meta: { total: number } }
         const teams = response?.data || [];
+        console.log('Loaded teams:', teams);
+        console.log('Sample team with coach:', teams.find(t => t.coach));
         this.teams.set(teams);
         this.totalTeams.set(response?.meta?.total || teams.length);
         this.loading.set(false);
@@ -812,6 +819,9 @@ export class TeamsComponent implements OnInit {
 
   getCoachName(team: Team): string {
     if (!team.coach) return '-';
+    
+    console.log('Coach data for team:', team.name, team.coach);
+    
     // Handle both name formats: direct name or firstName/lastName
     if ('name' in team.coach && team.coach.name) {
       return team.coach.name;
@@ -821,6 +831,14 @@ export class TeamsComponent implements OnInit {
       const lastName = (team.coach as any).lastName || '';
       return `${firstName} ${lastName}`.trim();
     }
+    
+    // Handle coach_first_name and coach_last_name format (from API)
+    if ('coach_first_name' in team.coach || 'coach_last_name' in team.coach) {
+      const firstName = (team.coach as any).coach_first_name || '';
+      const lastName = (team.coach as any).coach_last_name || '';
+      return `${firstName} ${lastName}`.trim();
+    }
+    
     return '-';
   }
 
