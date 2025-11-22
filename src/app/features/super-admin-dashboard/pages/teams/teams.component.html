@@ -79,6 +79,10 @@
       <div class="filter-stats">
         <div class="stat-item">
           <span class="stat-label">Total</span>
+          <span class="stat-value">{{ filteredTeams().length }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing</span>
           <span class="stat-value">{{ displayedTeams().length }}</span>
         </div>
       </div>
@@ -238,6 +242,35 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination -->
+    @if (filteredTeams().length > pageSize()) {
+    <div class="pagination">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() === 1"
+        (click)="onPageChange(currentPage() - 1)"
+      >
+        <tui-icon icon="@tui.chevron-left" />
+        Previous
+      </button>
+      <span class="page-info">
+        Page {{ currentPage() }} of {{ totalPages() }}
+      </span>
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() >= totalPages()"
+        (click)="onPageChange(currentPage() + 1)"
+      >
+        Next
+        <tui-icon icon="@tui.chevron-right" />
+      </button>
+    </div>
+    }
     }
   </div>
   }
