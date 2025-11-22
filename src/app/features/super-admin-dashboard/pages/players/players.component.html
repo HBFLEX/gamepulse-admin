@@ -188,6 +188,16 @@
                   tuiButton
                   appearance="flat"
                   size="xs"
+                  class="view-button"
+                  (click)="openPlayerDetailsModal(player)"
+                  title="View player details"
+                >
+                  <tui-icon icon="@tui.eye" />
+                </button>
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
                   class="edit-button"
                   (click)="openEditModal(player)"
                   title="Edit player"
@@ -416,8 +426,12 @@
       <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
         Cancel
       </button>
-      <button tuiButton appearance="primary" size="m" (click)="createPlayer()">
-        Create Player
+      <button tuiButton appearance="primary" size="m" (click)="createPlayer()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Create Player</span>
+        }
       </button>
     </div>
   </div>
@@ -557,8 +571,12 @@
       <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
         Cancel
       </button>
-      <button tuiButton appearance="primary" size="m" (click)="updatePlayer()">
-        Save Changes
+      <button tuiButton appearance="primary" size="m" (click)="updatePlayer()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Save Changes</span>
+        }
       </button>
     </div>
   </div>
@@ -603,10 +621,14 @@
         tuiButton
         appearance="primary"
         size="m"
-        [disabled]="!transferTeamId()"
+        [disabled]="!transferTeamId() || loading()"
         (click)="transferPlayer()"
       >
-        Transfer
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Transfer</span>
+        }
       </button>
     </div>
   </div>
@@ -679,3 +701,34 @@
 </div>
 }
 
+
+<!-- Player Details Modal with Tabs -->
+@if (showPlayerDetailsModal() && selectedPlayer()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-details" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ selectedPlayer()!.fullName }}</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body modal-tabs-body">
+      <tui-tabs [(activeItemIndex)]="activeTab">
+        <button tuiTab>Details</button>
+        <button tuiTab>Statistics</button>
+        <button tuiTab>Game Logs</button>
+      </tui-tabs>
+
+      <div class="tab-content">
+        @if (activeTab() === 0) {
+          <app-player-details-tab [playerId]="selectedPlayer()!.id" />
+        } @else if (activeTab() === 1) {
+          <app-player-stats-tab [playerId]="selectedPlayer()!.id" />
+        } @else if (activeTab() === 2) {
+          <app-player-game-logs-tab [playerId]="selectedPlayer()!.id" />
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
