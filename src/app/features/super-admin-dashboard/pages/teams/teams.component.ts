@@ -637,9 +637,10 @@ export class TeamsComponent implements OnInit {
       detailsRequest.toPromise(),
       statsRequest.toPromise()
     ]).then(([details, stats]) => {
-      // Combine the data
+      // Combine the data, excluding standings
+      const { standings, ...restOfDetails } = details;
       this.teamDetails.set({
-        ...details,
+        ...restOfDetails,
         stats: stats
       });
       this.loading.set(false);
