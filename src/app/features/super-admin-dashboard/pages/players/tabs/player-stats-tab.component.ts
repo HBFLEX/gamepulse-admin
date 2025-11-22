@@ -29,7 +29,7 @@ interface PlayerStats {
     <div class="stats-tab">
       @if (loading()) {
         <div class="loading-state">
-          <tui-loader [size]="'l'"></tui-loader>
+          <tui-loader [size]="'m'"></tui-loader>
           <span>Loading player statistics...</span>
         </div>
       } @else if (error()) {
@@ -157,6 +157,7 @@ interface PlayerStats {
   styles: [`
     .stats-tab {
       padding: 1.5rem;
+      background: transparent;
     }
 
     .loading-state, .error-state, .empty-state {

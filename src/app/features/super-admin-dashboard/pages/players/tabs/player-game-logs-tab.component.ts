@@ -49,7 +49,7 @@ interface GameLogResponse {
     <div class="game-logs-tab">
       @if (loading() && gameLogs().length === 0) {
         <div class="loading-state">
-          <tui-loader [size]="'l'"></tui-loader>
+          <tui-loader [size]="'m'"></tui-loader>
           <span>Loading game logs...</span>
         </div>
       } @else if (error()) {
@@ -128,7 +128,7 @@ interface GameLogResponse {
           <!-- Pagination -->
           @if (hasMore()) {
             <div class="pagination">
-              <button 
+              <button
                 tuiButton
                 appearance="secondary"
                 size="m"
@@ -155,6 +155,7 @@ interface GameLogResponse {
   styles: [`
     .game-logs-tab {
       padding: 1.5rem;
+      background: transparent;
     }
 
     .loading-state, .error-state, .empty-state {
@@ -373,7 +374,7 @@ export class PlayerGameLogsTabComponent {
   hasMore = signal(false);
 
   totalGames = computed(() => this.gameLogs().length);
-  
+
   avgPoints = computed(() => {
     const logs = this.gameLogs();
     if (logs.length === 0) return '0.0';
@@ -436,8 +437,8 @@ export class PlayerGameLogsTabComponent {
 
   formatDate(date: string): string {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('en-US', { 
-      month: 'short', 
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
