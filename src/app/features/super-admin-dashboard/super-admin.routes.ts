@@ -35,7 +35,7 @@ export const routes: Routes = [
   {
     path: 'players',
     loadComponent: () =>
-      import('./pages/overview/overview.component').then((m) => m.OverviewComponent), // TODO: Replace with actual component
+      import('./pages/players/players.component').then((m) => m.PlayersComponent),
   },
   {
     path: 'coaches',
