@@ -5,7 +5,6 @@ import { HttpClient } from '@angular/common/http';
 import { TuiButton, TuiIcon, TuiLoader, TuiLabel, TuiAlertService, TuiHint, TuiTextfield, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiInputModule } from '@taiga-ui/legacy';
 import { TuiCardLarge } from '@taiga-ui/layout';
-import { TuiTable } from '@taiga-ui/addon-table';
 import { environment } from '../../../../../environments/environment';
 import { TeamsApiService, League, Division, Conference } from '../../../../core/services/teams-api.service';
 import { Coach, CoachesApiService } from '../../../../core/services/coaches-api.service';
@@ -74,7 +73,6 @@ interface UpdateTeamDto {
     TuiTextfieldComponent,
     TuiInputModule,
     TuiCardLarge,
-    TuiTable,
   ],
   templateUrl: './teams.component.html',
   styleUrl: './teams.component.less',
@@ -315,7 +313,7 @@ export class TeamsComponent implements OnInit {
   toggleSelectAll(): void {
     const displayed = this.displayedTeams();
     if (displayed.length === 0) return;
-    
+
     const allSelected = displayed.every(team => this.selectedTeamIds().has(team.id));
 
     if (allSelected) {
@@ -849,9 +847,9 @@ export class TeamsComponent implements OnInit {
 
   getCoachName(team: Team): string {
     if (!team.coach) return '-';
-    
+
     console.log('Coach data for team:', team.name, team.coach);
-    
+
     // Handle both name formats: direct name or firstName/lastName
     if ('name' in team.coach && team.coach.name) {
       return team.coach.name;
@@ -861,14 +859,14 @@ export class TeamsComponent implements OnInit {
       const lastName = (team.coach as any).lastName || '';
       return `${firstName} ${lastName}`.trim();
     }
-    
+
     // Handle coach_first_name and coach_last_name format (from API)
     if ('coach_first_name' in team.coach || 'coach_last_name' in team.coach) {
       const firstName = (team.coach as any).coach_first_name || '';
       const lastName = (team.coach as any).coach_last_name || '';
       return `${firstName} ${lastName}`.trim();
     }
-    
+
     return '-';
   }
 

@@ -1,0 +1,640 @@
+<div class="players-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Players Management</h1>
+      <p class="page-subtitle">Manage player roster, transfers, and information</p>
+    </div>
+    <div class="header-actions">
+      <button tuiButton appearance="primary" size="m" (click)="openCreateModal()">
+        <tui-icon icon="@tui.plus" />
+        Add Player
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-container">
+    <tui-loader size="xl" [overlay]="true" />
+  </div>
+  } @else {
+  <div class="content-container">
+    <!-- Filters & Search -->
+    <div class="filters-section">
+      <div class="search-box">
+        <label tuiLabel>Search Players</label>
+        <tui-input [(ngModel)]="searchQuery" (ngModelChange)="searchQuery.set($event)"
+          [ngModelOptions]="{standalone: true}">
+          Search by name, team, position...
+        </tui-input>
+      </div>
+
+      <div class="filter-controls">
+        <select
+          class="filter-select"
+          [(ngModel)]="filterTeam"
+          (ngModelChange)="filterTeam.set($event)"
+        >
+          <option value="">All Teams</option>
+          @for (team of uniqueTeams(); track team) {
+          <option [value]="team">{{ team }}</option>
+          }
+        </select>
+
+        <select
+          class="filter-select"
+          [(ngModel)]="filterPosition"
+          (ngModelChange)="filterPosition.set($event)"
+        >
+          <option value="">All Positions</option>
+          @for (position of uniquePositions(); track position) {
+          <option [value]="position">{{ position }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Bulk Actions -->
+      @if (selectedCount() > 0) {
+      <div class="bulk-actions">
+        <span class="selected-count">{{ selectedCount() }} selected</span>
+        <button tuiButton appearance="secondary" size="s" (click)="clearSelection()">
+          Clear
+        </button>
+        <button tuiButton appearance="destructive-outline" size="s" (click)="bulkDelete()">
+          <tui-icon icon="@tui.trash" />
+          Delete Selected
+        </button>
+      </div>
+      }
+
+      <!-- Stats -->
+      <div class="filter-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total</span>
+          <span class="stat-value">{{ filteredPlayers().length }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing</span>
+          <span class="stat-value">{{ displayedPlayers().length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Players Table -->
+  <div class="table-container">
+    @if (displayedPlayers().length === 0) {
+    <div class="empty-state">
+      <tui-icon icon="@tui.users" class="empty-icon" />
+      <h3>No players found</h3>
+      <p>Try adjusting your filters or add a new player</p>
+    </div>
+    } @else {
+    <div class="table-wrapper">
+      <table class="players-table">
+        <thead>
+          <tr>
+            <th class="checkbox-col">
+              <input
+                type="checkbox"
+                [checked]="areAllSelected()"
+                (change)="toggleSelectAll()"
+              />
+            </th>
+            <th class="sortable" (click)="sortBy('number')">
+              #
+              @if (sortColumn() === 'number') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('lastName')">
+              Name
+              @if (sortColumn() === 'lastName') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('position')">
+              Position
+              @if (sortColumn() === 'position') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('team')">
+              Team
+              @if (sortColumn() === 'team') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('height')">
+              Height (cm)
+              @if (sortColumn() === 'height') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('weight')">
+              Weight (kg)
+              @if (sortColumn() === 'weight') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('age')">
+              Age
+              @if (sortColumn() === 'age') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('nationality')">
+              Nationality
+              @if (sortColumn() === 'nationality') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (player of displayedPlayers(); track player.id) {
+          <tr [class.selected]="isSelected(player.id)">
+            <td class="checkbox-col">
+              <input
+                type="checkbox"
+                [checked]="isSelected(player.id)"
+                (change)="toggleSelection(player.id)"
+              />
+            </td>
+            <td class="number-col">{{ player.number }}</td>
+            <td class="name-col">
+              <div class="player-name">
+                <span class="full-name">{{ player.fullName }}</span>
+              </div>
+            </td>
+            <td class="position-col">{{ player.position || 'N/A' }}</td>
+            <td class="team-col">
+              @if (player.team) {
+              <div class="team-info">
+                <span class="team-name">{{ player.team.name }}</span>
+                <span class="team-city">{{ player.team.city }}</span>
+              </div>
+              } @else {
+              <span class="no-team">Free Agent</span>
+              }
+            </td>
+            <td>{{ player.height }}</td>
+            <td>{{ player.weight }}</td>
+            <td>{{ calculateAge(player.birthDate) }}</td>
+            <td>{{ player.nationality }}</td>
+            <td class="actions-col">
+              <div class="action-buttons">
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  (click)="openEditModal(player)"
+                  title="Edit player"
+                >
+                  <tui-icon icon="@tui.pencil" />
+                </button>
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  (click)="openTransferModal(player)"
+                  title="Transfer player"
+                >
+                  <tui-icon icon="@tui.arrow-right" />
+                </button>
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  (click)="openDeleteModal(player)"
+                  title="Delete player"
+                >
+                  <tui-icon icon="@tui.trash" />
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (filteredPlayers().length > pageSize()) {
+    <div class="pagination">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() === 1"
+        (click)="onPageChange(currentPage() - 1)"
+      >
+        <tui-icon icon="@tui.chevron-left" />
+        Previous
+      </button>
+      <span class="page-info">
+        Page {{ currentPage() }} of {{ totalPages() }}
+      </span>
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() >= totalPages()"
+        (click)="onPageChange(currentPage() + 1)"
+      >
+        Next
+        <tui-icon icon="@tui.chevron-right" />
+      </button>
+    </div>
+    }
+    }
+  </div>
+  }
+</div>
+
+<!-- Create Player Modal -->
+@if (showCreateModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add New Player</h2>
+      <button class="close-btn" (click)="closeModals()">
+        <tui-icon icon="@tui.x" />
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="player-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>First Name *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter first name"
+                [value]="playerForm().firstName"
+                (input)="updateFormField('firstName', $any($event.target).value)"
+                name="firstName"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Last Name *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter last name"
+                [value]="playerForm().lastName"
+                (input)="updateFormField('lastName', $any($event.target).value)"
+                name="lastName"
+              />
+            </tui-textfield>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Jersey Number *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter number"
+                [value]="playerForm().number"
+                (input)="updateFormField('number', +$any($event.target).value)"
+                name="number"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Position *</label>
+            <select
+              class="filter-select form-control-height"
+              [(ngModel)]="playerForm().positionId"
+              name="positionId"
+            >
+              <option [value]="undefined">Select Position</option>
+              @for (position of positions(); track position.id) {
+              <option [value]="position.id">{{ position.player_position_name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Team *</label>
+            <select
+              class="filter-select form-control-height"
+              [(ngModel)]="playerForm().teamId"
+              name="teamId"
+            >
+              <option [value]="undefined">Select Team</option>
+              @for (team of teams(); track team.id) {
+              <option [value]="team.id">{{ team.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Birth Date *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="date"
+                [value]="playerForm().birthDate"
+                (input)="updateFormField('birthDate', $any($event.target).value)"
+                name="birthDate"
+              />
+            </tui-textfield>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Height (cm) *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter height"
+                [value]="playerForm().heightCm"
+                (input)="updateFormField('heightCm', +$any($event.target).value)"
+                name="heightCm"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Weight (kg) *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter weight"
+                [value]="playerForm().weightKg"
+                (input)="updateFormField('weightKg', +$any($event.target).value)"
+                name="weightKg"
+              />
+            </tui-textfield>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Nationality *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter nationality"
+                [value]="playerForm().nationality"
+                (input)="updateFormField('nationality', $any($event.target).value)"
+                name="nationality"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>City *</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter city"
+                [value]="playerForm().city"
+                (input)="updateFormField('city', $any($event.target).value)"
+                name="city"
+              />
+            </tui-textfield>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="createPlayer()">
+        Create Player
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Edit Player Modal -->
+@if (showEditModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Player</h2>
+      <button class="close-btn" (click)="closeModals()">
+        <tui-icon icon="@tui.x" />
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="player-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>First Name</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter first name"
+                [value]="playerForm().firstName"
+                (input)="updateFormField('firstName', $any($event.target).value)"
+                name="firstName"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Last Name</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter last name"
+                [value]="playerForm().lastName"
+                (input)="updateFormField('lastName', $any($event.target).value)"
+                name="lastName"
+              />
+            </tui-textfield>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Jersey Number</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter number"
+                [value]="playerForm().number"
+                (input)="updateFormField('number', +$any($event.target).value)"
+                name="number"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Position</label>
+            <select
+              class="filter-select form-control-height"
+              [(ngModel)]="playerForm().positionId"
+              name="positionId"
+            >
+              <option [value]="undefined">Select Position</option>
+              @for (position of positions(); track position.id) {
+              <option [value]="position.id">{{ position.player_position_name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Height (cm)</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter height"
+                [value]="playerForm().heightCm"
+                (input)="updateFormField('heightCm', +$any($event.target).value)"
+                name="heightCm"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>Weight (kg)</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="number"
+                placeholder="Enter weight"
+                [value]="playerForm().weightKg"
+                (input)="updateFormField('weightKg', +$any($event.target).value)"
+                name="weightKg"
+              />
+            </tui-textfield>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label tuiLabel>Nationality</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter nationality"
+                [value]="playerForm().nationality"
+                (input)="updateFormField('nationality', $any($event.target).value)"
+                name="nationality"
+              />
+            </tui-textfield>
+          </div>
+          <div class="form-group">
+            <label tuiLabel>City</label>
+            <tui-textfield>
+              <input
+                tuiTextfield
+                type="text"
+                placeholder="Enter city"
+                [value]="playerForm().city"
+                (input)="updateFormField('city', $any($event.target).value)"
+                name="city"
+              />
+            </tui-textfield>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="updatePlayer()">
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Transfer Player Modal -->
+@if (showTransferModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content small" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Transfer Player</h2>
+      <button class="close-btn" (click)="closeModals()">
+        <tui-icon icon="@tui.x" />
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="transfer-info">
+        Transfer <strong>{{ selectedPlayer()?.fullName }}</strong> to:
+      </p>
+      <div class="form-group">
+        <label>Select Team *</label>
+        <select
+          class="form-select"
+          [(ngModel)]="transferTeamId"
+          (ngModelChange)="transferTeamId.set($event)"
+        >
+          <option [value]="null">Select Team</option>
+          @for (team of teams(); track team.id) {
+          @if (team.id !== selectedPlayer()?.team?.id) {
+          <option [value]="team.id">{{ team.name }}</option>
+          }
+          }
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button
+        tuiButton
+        appearance="primary"
+        size="m"
+        [disabled]="!transferTeamId()"
+        (click)="transferPlayer()"
+      >
+        Transfer
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Delete Player Modal -->
+@if (showDeleteModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content small" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Player</h2>
+      <button class="close-btn" (click)="closeModals()">
+        <tui-icon icon="@tui.x" />
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="delete-warning">
+        Are you sure you want to delete <strong>{{ selectedPlayer()?.fullName }}</strong>?
+        This action cannot be undone.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="destructive" size="m" (click)="deletePlayer()">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+}
+
