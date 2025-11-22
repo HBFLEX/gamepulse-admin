@@ -199,6 +199,20 @@ export class PlayersComponent implements OnInit {
     });
   }
 
+  loadPlayersInBackground(): void {
+    // Load players without showing loading indicator
+    this.http.get<{ data: Player[]; meta: { total: number } }>(`${this.apiUrl}?limit=1000`).subscribe({
+      next: (response) => {
+        const players = response?.data || [];
+        this.players.set(players);
+        this.totalPlayers.set(response?.meta?.total || players.length);
+      },
+      error: (error) => {
+        console.error('Error loading players in background:', error);
+      },
+    });
+  }
+
   loadTeams(): void {
     // Fetch all teams by setting a large limit
     this.http.get<{ data: any[] }>(`${environment.apiUrl}/teams?limit=1000`).subscribe({
@@ -360,10 +374,9 @@ export class PlayersComponent implements OnInit {
     this.loading.set(true);
     this.playersApi.createPlayer(form as CreatePlayerDto).subscribe({
       next: () => {
+        this.closeModals();
         this.alerts.open('Player created successfully', { appearance: 'success' }).subscribe();
         this.loadPlayers();
-        this.closeModals();
-        this.loading.set(false);
       },
       error: (error) => {
         console.error('Error creating player:', error);
@@ -378,18 +391,45 @@ export class PlayersComponent implements OnInit {
     if (!player) return;
 
     const form = this.playerForm();
-    this.loading.set(true);
+    
+    // Optimistically update the UI immediately
+    const playerIndex = this.players().findIndex(p => p.id === player.id);
+    if (playerIndex !== -1) {
+      const updatedPlayers = [...this.players()];
+      const position = this.positions().find(p => p.id === form.positionId);
+      const team = this.teams().find(t => t.id === form.teamId);
+      
+      updatedPlayers[playerIndex] = {
+        ...updatedPlayers[playerIndex],
+        firstName: form.firstName || updatedPlayers[playerIndex].firstName,
+        lastName: form.lastName || updatedPlayers[playerIndex].lastName,
+        fullName: `${form.firstName || updatedPlayers[playerIndex].firstName} ${form.lastName || updatedPlayers[playerIndex].lastName}`,
+        number: form.number || updatedPlayers[playerIndex].number,
+        position: position?.player_position_name || updatedPlayers[playerIndex].position,
+        height: form.heightCm || updatedPlayers[playerIndex].height,
+        weight: form.weightKg || updatedPlayers[playerIndex].weight,
+        birthDate: form.birthDate || updatedPlayers[playerIndex].birthDate,
+        nationality: form.nationality || updatedPlayers[playerIndex].nationality,
+        city: form.city || updatedPlayers[playerIndex].city,
+        team: team ? { id: team.id, name: team.name, city: team.city || '' } : updatedPlayers[playerIndex].team,
+      };
+      this.players.set(updatedPlayers);
+    }
+
+    // Close modal immediately for better UX
+    this.closeModals();
+
+    // Then update on server
     this.playersApi.updatePlayer(player.id, form as UpdatePlayerDto).subscribe({
       next: () => {
+        this.loadPlayersInBackground();
         this.alerts.open('Player updated successfully', { appearance: 'success' }).subscribe();
-        this.loadPlayers();
-        this.closeModals();
-        this.loading.set(false);
       },
       error: (error) => {
         console.error('Error updating player:', error);
+        // Revert the optimistic update on error
+        this.loadPlayers();
         this.alerts.open('Failed to update player', { appearance: 'error' }).subscribe();
-        this.loading.set(false);
       },
     });
   }
@@ -398,18 +438,25 @@ export class PlayersComponent implements OnInit {
     const player = this.selectedPlayer();
     if (!player) return;
 
-    this.loading.set(true);
+    // Optimistically remove from UI immediately
+    const updatedPlayers = this.players().filter(p => p.id !== player.id);
+    this.players.set(updatedPlayers);
+    this.totalPlayers.set(this.totalPlayers() - 1);
+
+    // Close modal immediately for better UX
+    this.closeModals();
+
+    // Then delete on server in the background
     this.playersApi.deletePlayer(player.id).subscribe({
       next: () => {
+        this.loadPlayersInBackground();
         this.alerts.open('Player deleted successfully', { appearance: 'success' }).subscribe();
-        this.loadPlayers();
-        this.closeModals();
-        this.loading.set(false);
       },
       error: (error) => {
         console.error('Error deleting player:', error);
+        // Revert the optimistic update on error
+        this.loadPlayers();
         this.alerts.open('Failed to delete player', { appearance: 'error' }).subscribe();
-        this.loading.set(false);
       },
     });
   }
@@ -419,58 +466,82 @@ export class PlayersComponent implements OnInit {
     const teamId = this.transferTeamId();
     if (!player || !teamId) return;
 
-    this.loading.set(true);
+    // Optimistically update the UI immediately
+    const playerIndex = this.players().findIndex(p => p.id === player.id);
+    if (playerIndex !== -1) {
+      const updatedPlayers = [...this.players()];
+      const newTeam = this.teams().find(t => t.id === teamId);
+      
+      if (newTeam) {
+        updatedPlayers[playerIndex] = {
+          ...updatedPlayers[playerIndex],
+          team: { id: newTeam.id, name: newTeam.name, city: newTeam.city || '' },
+        };
+        this.players.set(updatedPlayers);
+      }
+    }
+
+    // Close modal immediately for better UX
+    this.closeModals();
+
+    // Then transfer on server
     this.playersApi.transferPlayer(player.id, { teamId }).subscribe({
       next: () => {
+        this.loadPlayersInBackground();
         this.alerts.open('Player transferred successfully', { appearance: 'success' }).subscribe();
-        this.loadPlayers();
-        this.closeModals();
-        this.loading.set(false);
       },
       error: (error) => {
         console.error('Error transferring player:', error);
+        // Revert the optimistic update on error
+        this.loadPlayers();
         this.alerts.open('Failed to transfer player', { appearance: 'error' }).subscribe();
-        this.loading.set(false);
       },
     });
   }
 
   bulkDeletePlayers(): void {
-    const selected = Array.from(this.selectedPlayerIds());
-    if (selected.length === 0) return;
+    const ids = Array.from(this.selectedPlayerIds());
+    if (ids.length === 0) return;
 
-    this.loading.set(true);
+    // Optimistically remove from UI immediately
+    const updatedPlayers = this.players().filter(player => !ids.includes(player.id));
+    this.players.set(updatedPlayers);
+    this.totalPlayers.set(this.totalPlayers() - ids.length);
+    this.selectedPlayerIds.set(new Set());
+    this.closeModals();
+
+    // Delete on server in background
     let completed = 0;
-    let errors = 0;
+    let failed = 0;
 
-    selected.forEach(id => {
+    ids.forEach(id => {
       this.playersApi.deletePlayer(id).subscribe({
         next: () => {
           completed++;
-          if (completed + errors === selected.length) {
-            this.finalizeBulkDelete(completed, errors);
+          if (completed + failed === ids.length) {
+            this.loadPlayersInBackground();
+            if (failed === 0) {
+              this.alerts.open(`Successfully deleted ${completed} player(s)`, { appearance: 'success' }).subscribe();
+            } else {
+              this.alerts.open(`Deleted ${completed} player(s), ${failed} failed`, { appearance: 'warning' }).subscribe();
+            }
           }
         },
         error: () => {
-          errors++;
-          if (completed + errors === selected.length) {
-            this.finalizeBulkDelete(completed, errors);
+          failed++;
+          if (completed + failed === ids.length) {
+            if (failed === ids.length) {
+              // All failed, revert the optimistic update
+              this.loadPlayers();
+              this.alerts.open('Failed to delete players', { appearance: 'error' }).subscribe();
+            } else {
+              this.loadPlayersInBackground();
+              this.alerts.open(`Deleted ${completed} player(s), ${failed} failed`, { appearance: 'warning' }).subscribe();
+            }
           }
         },
       });
     });
-  }
-
-  private finalizeBulkDelete(completed: number, errors: number): void {
-    this.loadPlayers();
-    this.clearSelection();
-    this.closeModals();
-    this.loading.set(false);
-    if (errors > 0) {
-      this.alerts.open(`Deleted ${completed} player(s), ${errors} failed`, { appearance: 'warning' }).subscribe();
-    } else {
-      this.alerts.open(`Successfully deleted ${completed} player(s)`, { appearance: 'success' }).subscribe();
-    }
   }
 
   private validatePlayerForm(form: Partial<CreatePlayerDto>): boolean {

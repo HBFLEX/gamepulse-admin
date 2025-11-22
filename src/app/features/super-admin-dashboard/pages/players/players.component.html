@@ -416,8 +416,12 @@
       <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
         Cancel
       </button>
-      <button tuiButton appearance="primary" size="m" (click)="createPlayer()">
-        Create Player
+      <button tuiButton appearance="primary" size="m" (click)="createPlayer()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Create Player</span>
+        }
       </button>
     </div>
   </div>
@@ -557,8 +561,12 @@
       <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
         Cancel
       </button>
-      <button tuiButton appearance="primary" size="m" (click)="updatePlayer()">
-        Save Changes
+      <button tuiButton appearance="primary" size="m" (click)="updatePlayer()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Save Changes</span>
+        }
       </button>
     </div>
   </div>
@@ -603,10 +611,14 @@
         tuiButton
         appearance="primary"
         size="m"
-        [disabled]="!transferTeamId()"
+        [disabled]="!transferTeamId() || loading()"
         (click)="transferPlayer()"
       >
-        Transfer
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Transfer</span>
+        }
       </button>
     </div>
   </div>
