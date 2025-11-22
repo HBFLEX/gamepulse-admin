@@ -703,130 +703,87 @@
           <p>No head coach assigned</p>
         </div>
         }
-        <!-- Standings Section -->
-        @if (teamDetails().standings) {
-        <div class="section-divider"></div>
-        <div class="standings-section">
-          <h4 class="section-title">
-            <tui-icon icon="@tui.bar-chart-2"></tui-icon>
-            Current Standings
-          </h4>
-          <div class="standings-grid">
-            <div class="standing-card">
-              <div class="standing-label">Wins</div>
-              <div class="standing-value wins">{{ teamDetails().standings.wins || 0 }}</div>
-            </div>
-            <div class="standing-card">
-              <div class="standing-label">Losses</div>
-              <div class="standing-value losses">{{ teamDetails().standings.losses || 0 }}</div>
-            </div>
-            <div class="standing-card">
-              <div class="standing-label">Win %</div>
-              <div class="standing-value">{{ (teamDetails().standings.winPercentage * 100).toFixed(1) }}%</div>
-            </div>
-            <div class="standing-card">
-              <div class="standing-label">Position</div>
-              <div class="standing-value position">{{ teamDetails().standings.position }}</div>
-            </div>
-          </div>
-        </div>
-        }
-        <!-- Team Statistics Section -->
+
+        <!-- Modern Team Statistics -->
         @if (teamDetails().stats?.seasonStats) {
-        <div class="section-divider"></div>
         <div class="stats-section-modern">
           <h4 class="section-title-modern">
-            Season Statistics <span class="season-badge">{{ teamDetails().stats.season }}</span>
+            <tui-icon icon="@tui.bar-chart"></tui-icon>
+            <span>Season Statistics</span>
+            <span class="season-badge">{{ teamDetails().stats.season }}</span>
           </h4>
           <div class="stats-grid-modern">
             <div class="stat-card-modern">
-              <div class="stat-label-modern">GP</div>
+              <div class="stat-label-modern">Games Played</div>
               <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.gamesPlayed }}</div>
-              <div class="stat-sub-modern">Games</div>
             </div>
             <div class="stat-card-modern">
-              <div class="stat-label-modern">PPG</div>
+              <div class="stat-label-modern">Points</div>
               <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.pointsAvg }}</div>
-              <div class="stat-sub-modern">Points</div>
+              <div class="stat-sub-modern">Per Game</div>
             </div>
             <div class="stat-card-modern">
-              <div class="stat-label-modern">RPG</div>
+              <div class="stat-label-modern">Rebounds</div>
               <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.reboundsAvg }}</div>
-              <div class="stat-sub-modern">Rebounds</div>
+              <div class="stat-sub-modern">Per Game</div>
             </div>
             <div class="stat-card-modern">
-              <div class="stat-label-modern">APG</div>
+              <div class="stat-label-modern">Assists</div>
               <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.assistsAvg }}</div>
-              <div class="stat-sub-modern">Assists</div>
+              <div class="stat-sub-modern">Per Game</div>
             </div>
             <div class="stat-card-modern">
-              <div class="stat-label-modern">SPG</div>
-              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.stealsAvg || '-' }}</div>
-              <div class="stat-sub-modern">Steals</div>
-            </div>
-            <div class="stat-card-modern">
-              <div class="stat-label-modern">BPG</div>
-              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.blocksAvg || '-' }}</div>
-              <div class="stat-sub-modern">Blocks</div>
-            </div>
-            <div class="stat-card-modern">
-              <div class="stat-label-modern">TPG</div>
-              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.turnoversAvg || '-' }}</div>
-              <div class="stat-sub-modern">Turnovers</div>
-            </div>
-            <div class="stat-card-modern">
-              <div class="stat-label-modern">FG%</div>
+              <div class="stat-label-modern">Field Goal %</div>
               <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.fieldGoalPct.toFixed(1) }}%</div>
-              <div class="stat-sub-modern">Field Goal</div>
             </div>
             <div class="stat-card-modern">
-              <div class="stat-label-modern">3P%</div>
+              <div class="stat-label-modern">3-Point %</div>
               <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.threePointPct.toFixed(1) }}%</div>
-              <div class="stat-sub-modern">3-Point</div>
-            </div>
-            <div class="stat-card-modern">
-              <div class="stat-label-modern">FT%</div>
-              <div class="stat-value-modern">{{ teamDetails().stats.seasonStats.freeThrowPct ?
-                teamDetails().stats.seasonStats.freeThrowPct.toFixed(1) + '%' : '-' }}</div>
-              <div class="stat-sub-modern">Free Throw</div>
             </div>
           </div>
         </div>
         }
-        <!-- Team Rankings Section -->
+
+        <!-- Modern Team Rankings -->
         @if (teamDetails().stats?.teamRankings) {
-        <div class="section-divider"></div>
         <div class="rankings-section-modern">
-          <h4 class="section-title-modern">League Rankings</h4>
+          <h4 class="section-title-modern">
+            <tui-icon icon="@tui.trending-up"></tui-icon>
+            <span>Team Rankings</span>
+          </h4>
           <div class="rankings-container">
+            <!-- Offensive Ranking -->
             <div class="ranking-row">
               <div class="ranking-info">
-                <span class="ranking-name">Offensive Rating</span>
-                <span class="ranking-value">{{ teamDetails().stats.teamRankings.offensive.rating }}</span>
+                <div class="ranking-name">Offensive Rating</div>
+                <div class="ranking-value">{{ teamDetails().stats.teamRankings.offensive.rating }}</div>
               </div>
               <div class="ranking-bar-container">
-                <div class="ranking-bar offensive"
-                  [style.width.%]="(1 - (teamDetails().stats.teamRankings.offensive.rank / teamDetails().stats.teamRankings.offensive.totalTeams)) * 100">
-                </div>
+                <div
+                  class="ranking-bar offensive"
+                  [style.width.%]="(teamDetails().stats.teamRankings.offensive.rank / teamDetails().stats.teamRankings.offensive.totalTeams) * 100"
+                ></div>
               </div>
               <div class="ranking-position">
-                <span class="rank-number">#{{ teamDetails().stats.teamRankings.offensive.rank }}</span>
-                <span class="rank-total">/ {{ teamDetails().stats.teamRankings.offensive.totalTeams }}</span>
+                <div class="rank-number">#{{ teamDetails().stats.teamRankings.offensive.rank }}</div>
+                <div class="rank-total">of {{ teamDetails().stats.teamRankings.offensive.totalTeams }}</div>
               </div>
             </div>
+            <!-- Defensive Ranking -->
             <div class="ranking-row">
               <div class="ranking-info">
-                <span class="ranking-name">Defensive Rating</span>
-                <span class="ranking-value">{{ teamDetails().stats.teamRankings.defensive.rating }}</span>
+                <div class="ranking-name">Defensive Rating</div>
+                <div class="ranking-value">{{ teamDetails().stats.teamRankings.defensive.rating }}</div>
               </div>
               <div class="ranking-bar-container">
-                <div class="ranking-bar defensive"
-                  [style.width.%]="(1 - (teamDetails().stats.teamRankings.defensive.rank / teamDetails().stats.teamRankings.defensive.totalTeams)) * 100">
-                </div>
+                <div
+                  class="ranking-bar defensive"
+                  [style.width.%]="(teamDetails().stats.teamRankings.defensive.rank / teamDetails().stats.teamRankings.defensive.totalTeams) * 100"
+                ></div>
               </div>
               <div class="ranking-position">
-                <span class="rank-number">#{{ teamDetails().stats.teamRankings.defensive.rank }}</span>
-                <span class="rank-total">/ {{ teamDetails().stats.teamRankings.defensive.totalTeams }}</span>
+                <div class="rank-number">#{{ teamDetails().stats.teamRankings.defensive.rank }}</div>
+                <div class="rank-total">of {{ teamDetails().stats.teamRankings.defensive.totalTeams }}</div>
               </div>
             </div>
           </div>
