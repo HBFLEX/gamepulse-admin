@@ -59,8 +59,8 @@
         <button tuiButton appearance="secondary" size="s" (click)="clearSelection()">
           Clear
         </button>
-        <button tuiButton appearance="destructive-outline" size="s" (click)="bulkDelete()">
-          <tui-icon icon="@tui.trash" />
+        <button tuiButton appearance="secondary" size="s" class="bulk-delete-button" (click)="openBulkDeleteModal()">
+          <tui-icon icon="@tui.trash-2" />
           Delete Selected
         </button>
       </div>
@@ -616,25 +616,63 @@
 <!-- Delete Player Modal -->
 @if (showDeleteModal()) {
 <div class="modal-overlay" (click)="closeModals()">
-  <div class="modal-content small" (click)="$event.stopPropagation()">
+  <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Delete Player</h2>
-      <button class="close-btn" (click)="closeModals()">
-        <tui-icon icon="@tui.x" />
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
       </button>
     </div>
     <div class="modal-body">
-      <p class="delete-warning">
-        Are you sure you want to delete <strong>{{ selectedPlayer()?.fullName }}</strong>?
-        This action cannot be undone.
-      </p>
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedPlayer()?.fullName }}</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
     </div>
     <div class="modal-footer">
       <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
         Cancel
       </button>
-      <button tuiButton appearance="destructive" size="m" (click)="deletePlayer()">
-        Delete
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="deletePlayer()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Player</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Bulk Delete Modal -->
+@if (showBulkDeleteModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Multiple Players</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedCount() }} player(s)</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="bulkDeletePlayers()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Players</span>
+        }
       </button>
     </div>
   </div>
