@@ -166,7 +166,7 @@ interface PlayerStats {
       justify-content: center;
       padding: 3rem;
       gap: 1rem;
-      color: #64748b;
+      color: var(--tui-text-secondary);
     }
 
     .error-state {
@@ -190,8 +190,8 @@ interface PlayerStats {
       align-items: center;
       gap: 1rem;
       padding: 1.5rem;
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--tui-background-elevation-1);
+      border: 1px solid var(--tui-border-normal);
       border-radius: 0.75rem;
       transition: all 0.2s;
     }
@@ -248,10 +248,16 @@ interface PlayerStats {
     }
 
     .stats-section {
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--tui-background-elevation-1);
+      border: 1px solid var(--tui-border-normal);
       border-radius: 0.75rem;
       padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .stats-section:hover {
+      border-color: #C53A34;
+      box-shadow: 0 4px 6px -1px rgba(197, 58, 52, 0.1);
     }
 
     .stats-section h3 {
@@ -259,7 +265,7 @@ interface PlayerStats {
       font-size: 1.1rem;
       font-family: 'Bebas Neue', sans-serif;
       letter-spacing: 1px;
-      color: #1a1a1a;
+      color: var(--tui-text-primary);
       padding-bottom: 0.75rem;
       border-bottom: 2px solid #C53A34;
     }
@@ -274,7 +280,7 @@ interface PlayerStats {
       grid-template-columns: 2fr 1fr 1fr;
       gap: 1rem;
       padding: 0.875rem 0;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--tui-border-normal);
     }
 
     .table-row:last-child {
@@ -284,7 +290,7 @@ interface PlayerStats {
     .table-row.header {
       font-size: 0.8rem;
       font-weight: 600;
-      color: #64748b;
+      color: var(--tui-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       padding-bottom: 0.5rem;
@@ -297,12 +303,12 @@ interface PlayerStats {
 
     .category {
       font-weight: 500;
-      color: #1a1a1a;
+      color: var(--tui-text-primary);
     }
 
     .table-row span:not(.category) {
       font-weight: 600;
-      color: #334155;
+      color: var(--tui-text-secondary);
       justify-content: flex-end;
     }
 
@@ -315,6 +321,28 @@ interface PlayerStats {
     @media (max-width: 640px) {
       .stats-overview {
         grid-template-columns: 1fr;
+      }
+    }
+
+    :host-context([tuiTheme='dark']) {
+      .stat-card {
+        background: rgba(58, 38, 52, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .stat-card:hover {
+        background: rgba(58, 38, 52, 0.5);
+        box-shadow: 0 4px 6px -1px rgba(197, 58, 52, 0.3);
+      }
+
+      .stats-section {
+        background: rgba(58, 38, 52, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .stats-section:hover {
+        background: rgba(58, 38, 52, 0.5);
+        box-shadow: 0 4px 6px -1px rgba(197, 58, 52, 0.3);
       }
     }
   `]

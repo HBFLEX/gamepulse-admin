@@ -164,7 +164,7 @@ interface GameLogResponse {
       justify-content: center;
       padding: 3rem;
       gap: 1rem;
-      color: #64748b;
+      color: var(--tui-text-secondary);
     }
 
     .error-state {
@@ -182,9 +182,15 @@ interface GameLogResponse {
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 1rem;
       padding: 1.25rem;
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--tui-background-elevation-1);
+      border: 1px solid var(--tui-border-normal);
       border-radius: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .summary-bar:hover {
+      border-color: #C53A34;
+      box-shadow: 0 4px 6px -1px rgba(197, 58, 52, 0.1);
     }
 
     .summary-item {
@@ -196,7 +202,7 @@ interface GameLogResponse {
 
     .summary-label {
       font-size: 0.8rem;
-      color: #64748b;
+      color: var(--tui-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-weight: 600;
@@ -211,8 +217,8 @@ interface GameLogResponse {
     }
 
     .table-container {
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--tui-background-elevation-1);
+      border: 1px solid var(--tui-border-normal);
       border-radius: 0.75rem;
       overflow: hidden;
     }
@@ -223,7 +229,7 @@ interface GameLogResponse {
     }
 
     .game-logs-table thead {
-      background: #f8f9fa;
+      background: var(--tui-background-elevation-2);
       border-bottom: 2px solid #C53A34;
     }
 
@@ -232,7 +238,7 @@ interface GameLogResponse {
       text-align: left;
       font-size: 0.8rem;
       font-weight: 600;
-      color: #64748b;
+      color: var(--tui-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-family: 'Bebas Neue', sans-serif;
@@ -243,12 +249,12 @@ interface GameLogResponse {
     }
 
     .game-logs-table tbody tr {
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--tui-border-normal);
       transition: background-color 0.2s;
     }
 
     .game-logs-table tbody tr:hover {
-      background: #f8f9fa;
+      background: var(--tui-background-elevation-2);
     }
 
     .game-logs-table tbody tr:last-child {
@@ -258,7 +264,7 @@ interface GameLogResponse {
     .game-logs-table td {
       padding: 1rem;
       font-size: 0.9rem;
-      color: #334155;
+      color: var(--tui-text-secondary);
     }
 
     .game-logs-table td:nth-child(n+4) {
@@ -268,6 +274,7 @@ interface GameLogResponse {
 
     .matchup-cell {
       font-weight: 500;
+      color: var(--tui-text-primary);
     }
 
     .matchup {
@@ -316,6 +323,41 @@ interface GameLogResponse {
     @media (max-width: 640px) {
       .summary-bar {
         grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    :host-context([tuiTheme='dark']) {
+      .summary-bar {
+        background: rgba(58, 38, 52, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .summary-bar:hover {
+        background: rgba(58, 38, 52, 0.5);
+        box-shadow: 0 4px 6px -1px rgba(197, 58, 52, 0.3);
+      }
+
+      .table-container {
+        background: rgba(58, 38, 52, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .game-logs-table thead {
+        background: rgba(58, 38, 52, 0.4);
+      }
+
+      .game-logs-table tbody tr:hover {
+        background: rgba(58, 38, 52, 0.5);
+      }
+
+      .score.win {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+      }
+
+      .score.loss {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
       }
     }
   `]

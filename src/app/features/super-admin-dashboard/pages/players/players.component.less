@@ -519,8 +519,8 @@
   
   tui-tabs {
     padding: 0 1.5rem;
-    border-bottom: 2px solid #e5e7eb;
-    background: #f8f9fa;
+    border-bottom: 2px solid var(--tui-border-normal);
+    background: var(--tui-background-elevation-1);
     
     button[tuiTab] {
       font-family: 'Bebas Neue', sans-serif;
@@ -530,7 +530,7 @@
       font-weight: 600;
       border: none;
       background: transparent;
-      color: #64748b;
+      color: var(--tui-text-secondary);
       border-bottom: 3px solid transparent;
       transition: all 0.2s;
       
@@ -550,7 +550,27 @@
     min-height: 400px;
     max-height: 70vh;
     overflow-y: auto;
-    background: #f8f9fa;
+    background: var(--tui-background-base);
+  }
+}
+
+// Dark mode support for modal tabs
+:host-context([tuiTheme='dark']) {
+  .modal-tabs-body {
+    tui-tabs {
+      background: rgba(58, 38, 52, 0.3);
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      
+      button[tuiTab] {
+        &:hover {
+          background: rgba(197, 58, 52, 0.15);
+        }
+      }
+    }
+    
+    .tab-content {
+      background: var(--tui-background-base);
+    }
   }
 }
 
