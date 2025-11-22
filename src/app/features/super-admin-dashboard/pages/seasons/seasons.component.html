@@ -1,0 +1,407 @@
+<div class="seasons-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Seasons Management</h1>
+      <p class="page-subtitle">Manage basketball seasons and their information</p>
+    </div>
+    <div class="header-actions">
+      <button tuiButton appearance="primary" size="m" (click)="openCreateModal()">
+        <tui-icon icon="@tui.plus" />
+        Add Season
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-container">
+    <tui-loader size="m" [overlay]="true" />
+  </div>
+  } @else {
+  <div class="content-container">
+    <!-- Filters & Search -->
+    <div class="filters-section">
+      <div class="search-box">
+        <label tuiLabel>Search Seasons</label>
+        <tui-input [(ngModel)]="searchQuery" (ngModelChange)="searchQuery.set($event)"
+          [ngModelOptions]="{standalone: true}">
+          Search by year, type...
+        </tui-input>
+      </div>
+
+      <div class="filter-controls">
+        <select
+          class="filter-select"
+          [(ngModel)]="filterType"
+          (ngModelChange)="filterType.set($event)"
+        >
+          <option value="">All Types</option>
+          @for (type of uniqueTypes(); track type) {
+          <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Bulk Actions -->
+      @if (selectedCount() > 0) {
+      <div class="bulk-actions">
+        <span class="selected-count">{{ selectedCount() }} selected</span>
+        <button tuiButton appearance="secondary" size="s" (click)="clearSelection()">
+          Clear
+        </button>
+        <button tuiButton appearance="secondary" size="s" class="bulk-delete-button" (click)="openBulkDeleteModal()">
+          <tui-icon icon="@tui.trash-2" />
+          Delete Selected
+        </button>
+      </div>
+      }
+
+      <!-- Stats -->
+      <div class="filter-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total</span>
+          <span class="stat-value">{{ filteredSeasons().length }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing</span>
+          <span class="stat-value">{{ displayedSeasons().length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seasons Table -->
+  <div class="table-container">
+    @if (displayedSeasons().length === 0) {
+    <div class="empty-state">
+      <tui-icon icon="@tui.calendar" class="empty-icon" />
+      <h3>No seasons found</h3>
+      <p>Try adjusting your filters or add a new season</p>
+    </div>
+    } @else {
+    <div class="table-wrapper">
+      <table class="seasons-table">
+        <thead>
+          <tr>
+            <th class="checkbox-col">
+              <input
+                type="checkbox"
+                [checked]="areAllSelected()"
+                (change)="toggleSelectAll()"
+              />
+            </th>
+            <th class="sortable" (click)="sortBy('season_year')">
+              Year
+              @if (sortColumn() === 'season_year') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('season_type')">
+              Type
+              @if (sortColumn() === 'season_type') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('created_at')">
+              Created
+              @if (sortColumn() === 'created_at') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (season of displayedSeasons(); track season.id) {
+          <tr [class.selected]="isSelected(season.id)">
+            <td class="checkbox-col">
+              <input
+                type="checkbox"
+                [checked]="isSelected(season.id)"
+                (change)="toggleSelection(season.id)"
+              />
+            </td>
+            <td class="name-col">
+              <div class="season-year">
+                <span class="year">{{ season.season_year }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="season-type-badge" [class]="'type-' + (season.season_type || '').toLowerCase().replace(' ', '-')">
+                {{ season.season_type || 'N/A' }}
+              </span>
+            </td>
+            <td>{{ formatDate(season.created_at!) }}</td>
+            <td class="actions-col">
+              <div class="action-buttons">
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  class="view-button"
+                  (click)="openSeasonDetailsModal(season)"
+                  title="View season details"
+                >
+                  <tui-icon icon="@tui.eye" />
+                </button>
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  class="edit-button"
+                  (click)="openEditModal(season)"
+                  title="Edit season"
+                >
+                  <tui-icon icon="@tui.pencil" />
+                </button>
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  class="delete-button"
+                  (click)="openDeleteModal(season)"
+                  title="Delete season"
+                >
+                  <tui-icon icon="@tui.trash" />
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() === 1"
+        (click)="onPageChange(currentPage() - 1)"
+      >
+        <tui-icon icon="@tui.chevron-left" />
+        Previous
+      </button>
+
+      <div class="page-info">
+        <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
+      </div>
+
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() === totalPages()"
+        (click)="onPageChange(currentPage() + 1)"
+      >
+        Next
+        <tui-icon icon="@tui.chevron-right" />
+      </button>
+    </div>
+    }
+  </div>
+  }
+</div>
+
+<!-- Create Season Modal -->
+@if (showCreateModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add New Season</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="season-form">
+        <div class="form-field">
+          <label tuiLabel>Season Year *</label>
+          <tui-input
+            [ngModel]="seasonForm().seasonYear"
+            (ngModelChange)="updateFormField('seasonYear', $event)"
+            [ngModelOptions]="{standalone: true}"
+          >
+            e.g., 2024-2025
+          </tui-input>
+        </div>
+
+        <div class="form-field">
+          <label tuiLabel>Season Type *</label>
+          <select
+            class="select-input"
+            [ngModel]="seasonForm().seasonType"
+            (ngModelChange)="updateFormField('seasonType', $event)"
+            [ngModelOptions]="{standalone: true}"
+          >
+            @for (type of seasonTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="createSeason()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Create Season</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Edit Season Modal -->
+@if (showEditModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Season</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="season-form">
+        <div class="form-field">
+          <label tuiLabel>Season Year *</label>
+          <tui-input
+            [ngModel]="seasonForm().seasonYear"
+            (ngModelChange)="updateFormField('seasonYear', $event)"
+            [ngModelOptions]="{standalone: true}"
+          >
+            e.g., 2024-2025
+          </tui-input>
+        </div>
+
+        <div class="form-field">
+          <label tuiLabel>Season Type *</label>
+          <select
+            class="select-input"
+            [ngModel]="seasonForm().seasonType"
+            (ngModelChange)="updateFormField('seasonType', $event)"
+            [ngModelOptions]="{standalone: true}"
+          >
+            @for (type of seasonTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="updateSeason()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Save Changes</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Delete Season Modal -->
+@if (showDeleteModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Season</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete season <strong>{{ selectedSeason()?.season_year }}</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="deleteSeason()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Season</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Bulk Delete Modal -->
+@if (showBulkDeleteModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Multiple Seasons</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedCount() }} season(s)</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="bulkDeleteSeasons()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Seasons</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Season Details Modal with Tabs -->
+@if (showSeasonDetailsModal() && selectedSeason()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-details" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ selectedSeason()!.season_year }} - {{ selectedSeason()!.season_type }}</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body modal-tabs-body">
+      <tui-tabs [(activeItemIndex)]="activeTab">
+        <button tuiTab>Details</button>
+        <button tuiTab>Games</button>
+      </tui-tabs>
+
+      <div class="tab-content">
+        @if (activeTab() === 0) {
+          <app-season-details-tab [seasonId]="selectedSeason()!.id" />
+        } @else if (activeTab() === 1) {
+          <app-season-games-tab [seasonId]="selectedSeason()!.id" />
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}

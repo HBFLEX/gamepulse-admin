@@ -45,7 +45,7 @@ export const routes: Routes = [
   {
     path: 'seasons',
     loadComponent: () =>
-      import('./pages/overview/overview.component').then((m) => m.OverviewComponent), // TODO: Replace with actual component
+      import('./pages/seasons/seasons.component').then((m) => m.SeasonsComponent),
   },
   {
     path: 'schedule',
