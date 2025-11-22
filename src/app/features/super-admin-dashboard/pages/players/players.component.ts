@@ -182,7 +182,8 @@ export class PlayersComponent implements OnInit {
 
   loadPlayers(): void {
     this.loading.set(true);
-    this.http.get<{ data: Player[]; meta: { total: number } }>(this.apiUrl).subscribe({
+    // Fetch all players by setting a large limit
+    this.http.get<{ data: Player[]; meta: { total: number } }>(`${this.apiUrl}?limit=1000`).subscribe({
       next: (response) => {
         const players = response?.data || [];
         this.players.set(players);
@@ -198,7 +199,8 @@ export class PlayersComponent implements OnInit {
   }
 
   loadTeams(): void {
-    this.http.get<{ data: any[] }>(`${environment.apiUrl}/teams`).subscribe({
+    // Fetch all teams by setting a large limit
+    this.http.get<{ data: any[] }>(`${environment.apiUrl}/teams?limit=1000`).subscribe({
       next: (response: any) => {
         const teams = response?.data || [];
         this.teams.set(teams.map((t: any) => ({ id: t.id, name: t.name, city: t.city })));
