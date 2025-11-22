@@ -125,7 +125,7 @@ import { PlayersApiService, Player } from '../../../../../core/services/players-
       justify-content: center;
       padding: 3rem;
       gap: 1rem;
-      color: #64748b;
+      color: var(--tui-text-secondary);
     }
 
     .error-state {
@@ -190,10 +190,16 @@ import { PlayersApiService, Player } from '../../../../../core/services/players-
     }
 
     .info-card {
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: var(--tui-background-elevation-1);
+      border: 1px solid var(--tui-border-normal);
       border-radius: 0.75rem;
       padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .info-card:hover {
+      border-color: #C53A34;
+      box-shadow: 0 4px 6px -1px rgba(197, 58, 52, 0.1);
     }
 
     .info-card h3 {
@@ -201,7 +207,7 @@ import { PlayersApiService, Player } from '../../../../../core/services/players-
       font-size: 1.1rem;
       font-family: 'Bebas Neue', sans-serif;
       letter-spacing: 1px;
-      color: #1a1a1a;
+      color: var(--tui-text-primary);
       padding-bottom: 0.75rem;
       border-bottom: 2px solid #C53A34;
     }
@@ -221,19 +227,19 @@ import { PlayersApiService, Player } from '../../../../../core/services/players-
 
     .info-row .label {
       font-size: 0.875rem;
-      color: #64748b;
+      color: var(--tui-text-secondary);
       font-weight: 500;
     }
 
     .info-row .value {
       font-size: 0.95rem;
-      color: #1a1a1a;
+      color: var(--tui-text-primary);
       font-weight: 600;
       text-align: right;
     }
 
     .text-muted {
-      color: #94a3b8 !important;
+      color: var(--tui-text-tertiary) !important;
     }
 
     @media (max-width: 768px) {
@@ -244,6 +250,18 @@ import { PlayersApiService, Player } from '../../../../../core/services/players-
       .profile-section {
         flex-direction: column;
         text-align: center;
+      }
+    }
+
+    :host-context([tuiTheme='dark']) {
+      .info-card {
+        background: rgba(58, 38, 52, 0.3);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .info-card:hover {
+        background: rgba(58, 38, 52, 0.5);
+        box-shadow: 0 4px 6px -1px rgba(197, 58, 52, 0.3);
       }
     }
   `]
