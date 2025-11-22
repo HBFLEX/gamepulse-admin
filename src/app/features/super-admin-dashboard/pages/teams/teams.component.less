@@ -1200,6 +1200,39 @@
   to { opacity: 1; transform: translateY(0); } 
 }
 
+// Pagination
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid var(--tui-border-normal);
+  margin-top: 1rem;
+}
+
+.pagination .page-info {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.938rem;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+  min-width: 120px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.pagination button {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.pagination button:not([data-disabled]):hover {
+  background: rgba(197, 58, 52, 0.1) !important;
+  color: #C53A34 !important;
+  border-color: #C53A34 !important;
+}
+
 // Responsive
 @media (max-width: 640px) {
   .teams-container {

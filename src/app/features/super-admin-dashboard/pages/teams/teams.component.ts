@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -107,6 +107,7 @@ export class TeamsComponent implements OnInit {
   currentPage = signal(1);
   pageSize = signal(20);
   totalTeams = signal(0);
+  hasMore = signal(false);
 
   // Sorting
   sortColumn = signal<string>('name');
@@ -144,7 +145,7 @@ export class TeamsComponent implements OnInit {
   isUploading = signal(false);
 
   // Computed
-  displayedTeams = computed(() => {
+  filteredTeams = computed(() => {
     const teams = this.teams();
     if (!teams || !Array.isArray(teams) || teams.length === 0) return [];
 
@@ -198,7 +199,29 @@ export class TeamsComponent implements OnInit {
     return filtered;
   });
 
+  displayedTeams = computed(() => {
+    const filtered = this.filteredTeams();
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    const end = start + size;
+    return filtered.slice(start, end);
+  });
+
+  totalPages = computed(() => Math.ceil(this.filteredTeams().length / this.pageSize()));
+
   selectedCount = computed(() => this.selectedTeamIds().size);
+
+  constructor() {
+    // Reset to page 1 when filters change
+    effect(() => {
+      this.searchQuery();
+      this.filterLeague();
+      this.filterDivision();
+      this.filterConference();
+      this.currentPage.set(1);
+    }, { allowSignalWrites: true });
+  }
 
   ngOnInit(): void {
     this.loadMetadata();
@@ -251,10 +274,7 @@ export class TeamsComponent implements OnInit {
     this.loading.set(true);
     this.http.get<{ data: Team[]; meta: { total: number } }>(this.apiUrl).subscribe({
       next: (response) => {
-        // Backend returns { data: Team[], meta: { total: number } }
         const teams = response?.data || [];
-        console.log('Loaded teams:', teams);
-        console.log('Sample team with coach:', teams.find(t => t.coach));
         this.teams.set(teams);
         this.totalTeams.set(response?.meta?.total || teams.length);
         this.loading.set(false);
@@ -294,6 +314,8 @@ export class TeamsComponent implements OnInit {
 
   toggleSelectAll(): void {
     const displayed = this.displayedTeams();
+    if (displayed.length === 0) return;
+    
     const allSelected = displayed.every(team => this.selectedTeamIds().has(team.id));
 
     if (allSelected) {
@@ -315,6 +337,13 @@ export class TeamsComponent implements OnInit {
       this.sortColumn.set(column);
       this.sortDirection.set('asc');
     }
+  }
+
+  // Pagination
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // File Upload
@@ -849,4 +878,6 @@ export class TeamsComponent implements OnInit {
     if (!coach) return 'No coach assigned';
     return `${coach.coach_first_name} ${coach.coach_last_name}`;
   }
+
+  protected readonly Math = Math;
 }
