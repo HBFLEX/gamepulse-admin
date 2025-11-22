@@ -64,6 +64,7 @@ export class PlayersComponent implements OnInit {
   showCreateModal = signal(false);
   showEditModal = signal(false);
   showDeleteModal = signal(false);
+  showBulkDeleteModal = signal(false);
   showTransferModal = signal(false);
   selectedPlayer = signal<Player | null>(null);
 
@@ -328,6 +329,10 @@ export class PlayersComponent implements OnInit {
     this.showDeleteModal.set(true);
   }
 
+  openBulkDeleteModal(): void {
+    this.showBulkDeleteModal.set(true);
+  }
+
   openTransferModal(player: Player): void {
     this.selectedPlayer.set(player);
     this.transferTeamId.set(null);
@@ -338,6 +343,7 @@ export class PlayersComponent implements OnInit {
     this.showCreateModal.set(false);
     this.showEditModal.set(false);
     this.showDeleteModal.set(false);
+    this.showBulkDeleteModal.set(false);
     this.showTransferModal.set(false);
     this.selectedPlayer.set(null);
     this.playerForm.set({});
@@ -429,11 +435,9 @@ export class PlayersComponent implements OnInit {
     });
   }
 
-  bulkDelete(): void {
+  bulkDeletePlayers(): void {
     const selected = Array.from(this.selectedPlayerIds());
     if (selected.length === 0) return;
-
-    if (!confirm(`Are you sure you want to delete ${selected.length} player(s)?`)) return;
 
     this.loading.set(true);
     let completed = 0;
@@ -460,6 +464,7 @@ export class PlayersComponent implements OnInit {
   private finalizeBulkDelete(completed: number, errors: number): void {
     this.loadPlayers();
     this.clearSelection();
+    this.closeModals();
     this.loading.set(false);
     if (errors > 0) {
       this.alerts.open(`Deleted ${completed} player(s), ${errors} failed`, { appearance: 'warning' }).subscribe();
