@@ -1,0 +1,484 @@
+<div class="coaches-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Coaches Management</h1>
+      <p class="page-subtitle">Manage coaching staff and their information</p>
+    </div>
+    <div class="header-actions">
+      <button tuiButton appearance="primary" size="m" (click)="openCreateModal()">
+        <tui-icon icon="@tui.plus" />
+        Add Coach
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-container">
+    <tui-loader size="m" [overlay]="true" />
+  </div>
+  } @else {
+  <div class="content-container">
+    <!-- Filters & Search -->
+    <div class="filters-section">
+      <div class="search-box">
+        <label tuiLabel>Search Coaches</label>
+        <tui-input [(ngModel)]="searchQuery" (ngModelChange)="searchQuery.set($event)"
+          [ngModelOptions]="{standalone: true}">
+          Search by name, nationality...
+        </tui-input>
+      </div>
+
+      <div class="filter-controls">
+        <select
+          class="filter-select"
+          [(ngModel)]="filterNationality"
+          (ngModelChange)="filterNationality.set($event)"
+        >
+          <option value="">All Nationalities</option>
+          @for (nationality of uniqueNationalities(); track nationality) {
+          <option [value]="nationality">{{ nationality }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Bulk Actions -->
+      @if (selectedCount() > 0) {
+      <div class="bulk-actions">
+        <span class="selected-count">{{ selectedCount() }} selected</span>
+        <button tuiButton appearance="secondary" size="s" (click)="clearSelection()">
+          Clear
+        </button>
+        <button tuiButton appearance="secondary" size="s" class="bulk-delete-button" (click)="openBulkDeleteModal()">
+          <tui-icon icon="@tui.trash-2" />
+          Delete Selected
+        </button>
+      </div>
+      }
+
+      <!-- Stats -->
+      <div class="filter-stats">
+        <div class="stat-item">
+          <span class="stat-label">Total</span>
+          <span class="stat-value">{{ filteredCoaches().length }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Showing</span>
+          <span class="stat-value">{{ displayedCoaches().length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coaches Table -->
+  <div class="table-container">
+    @if (displayedCoaches().length === 0) {
+    <div class="empty-state">
+      <tui-icon icon="@tui.users" class="empty-icon" />
+      <h3>No coaches found</h3>
+      <p>Try adjusting your filters or add a new coach</p>
+    </div>
+    } @else {
+    <div class="table-wrapper">
+      <table class="coaches-table">
+        <thead>
+          <tr>
+            <th class="checkbox-col">
+              <input
+                type="checkbox"
+                [checked]="areAllSelected()"
+                (change)="toggleSelectAll()"
+              />
+            </th>
+            <th class="sortable" (click)="sortBy('coach_last_name')">
+              Name
+              @if (sortColumn() === 'coach_last_name') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('age')">
+              Age
+              @if (sortColumn() === 'age') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('coach_nationality')">
+              Nationality
+              @if (sortColumn() === 'coach_nationality') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th class="sortable" (click)="sortBy('coach_experience_years')">
+              Experience (Years)
+              @if (sortColumn() === 'coach_experience_years') {
+              <tui-icon [icon]="sortDirection() === 'asc' ? '@tui.chevron-up' : '@tui.chevron-down'" />
+              }
+            </th>
+            <th>Current Team</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (coach of displayedCoaches(); track coach.id) {
+          <tr [class.selected]="isSelected(coach.id)">
+            <td class="checkbox-col">
+              <input
+                type="checkbox"
+                [checked]="isSelected(coach.id)"
+                (change)="toggleSelection(coach.id)"
+              />
+            </td>
+            <td class="name-col">
+              <div class="coach-name">
+                <span class="full-name">{{ coach.coach_first_name }} {{ coach.coach_last_name }}</span>
+              </div>
+            </td>
+            <td>{{ calculateAge(coach.coach_birth_date) || 'N/A' }}</td>
+            <td>{{ coach.coach_nationality || 'N/A' }}</td>
+            <td>{{ coach.coach_experience_years || 0 }}</td>
+            <td class="team-col">
+              <span class="no-team">Available</span>
+            </td>
+            <td class="actions-col">
+              <div class="action-buttons">
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  class="view-button"
+                  (click)="openCoachDetailsModal(coach)"
+                  title="View coach details"
+                >
+                  <tui-icon icon="@tui.eye" />
+                </button>
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  class="edit-button"
+                  (click)="openEditModal(coach)"
+                  title="Edit coach"
+                >
+                  <tui-icon icon="@tui.pencil" />
+                </button>
+                <button
+                  tuiButton
+                  appearance="flat"
+                  size="xs"
+                  class="delete-button"
+                  (click)="openDeleteModal(coach)"
+                  title="Delete coach"
+                >
+                  <tui-icon icon="@tui.trash" />
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() === 1"
+        (click)="onPageChange(currentPage() - 1)"
+      >
+        <tui-icon icon="@tui.chevron-left" />
+        Previous
+      </button>
+
+      <div class="page-info">
+        <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
+      </div>
+
+      <button
+        tuiButton
+        appearance="secondary"
+        size="s"
+        [disabled]="currentPage() === totalPages()"
+        (click)="onPageChange(currentPage() + 1)"
+      >
+        Next
+        <tui-icon icon="@tui.chevron-right" />
+      </button>
+    </div>
+    }
+  </div>
+  }
+</div>
+
+<!-- Create Coach Modal -->
+@if (showCreateModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add New Coach</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="coach-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label tuiLabel>First Name *</label>
+            <tui-input
+              [ngModel]="coachForm().firstName"
+              (ngModelChange)="updateFormField('firstName', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              First name
+            </tui-input>
+          </div>
+          <div class="form-field">
+            <label tuiLabel>Last Name *</label>
+            <tui-input
+              [ngModel]="coachForm().lastName"
+              (ngModelChange)="updateFormField('lastName', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Last name
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label tuiLabel>Birth Date</label>
+            <input
+              type="date"
+              class="date-input"
+              [ngModel]="coachForm().birthDate"
+              (ngModelChange)="updateFormField('birthDate', $event)"
+              [ngModelOptions]="{standalone: true}"
+            />
+          </div>
+          <div class="form-field">
+            <label tuiLabel>Nationality</label>
+            <tui-input
+              [ngModel]="coachForm().nationality"
+              (ngModelChange)="updateFormField('nationality', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Nationality
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label tuiLabel>Experience (Years)</label>
+            <tui-input-number
+              [ngModel]="coachForm().experienceYears"
+              (ngModelChange)="updateFormField('experienceYears', $event)"
+              [ngModelOptions]="{standalone: true}"
+              [min]="0"
+            >
+              Years of experience
+            </tui-input-number>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="createCoach()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Create Coach</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Edit Coach Modal -->
+@if (showEditModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit Coach</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form class="coach-form">
+        <div class="form-row">
+          <div class="form-field">
+            <label tuiLabel>First Name *</label>
+            <tui-input
+              [ngModel]="coachForm().firstName"
+              (ngModelChange)="updateFormField('firstName', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              First name
+            </tui-input>
+          </div>
+          <div class="form-field">
+            <label tuiLabel>Last Name *</label>
+            <tui-input
+              [ngModel]="coachForm().lastName"
+              (ngModelChange)="updateFormField('lastName', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Last name
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label tuiLabel>Birth Date</label>
+            <input
+              type="date"
+              class="date-input"
+              [ngModel]="coachForm().birthDate"
+              (ngModelChange)="updateFormField('birthDate', $event)"
+              [ngModelOptions]="{standalone: true}"
+            />
+          </div>
+          <div class="form-field">
+            <label tuiLabel>Nationality</label>
+            <tui-input
+              [ngModel]="coachForm().nationality"
+              (ngModelChange)="updateFormField('nationality', $event)"
+              [ngModelOptions]="{standalone: true}"
+            >
+              Nationality
+            </tui-input>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label tuiLabel>Experience (Years)</label>
+            <tui-input-number
+              [ngModel]="coachForm().experienceYears"
+              (ngModelChange)="updateFormField('experienceYears', $event)"
+              [ngModelOptions]="{standalone: true}"
+              [min]="0"
+            >
+              Years of experience
+            </tui-input-number>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" (click)="updateCoach()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Save Changes</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Delete Coach Modal -->
+@if (showDeleteModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Coach</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedCoach()?.coach_first_name }} {{ selectedCoach()?.coach_last_name }}</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="deleteCoach()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Coach</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Bulk Delete Modal -->
+@if (showBulkDeleteModal()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Delete Multiple Coaches</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <tui-icon icon="@tui.alert-triangle" class="warning-icon"></tui-icon>
+        <p>Are you sure you want to delete <strong>{{ selectedCount() }} coach(es)</strong>?</p>
+        <p class="warning-text">This action cannot be undone. All associated data will be permanently removed.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button tuiButton appearance="secondary" size="m" (click)="closeModals()">
+        Cancel
+      </button>
+      <button tuiButton appearance="primary" size="m" class="delete-confirm-button" (click)="bulkDeleteCoaches()" [disabled]="loading()">
+        @if (loading()) {
+        <tui-loader size="s"></tui-loader>
+        } @else {
+        <span>Delete Coaches</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Coach Details Modal with Tabs -->
+@if (showCoachDetailsModal() && selectedCoach()) {
+<div class="modal-overlay" (click)="closeModals()">
+  <div class="modal-content modal-details" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ selectedCoach()!.coach_first_name }} {{ selectedCoach()!.coach_last_name }}</h2>
+      <button tuiButton appearance="icon" size="s" (click)="closeModals()">
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+    <div class="modal-body modal-tabs-body">
+      <tui-tabs [(activeItemIndex)]="activeTab">
+        <button tuiTab>Details</button>
+        <button tuiTab>Team History</button>
+      </tui-tabs>
+
+      <div class="tab-content">
+        @if (activeTab() === 0) {
+          <app-coach-details-tab [coachId]="selectedCoach()!.id" />
+        } @else if (activeTab() === 1) {
+          <app-coach-history-tab [coachId]="selectedCoach()!.id" />
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
