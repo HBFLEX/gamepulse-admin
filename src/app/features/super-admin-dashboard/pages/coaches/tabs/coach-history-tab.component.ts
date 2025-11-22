@@ -12,6 +12,12 @@ interface HistoryEntry {
   new_values: any;
   created_at: string;
   user_id: string;
+  team?: {
+    id: number;
+    name: string;
+    city: string;
+  };
+  coach_name?: string;
 }
 
 @Component({
@@ -48,10 +54,18 @@ interface HistoryEntry {
                   </div>
                   <div class="timeline-body">
                     <p class="timeline-description">{{ getDescription(entry) }}</p>
-                    @if (entry.new_values) {
+                    @if (entry.team) {
                       <div class="timeline-details">
-                        <span class="detail-label">Team ID:</span>
-                        <span class="detail-value">{{ entry.new_values.team_coach_id }}</span>
+                        <div class="detail-row">
+                          <span class="detail-label">Team:</span>
+                          <span class="detail-value">{{ entry.team.name }}</span>
+                        </div>
+                        @if (entry.team.city) {
+                        <div class="detail-row">
+                          <span class="detail-label">City:</span>
+                          <span class="detail-value">{{ entry.team.city }}</span>
+                        </div>
+                        }
                       </div>
                     }
                   </div>
@@ -200,11 +214,18 @@ interface HistoryEntry {
 
     .timeline-details {
       display: flex;
+      flex-direction: column;
       gap: 0.5rem;
-      padding: 0.625rem;
+      padding: 0.75rem;
       background: rgba(197, 58, 52, 0.05);
       border-left: 3px solid #C53A34;
       border-radius: 0.25rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
     }
 
     .detail-label {
@@ -274,7 +295,18 @@ export class CoachHistoryTabComponent {
 
     this.coachesApi.getCoachTeamHistory(id).subscribe({
       next: (response) => {
-        this.history.set(response.data || []);
+        // Extract team info from new_values in audit logs
+        const enrichedHistory = (response.data || []).map((entry: any) => ({
+          ...entry,
+          team: entry.new_values?.team_name ? {
+            id: entry.entity_id,
+            name: entry.new_values.team_name,
+            city: entry.new_values.team_city || ''
+          } : null,
+          coach_name: entry.new_values?.coach_name || null
+        }));
+        
+        this.history.set(enrichedHistory);
         this.loading.set(false);
       },
       error: (err) => {
@@ -298,7 +330,10 @@ export class CoachHistoryTabComponent {
 
   getActionText(entry: HistoryEntry): string {
     if (entry.action === 'UPDATE') {
-      return 'Team Assignment Changed';
+      if (entry.new_values?.team_coach_id === null) {
+        return 'Coach Removed from Team';
+      }
+      return 'Assigned to Team';
     } else if (entry.action === 'CREATE') {
       return 'Team Assignment Created';
     }
@@ -306,9 +341,14 @@ export class CoachHistoryTabComponent {
   }
 
   getDescription(entry: HistoryEntry): string {
-    if (entry.action === 'UPDATE' && entry.new_values && entry.new_values.team_coach_id) {
-      return `Coach was assigned to a team (ID: ${entry.new_values.team_coach_id})`;
-    } else if (entry.action === 'CREATE') {
+    if (entry.team) {
+      if (entry.action === 'UPDATE') {
+        return `Coach was assigned to ${entry.team.name}`;
+      } else if (entry.action === 'CREATE') {
+        return `Started coaching ${entry.team.name}`;
+      }
+    }
+    if (entry.action === 'CREATE') {
       return 'Initial team assignment was created';
     }
     return 'Team coaching assignment was modified';

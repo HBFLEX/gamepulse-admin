@@ -136,7 +136,16 @@
             <td>{{ coach.coach_nationality || 'N/A' }}</td>
             <td>{{ coach.coach_experience_years || 0 }}</td>
             <td class="team-col">
+              @if (getCoachTeam(coach); as team) {
+              <div class="team-info">
+                <span class="team-name">{{ team.name }}</span>
+                @if (team.city) {
+                <span class="team-city">{{ team.city }}</span>
+                }
+              </div>
+              } @else {
               <span class="no-team">Available</span>
+              }
             </td>
             <td class="actions-col">
               <div class="action-buttons">

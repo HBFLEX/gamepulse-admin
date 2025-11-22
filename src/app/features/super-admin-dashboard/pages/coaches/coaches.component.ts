@@ -16,6 +16,10 @@ interface Team {
   city?: string;
 }
 
+interface CoachWithTeam extends Coach {
+  currentTeam?: Team;
+}
+
 interface CreateCoachDto {
   firstName: string;
   lastName: string;
@@ -60,7 +64,7 @@ export class CoachesComponent implements OnInit {
   private apiUrl = `${environment.apiUrl}/coaches`;
 
   // State
-  coaches = signal<Coach[]>([]);
+  coaches = signal<CoachWithTeam[]>([]);
   teams = signal<Team[]>([]);
   loading = signal(false);
   selectedCoachIds = signal(new Set<number>());
@@ -176,9 +180,13 @@ export class CoachesComponent implements OnInit {
   loadCoaches(): void {
     this.loading.set(true);
     this.coachesApi.getCoaches({ limit: 1000 }).subscribe({
-      next: (response) => {
+      next: async (response) => {
         const coaches = response?.data || [];
-        this.coaches.set(coaches);
+        
+        // Fetch team data for all coaches
+        const coachesWithTeams = await this.enrichCoachesWithTeamData(coaches);
+        
+        this.coaches.set(coachesWithTeams);
         this.totalCoaches.set(response?.pagination?.total || coaches.length);
         this.loading.set(false);
       },
@@ -188,6 +196,38 @@ export class CoachesComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  private async enrichCoachesWithTeamData(coaches: Coach[]): Promise<Coach[]> {
+    // Get all teams
+    const teams = this.teams();
+    
+    // Create a map of coach_id to team for quick lookup
+    const coachTeamMap = new Map<number, Team>();
+    
+    // Fetch teams and build the map
+    try {
+      const teamsResponse = await this.http.get<{ data: any[] }>(`${environment.apiUrl}/teams?limit=1000`).toPromise();
+      const allTeams = teamsResponse?.data || [];
+      
+      allTeams.forEach((team: any) => {
+        if (team.team_coach_id) {
+          coachTeamMap.set(team.team_coach_id, {
+            id: team.id,
+            name: team.team_name || team.name,
+            city: team.team_city || team.city
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching teams for coaches:', error);
+    }
+    
+    // Enrich coaches with team data
+    return coaches.map(coach => ({
+      ...coach,
+      currentTeam: coachTeamMap.get(coach.id)
+    }));
   }
 
   loadCoachesInBackground(): void {
@@ -288,10 +328,8 @@ export class CoachesComponent implements OnInit {
     return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
-  getCoachTeam(coachId: number): Team | null {
-    // This would need to be matched with actual team data that has coach_id
-    // For now, return null
-    return null;
+  getCoachTeam(coach: CoachWithTeam): Team | null {
+    return coach.currentTeam || null;
   }
 
   // CRUD Operations
