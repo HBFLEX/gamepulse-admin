@@ -5,22 +5,20 @@ import { TuiLoader, TuiIcon } from '@taiga-ui/core';
 import { environment } from '../../../../../../environments/environment';
 
 interface PlayerStats {
-  season_id: number;
-  season_name: string;
-  games_played: number;
-  points_total: number;
-  points_avg: number;
-  rebounds_total: number;
-  rebounds_avg: number;
-  assists_total: number;
-  assists_avg: number;
-  steals_total: number;
-  steals_avg: number;
-  blocks_total: number;
-  blocks_avg: number;
-  field_goal_pct: number;
-  three_point_pct: number;
-  free_throw_pct: number;
+  gamesPlayed: number;
+  pointsTotal: number;
+  pointsAvg: number;
+  reboundsTotal: number;
+  reboundsAvg: number;
+  assistsTotal: number;
+  assistsAvg: number;
+  stealsTotal: number;
+  stealsAvg: number;
+  blocksTotal: number;
+  blocksAvg: number;
+  fieldGoalPct: number;
+  threePointPct: number;
+  freeThrowPct: number;
 }
 
 @Component({
@@ -49,7 +47,7 @@ interface PlayerStats {
               </div>
               <div class="stat-info">
                 <span class="stat-label">Points Per Game</span>
-                <span class="stat-value">{{ stats()!.points_avg ? stats()!.points_avg.toFixed(1) : '0.0' }}</span>
+                <span class="stat-value">{{ stats()!.pointsAvg ? stats()!.pointsAvg.toFixed(1) : '0.0' }}</span>
               </div>
             </div>
             <div class="stat-card">
@@ -58,7 +56,7 @@ interface PlayerStats {
               </div>
               <div class="stat-info">
                 <span class="stat-label">Rebounds Per Game</span>
-                <span class="stat-value">{{ stats()!.rebounds_avg ? stats()!.rebounds_avg.toFixed(1) : '0.0' }}</span>
+                <span class="stat-value">{{ stats()!.reboundsAvg ? stats()!.reboundsAvg.toFixed(1) : '0.0' }}</span>
               </div>
             </div>
             <div class="stat-card">
@@ -67,7 +65,7 @@ interface PlayerStats {
               </div>
               <div class="stat-info">
                 <span class="stat-label">Assists Per Game</span>
-                <span class="stat-value">{{ stats()!.assists_avg ? stats()!.assists_avg.toFixed(1) : '0.0' }}</span>
+                <span class="stat-value">{{ stats()!.assistsAvg ? stats()!.assistsAvg.toFixed(1) : '0.0' }}</span>
               </div>
             </div>
             <div class="stat-card">
@@ -76,7 +74,7 @@ interface PlayerStats {
               </div>
               <div class="stat-info">
                 <span class="stat-label">Games Played</span>
-                <span class="stat-value">{{ stats()!.games_played || 0 }}</span>
+                <span class="stat-value">{{ stats()!.gamesPlayed || 0 }}</span>
               </div>
             </div>
           </div>
@@ -94,23 +92,23 @@ interface PlayerStats {
                 </div>
                 <div class="table-row">
                   <span class="category">Points</span>
-                  <span>{{ stats()!.points_total || 0 }}</span>
-                  <span>{{ stats()!.points_avg ? stats()!.points_avg.toFixed(1) : '0.0' }}</span>
+                  <span>{{ stats()!.pointsTotal || 0 }}</span>
+                  <span>{{ stats()!.pointsAvg ? stats()!.pointsAvg.toFixed(1) : '0.0' }}</span>
                 </div>
                 <div class="table-row">
                   <span class="category">Field Goal %</span>
                   <span>-</span>
-                  <span>{{ formatPercentage(stats()!.field_goal_pct) }}</span>
+                  <span>{{ formatPercentage(stats()!.fieldGoalPct) }}</span>
                 </div>
                 <div class="table-row">
                   <span class="category">3-Point %</span>
                   <span>-</span>
-                  <span>{{ formatPercentage(stats()!.three_point_pct) }}</span>
+                  <span>{{ formatPercentage(stats()!.threePointPct) }}</span>
                 </div>
                 <div class="table-row">
                   <span class="category">Free Throw %</span>
                   <span>-</span>
-                  <span>{{ formatPercentage(stats()!.free_throw_pct) }}</span>
+                  <span>{{ formatPercentage(stats()!.freeThrowPct) }}</span>
                 </div>
               </div>
             </div>
@@ -126,23 +124,23 @@ interface PlayerStats {
                 </div>
                 <div class="table-row">
                   <span class="category">Rebounds</span>
-                  <span>{{ stats()!.rebounds_total || 0 }}</span>
-                  <span>{{ stats()!.rebounds_avg ? stats()!.rebounds_avg.toFixed(1) : '0.0' }}</span>
+                  <span>{{ stats()!.reboundsTotal || 0 }}</span>
+                  <span>{{ stats()!.reboundsAvg ? stats()!.reboundsAvg.toFixed(1) : '0.0' }}</span>
                 </div>
                 <div class="table-row">
                   <span class="category">Assists</span>
-                  <span>{{ stats()!.assists_total || 0 }}</span>
-                  <span>{{ stats()!.assists_avg ? stats()!.assists_avg.toFixed(1) : '0.0' }}</span>
+                  <span>{{ stats()!.assistsTotal || 0 }}</span>
+                  <span>{{ stats()!.assistsAvg ? stats()!.assistsAvg.toFixed(1) : '0.0' }}</span>
                 </div>
                 <div class="table-row">
                   <span class="category">Steals</span>
-                  <span>{{ stats()!.steals_total || 0 }}</span>
-                  <span>{{ stats()!.steals_avg ? stats()!.steals_avg.toFixed(1) : '0.0' }}</span>
+                  <span>{{ stats()!.stealsTotal || 0 }}</span>
+                  <span>{{ stats()!.stealsAvg ? stats()!.stealsAvg.toFixed(1) : '0.0' }}</span>
                 </div>
                 <div class="table-row">
                   <span class="category">Blocks</span>
-                  <span>{{ stats()!.blocks_total || 0 }}</span>
-                  <span>{{ stats()!.blocks_avg ? stats()!.blocks_avg.toFixed(1) : '0.0' }}</span>
+                  <span>{{ stats()!.blocksTotal || 0 }}</span>
+                  <span>{{ stats()!.blocksAvg ? stats()!.blocksAvg.toFixed(1) : '0.0' }}</span>
                 </div>
               </div>
             </div>
@@ -342,8 +340,11 @@ export class PlayerStatsTabComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    this.http.get<PlayerStats>(`${environment.apiUrl}/players/${id}/stats`).subscribe({
-      next: (stats) => {
+    this.http.get<any>(`${environment.apiUrl}/players/${id}/stats`).subscribe({
+      next: (response) => {
+        // Server returns { seasonStats, gameLog }
+        // Use currentSeasonStats or careerStats from the response
+        const stats = response.seasonStats || response.currentSeasonStats || response.careerStats;
         this.stats.set(stats);
         this.loading.set(false);
       },

@@ -5,22 +5,30 @@ import { TuiLoader, TuiIcon, TuiButton } from '@taiga-ui/core';
 import { environment } from '../../../../../../environments/environment';
 
 interface GameLog {
-  player_stats_game_id: number;
-  player_stats_points: number;
-  player_stats_rebounds: number;
-  player_stats_assists: number;
-  player_stats_steals: number;
-  player_stats_blocks: number;
-  player_stats_minutes_played: number;
-  game: {
-    game_id: number;
-    game_date: string;
-    game_status: string;
-    home_team_name: string;
-    away_team_name: string;
-    home_team_score: number;
-    away_team_score: number;
-  };
+  gameId: number;
+  date: string;
+  time?: string;
+  opponent: string;
+  opponentCity?: string;
+  isHome: boolean;
+  isAway: boolean;
+  result: string;
+  homeTeamScore: number;
+  awayTeamScore: number;
+  minutesPlayed: number;
+  points: number;
+  rebounds: number;
+  assists: number;
+  steals: number;
+  blocks: number;
+  turnovers?: number;
+  fouls?: number;
+  fieldGoalsMade?: number;
+  fieldGoalsAttempted?: number;
+  threePointersMade?: number;
+  threePointersAttempted?: number;
+  freeThrowsMade?: number;
+  freeThrowsAttempted?: number;
 }
 
 interface GameLogResponse {
@@ -88,23 +96,29 @@ interface GameLogResponse {
                 </tr>
               </thead>
               <tbody>
-                @for (log of gameLogs(); track log.player_stats_game_id) {
+                @for (log of gameLogs(); track log.gameId) {
                   <tr>
-                    <td>{{ formatDate(log.game.game_date) }}</td>
+                    <td>{{ formatDate(log.date) }}</td>
                     <td class="matchup-cell">
-                      <span class="matchup">{{ log.game.away_team_name }} @ {{ log.game.home_team_name }}</span>
-                    </td>
-                    <td>
-                      <span class="score" [class.win]="isWin(log)" [class.loss]="!isWin(log)">
-                        {{ log.game.away_team_score }} - {{ log.game.home_team_score }}
+                      <span class="matchup">
+                        @if (log.isHome) {
+                          {{ log.opponent }} @ Home
+                        } @else {
+                          @ {{ log.opponent }}
+                        }
                       </span>
                     </td>
-                    <td>{{ log.player_stats_minutes_played }}</td>
-                    <td class="stat-highlight">{{ log.player_stats_points }}</td>
-                    <td>{{ log.player_stats_rebounds }}</td>
-                    <td>{{ log.player_stats_assists }}</td>
-                    <td>{{ log.player_stats_steals }}</td>
-                    <td>{{ log.player_stats_blocks }}</td>
+                    <td>
+                      <span class="score" [class.win]="log.result === 'Win'" [class.loss]="log.result === 'Loss'">
+                        {{ log.result }} ({{ log.awayTeamScore }} - {{ log.homeTeamScore }})
+                      </span>
+                    </td>
+                    <td>{{ log.minutesPlayed }}</td>
+                    <td class="stat-highlight">{{ log.points }}</td>
+                    <td>{{ log.rebounds }}</td>
+                    <td>{{ log.assists }}</td>
+                    <td>{{ log.steals }}</td>
+                    <td>{{ log.blocks }}</td>
                   </tr>
                 }
               </tbody>
@@ -321,21 +335,21 @@ export class PlayerGameLogsTabComponent {
   avgPoints = computed(() => {
     const logs = this.gameLogs();
     if (logs.length === 0) return '0.0';
-    const total = logs.reduce((sum, log) => sum + log.player_stats_points, 0);
+    const total = logs.reduce((sum, log) => sum + log.points, 0);
     return (total / logs.length).toFixed(1);
   });
 
   avgRebounds = computed(() => {
     const logs = this.gameLogs();
     if (logs.length === 0) return '0.0';
-    const total = logs.reduce((sum, log) => sum + log.player_stats_rebounds, 0);
+    const total = logs.reduce((sum, log) => sum + log.rebounds, 0);
     return (total / logs.length).toFixed(1);
   });
 
   avgAssists = computed(() => {
     const logs = this.gameLogs();
     if (logs.length === 0) return '0.0';
-    const total = logs.reduce((sum, log) => sum + log.player_stats_assists, 0);
+    const total = logs.reduce((sum, log) => sum + log.assists, 0);
     return (total / logs.length).toFixed(1);
   });
 
@@ -385,10 +399,5 @@ export class PlayerGameLogsTabComponent {
       day: 'numeric',
       year: 'numeric'
     });
-  }
-
-  isWin(log: GameLog): boolean {
-    // This is a simplified check - you might need to adjust based on which team the player was on
-    return log.game.home_team_score > log.game.away_team_score;
   }
 }

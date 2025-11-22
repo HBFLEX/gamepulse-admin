@@ -270,8 +270,14 @@ export class PlayerDetailsTabComponent {
     this.error.set(null);
 
     this.playersApi.getPlayerDetails(id).subscribe({
-      next: (player) => {
-        this.player.set(player);
+      next: (response: any) => {
+        // Server returns { player: {...}, team: {...}, currentSeasonStats: {...}, careerStats: {...} }
+        // Merge player and team data
+        const playerData = {
+          ...response.player,
+          team: response.team
+        };
+        this.player.set(playerData);
         this.loading.set(false);
       },
       error: (err) => {
