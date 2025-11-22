@@ -272,7 +272,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter first name"
-                [value]="playerForm().firstName"
+                [value]="playerForm().firstName || ''"
                 (input)="updateFormField('firstName', $any($event.target).value)"
                 name="firstName"
               />
@@ -285,7 +285,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter last name"
-                [value]="playerForm().lastName"
+                [value]="playerForm().lastName || ''"
                 (input)="updateFormField('lastName', $any($event.target).value)"
                 name="lastName"
               />
@@ -301,7 +301,7 @@
                 tuiTextfield
                 type="number"
                 placeholder="Enter number"
-                [value]="playerForm().number"
+                [value]="playerForm().number || ''"
                 (input)="updateFormField('number', +$any($event.target).value)"
                 name="number"
               />
@@ -342,7 +342,7 @@
               <input
                 tuiTextfield
                 type="date"
-                [value]="playerForm().birthDate"
+                [value]="playerForm().birthDate || ''"
                 (input)="updateFormField('birthDate', $any($event.target).value)"
                 name="birthDate"
               />
@@ -358,7 +358,7 @@
                 tuiTextfield
                 type="number"
                 placeholder="Enter height"
-                [value]="playerForm().heightCm"
+                [value]="playerForm().heightCm || ''"
                 (input)="updateFormField('heightCm', +$any($event.target).value)"
                 name="heightCm"
               />
@@ -371,7 +371,7 @@
                 tuiTextfield
                 type="number"
                 placeholder="Enter weight"
-                [value]="playerForm().weightKg"
+                [value]="playerForm().weightKg || ''"
                 (input)="updateFormField('weightKg', +$any($event.target).value)"
                 name="weightKg"
               />
@@ -387,7 +387,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter nationality"
-                [value]="playerForm().nationality"
+                [value]="playerForm().nationality || ''"
                 (input)="updateFormField('nationality', $any($event.target).value)"
                 name="nationality"
               />
@@ -400,7 +400,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter city"
-                [value]="playerForm().city"
+                [value]="playerForm().city || ''"
                 (input)="updateFormField('city', $any($event.target).value)"
                 name="city"
               />
@@ -441,7 +441,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter first name"
-                [value]="playerForm().firstName"
+                [value]="playerForm().firstName || ''"
                 (input)="updateFormField('firstName', $any($event.target).value)"
                 name="firstName"
               />
@@ -454,7 +454,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter last name"
-                [value]="playerForm().lastName"
+                [value]="playerForm().lastName || ''"
                 (input)="updateFormField('lastName', $any($event.target).value)"
                 name="lastName"
               />
@@ -470,7 +470,7 @@
                 tuiTextfield
                 type="number"
                 placeholder="Enter number"
-                [value]="playerForm().number"
+                [value]="playerForm().number || ''"
                 (input)="updateFormField('number', +$any($event.target).value)"
                 name="number"
               />
@@ -499,7 +499,7 @@
                 tuiTextfield
                 type="number"
                 placeholder="Enter height"
-                [value]="playerForm().heightCm"
+                [value]="playerForm().heightCm || ''"
                 (input)="updateFormField('heightCm', +$any($event.target).value)"
                 name="heightCm"
               />
@@ -512,7 +512,7 @@
                 tuiTextfield
                 type="number"
                 placeholder="Enter weight"
-                [value]="playerForm().weightKg"
+                [value]="playerForm().weightKg || ''"
                 (input)="updateFormField('weightKg', +$any($event.target).value)"
                 name="weightKg"
               />
@@ -528,7 +528,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter nationality"
-                [value]="playerForm().nationality"
+                [value]="playerForm().nationality || ''"
                 (input)="updateFormField('nationality', $any($event.target).value)"
                 name="nationality"
               />
@@ -541,7 +541,7 @@
                 tuiTextfield
                 type="text"
                 placeholder="Enter city"
-                [value]="playerForm().city"
+                [value]="playerForm().city || ''"
                 (input)="updateFormField('city', $any($event.target).value)"
                 name="city"
               />
