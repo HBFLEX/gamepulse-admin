@@ -4,8 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { TuiButton, TuiIcon, TuiLoader, TuiAlertService, TuiTextfield, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiInputModule, TuiInputNumberModule, TuiSelectModule } from '@taiga-ui/legacy';
+import { TuiTabs } from '@taiga-ui/kit';
 import { environment } from '../../../../../environments/environment';
 import { PlayersApiService, Player, CreatePlayerDto, UpdatePlayerDto, Position } from '../../../../core/services/players-api.service';
+import { PlayerDetailsTabComponent } from './tabs/player-details-tab.component';
+import { PlayerStatsTabComponent } from './tabs/player-stats-tab.component';
+import { PlayerGameLogsTabComponent } from './tabs/player-game-logs-tab.component';
 
 interface Team {
   id: number;
@@ -28,6 +32,10 @@ interface Team {
     TuiInputModule,
     TuiInputNumberModule,
     TuiSelectModule,
+    TuiTabs,
+    PlayerDetailsTabComponent,
+    PlayerStatsTabComponent,
+    PlayerGameLogsTabComponent,
   ],
   templateUrl: './players.component.html',
   styleUrl: './players.component.less'
@@ -66,7 +74,9 @@ export class PlayersComponent implements OnInit {
   showDeleteModal = signal(false);
   showBulkDeleteModal = signal(false);
   showTransferModal = signal(false);
+  showPlayerDetailsModal = signal(false);
   selectedPlayer = signal<Player | null>(null);
+  activeTab = signal(0);
 
   // Form data
   playerForm = signal<Partial<CreatePlayerDto>>({});
@@ -359,9 +369,17 @@ export class PlayersComponent implements OnInit {
     this.showDeleteModal.set(false);
     this.showBulkDeleteModal.set(false);
     this.showTransferModal.set(false);
+    this.showPlayerDetailsModal.set(false);
     this.selectedPlayer.set(null);
     this.playerForm.set({});
     this.transferTeamId.set(null);
+    this.activeTab.set(0);
+  }
+
+  openPlayerDetailsModal(player: Player): void {
+    this.selectedPlayer.set(player);
+    this.activeTab.set(0);
+    this.showPlayerDetailsModal.set(true);
   }
 
   createPlayer(): void {
