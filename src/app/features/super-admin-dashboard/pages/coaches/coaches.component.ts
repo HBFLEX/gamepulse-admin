@@ -394,7 +394,8 @@ export class CoachesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error creating coach:', error);
-        this.alerts.open('Failed to create coach', { appearance: 'error' }).subscribe();
+        const errorMessage = error?.error?.message || error?.message || 'Failed to create coach';
+        this.alerts.open(errorMessage, { appearance: 'error' }).subscribe();
         this.loading.set(false);
       },
     });
@@ -432,7 +433,8 @@ export class CoachesComponent implements OnInit {
       error: (error) => {
         console.error('Error updating coach:', error);
         this.loadCoaches();
-        this.alerts.open('Failed to update coach', { appearance: 'error' }).subscribe();
+        const errorMessage = error?.error?.message || error?.message || 'Failed to update coach';
+        this.alerts.open(errorMessage, { appearance: 'error' }).subscribe();
       },
     });
   }
@@ -456,7 +458,8 @@ export class CoachesComponent implements OnInit {
       error: (error) => {
         console.error('Error deleting coach:', error);
         this.loadCoaches();
-        this.alerts.open('Failed to delete coach', { appearance: 'error' }).subscribe();
+        const errorMessage = error?.error?.message || error?.message || 'Failed to delete coach';
+        this.alerts.open(errorMessage, { appearance: 'error' }).subscribe();
       },
     });
   }
@@ -474,6 +477,7 @@ export class CoachesComponent implements OnInit {
 
     let completed = 0;
     let failed = 0;
+    const failedReasons: string[] = [];
 
     ids.forEach(id => {
       this.http.delete(`${this.apiUrl}/admin/${id}`).subscribe({
@@ -484,19 +488,29 @@ export class CoachesComponent implements OnInit {
             if (failed === 0) {
               this.alerts.open(`Successfully deleted ${completed} coach(es)`, { appearance: 'success' }).subscribe();
             } else {
-              this.alerts.open(`Deleted ${completed} coach(es), ${failed} failed`, { appearance: 'warning' }).subscribe();
+              const message = failedReasons.length > 0 
+                ? `Deleted ${completed} coach(es), ${failed} failed. Reasons: ${failedReasons.join('; ')}`
+                : `Deleted ${completed} coach(es), ${failed} failed`;
+              this.alerts.open(message, { appearance: 'warning' }).subscribe();
             }
           }
         },
-        error: () => {
+        error: (error) => {
           failed++;
+          const errorMessage = error?.error?.message || 'Unknown error';
+          failedReasons.push(errorMessage);
+          
           if (completed + failed === ids.length) {
             if (failed === ids.length) {
               this.loadCoaches();
-              this.alerts.open('Failed to delete coaches', { appearance: 'error' }).subscribe();
+              const message = failedReasons.length > 0 
+                ? `Failed to delete coaches: ${failedReasons[0]}`
+                : 'Failed to delete coaches';
+              this.alerts.open(message, { appearance: 'error' }).subscribe();
             } else {
               this.loadCoachesInBackground();
-              this.alerts.open(`Deleted ${completed} coach(es), ${failed} failed`, { appearance: 'warning' }).subscribe();
+              const message = `Deleted ${completed} coach(es), ${failed} failed. First error: ${failedReasons[0]}`;
+              this.alerts.open(message, { appearance: 'warning' }).subscribe();
             }
           }
         },
